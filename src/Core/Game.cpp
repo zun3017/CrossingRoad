@@ -10,8 +10,8 @@
 Game* Game::s_instance = nullptr;
 
 Game::Game()
-    : m_window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Crossing Road",
-               sf::Style::Titlebar | sf::Style::Close)
+    : m_window(sf::VideoMode(1024, 768), "Crossing Road",
+               sf::Style::Default)
 {
     // Thiết lập singleton instance
     s_instance = this;
@@ -35,6 +35,10 @@ Game::Game()
     m_stateMachine.pushState(std::make_unique<MainMenuState>());
     // Xử lý ngay để state được init
     m_stateMachine.processStateChanges();
+    
+    // Khởi tạo View cố định tỷ lệ
+    sf::View view(sf::FloatRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT));
+    m_window.setView(view);
 }
 
 Game::~Game() {
@@ -70,6 +74,20 @@ void Game::run() {
                 m_window.close();
                 m_running = false;
                 return;
+            }
+            
+            // Xử lý resize cửa sổ (giữ nguyên view để tự động scale nội dung)
+            if (event.type == sf::Event::Resized) {
+                sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+                m_window.setView(sf::View(sf::FloatRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)));
+            }
+
+            // Map pixel to coords cho input chuột
+            if (event.type == sf::Event::MouseButtonPressed) {
+                sf::Vector2i pixelPos(event.mouseButton.x, event.mouseButton.y);
+                sf::Vector2f worldPos = m_window.mapPixelToCoords(pixelPos);
+                event.mouseButton.x = static_cast<int>(worldPos.x);
+                event.mouseButton.y = static_cast<int>(worldPos.y);
             }
 
             // Ủy thác input cho state hiện tại

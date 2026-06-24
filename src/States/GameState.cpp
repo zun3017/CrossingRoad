@@ -98,10 +98,28 @@ void GameState::initPlayer() {
     m_deathTimer = 0.f;
     if (m_nameInput) m_nameInput.reset();
     if (m_btnOk) m_btnOk.reset();
-    if (m_playAgainBtn) m_playAgainBtn.reset();
-    if (m_menuBtn) m_menuBtn.reset();
     if (m_btnYes) m_btnYes.reset();
     if (m_btnNo) m_btnNo.reset();
+    if (m_playAgainBtn) m_playAgainBtn.reset();
+    if (m_menuBtn) m_menuBtn.reset();
+
+    // Khôi phục lại hình ảnh ban đầu (nếu trước đó chết đổi thành hitbycar hoặc tàng hình)
+    if (m_texturesLoaded) {
+        try {
+            auto& tPlayer = ResourceManager<sf::Texture>::getInstance().get("assets/textures/player.png");
+            m_playerSprite.setTexture(tPlayer, true);
+            int frameW = tPlayer.getSize().x / 4;
+            int frameH = tPlayer.getSize().y / 4;
+            m_playerSprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
+            m_playerSprite.setScale(m_playerSize / frameW, m_playerSize / frameH);
+            m_playerSprite.setColor(sf::Color::White);
+            
+            // Khôi phục animation
+            m_playerAnimRow = 0;
+            m_playerAnimFrame = 0;
+            m_isPlayerAnimating = false;
+        } catch(...) {}
+    }
 }
 
 // ============================================================
@@ -761,6 +779,9 @@ void GameState::checkCollisions(float dt) {
                             SaveManager::deleteGame(m_currentSaveSession);
                             m_currentSaveSession = "";
                         }
+                        
+                        // Làm nhân vật tàng hình để giả hiệu ứng chìm xuống nước
+                        m_playerSprite.setColor(sf::Color::Transparent);
                     }
                     m_playerShape.setFillColor(sf::Color(0, 50, 150)); // Đổi màu xanh (chìm)
                     return;
@@ -908,7 +929,7 @@ void GameState::draw(sf::RenderWindow& window) {
     }
 
     // Vẽ người chơi
-    if (!m_playerDead) {
+    if (true) {
         if (m_texturesLoaded) {
             m_playerSprite.setPosition(m_playerPos);
             window.draw(m_playerSprite);
