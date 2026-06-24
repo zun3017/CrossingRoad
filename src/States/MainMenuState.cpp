@@ -15,8 +15,17 @@
 void MainMenuState::init() {
     // Tải font chữ
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
+    m_cloudLoaded = m_cloudTexture.loadFromFile("assets/textures/cloud.png");
+    
+    m_menuBgLoaded = m_menuBgTexture.loadFromFile("assets/textures/menu.png");
+    if (m_menuBgLoaded) {
+        m_menuBgSprite.setTexture(m_menuBgTexture);
+        auto size = m_menuBgTexture.getSize();
+        m_menuBgSprite.setScale(800.f / size.x, 600.f / size.y);
+    }
 
-    m_buttonLabels = { "PLAY", "LOAD GAME", "RANKING", "HELP", "ABOUT", "SETTINGS", "EXIT" };
+    // Nhãn viết tắt cho các nút hình vuông
+    m_buttonLabels = { "PL", "LD", "RK", "HP", "AB", "ST", "EX" };
 
     initBackground();
     initClouds();
@@ -72,26 +81,45 @@ void MainMenuState::initClouds() {
         cloud.shape.setFillColor(sf::Color(255, 255, 255, 80)); // Trắng mờ
         cloud.shape.setOutlineThickness(0.f);
         cloud.speed = cloudData[i][3];
+
+        if (m_cloudLoaded) {
+            cloud.sprite.setTexture(m_cloudTexture);
+            auto texSize = m_cloudTexture.getSize();
+            float scaleX = cloudData[i][2] / texSize.x;
+            float scaleY = scaleX; // Giữ tỷ lệ thật của ảnh
+            cloud.sprite.setScale(scaleX, scaleY);
+            // Giảm opacity một chút cho mây mờ ảo
+            cloud.sprite.setColor(sf::Color(255, 255, 255, 200)); 
+            cloud.sprite.setPosition(cloudData[i][0], cloudData[i][1]);
+        }
+
         m_clouds.push_back(cloud);
     }
 }
 
 void MainMenuState::initButtons() {
-    // Tạo các nút menu xếp dọc chính giữa màn hình
-    float startY = 150.f;
-    float buttonWidth = 220.f;
-    float buttonHeight = 40.f;
-    float spacing = 8.f;
+    // Tạo các nút menu xếp ngang ở góc dưới bên phải màn hình
+    float buttonSize = 50.f; // Nút hình vuông
+    float spacing = 10.f;
+    
+    // Tính tổng chiều rộng của tất cả các nút
+    float totalWidth = m_buttonLabels.size() * buttonSize + (m_buttonLabels.size() - 1) * spacing;
+    
+    // Đặt ở góc dưới bên phải (cách lề phải 20px, lề dưới 20px)
+    float startX = 800.f - 20.f - totalWidth + (buttonSize / 2.f); 
+    float startY = 600.f - 20.f - (buttonSize / 2.f);
 
     for (size_t i = 0; i < m_buttonLabels.size(); i++) {
         MenuButton btn;
 
         // Nền nút
-        btn.background.setSize(sf::Vector2f(buttonWidth, buttonHeight));
-        btn.background.setOrigin(buttonWidth / 2.f, buttonHeight / 2.f);
-        float yPos = startY + i * (buttonHeight + spacing);
-        btn.background.setPosition(400.f, yPos);
-        btn.background.setFillColor(sf::Color(60, 60, 120));
+        btn.background.setSize(sf::Vector2f(buttonSize, buttonSize));
+        btn.background.setOrigin(buttonSize / 2.f, buttonSize / 2.f);
+        
+        float xPos = startX + i * (buttonSize + spacing);
+        btn.background.setPosition(xPos, startY);
+        
+        btn.background.setFillColor(sf::Color(60, 60, 120, 200)); // Hơi trong suốt
         btn.background.setOutlineColor(sf::Color(100, 100, 180));
         btn.background.setOutlineThickness(2.f);
 
@@ -103,7 +131,7 @@ void MainMenuState::initButtons() {
         sf::FloatRect textBounds = btn.label.getLocalBounds();
         btn.label.setOrigin(textBounds.left + textBounds.width / 2.f,
                             textBounds.top + textBounds.height / 2.f);
-        btn.label.setPosition(400.f, yPos);
+        btn.label.setPosition(xPos, startY);
 
         btn.hovered = false;
         m_buttons.push_back(btn);
@@ -142,9 +170,11 @@ void MainMenuState::update(float dt) {
     // Cập nhật đám mây bay
     for (auto& cloud : m_clouds) {
         cloud.shape.move(cloud.speed * dt, 0.f);
+        if (m_cloudLoaded) cloud.sprite.move(cloud.speed * dt, 0.f);
         // Nếu bay ra khỏi bên phải, quay lại bên trái
         if (cloud.shape.getPosition().x > 820.f) {
             cloud.shape.setPosition(-cloud.shape.getSize().x, cloud.shape.getPosition().y);
+            if (m_cloudLoaded) cloud.sprite.setPosition(-cloud.shape.getSize().x, cloud.shape.getPosition().y);
         }
     }
 
@@ -166,13 +196,18 @@ void MainMenuState::update(float dt) {
 }
 
 void MainMenuState::draw(sf::RenderWindow& window) {
-    // Vẽ nền gradient
-    window.draw(m_bgTop);
-    window.draw(m_bgBottom);
+    // Vẽ nền
+    if (m_menuBgLoaded) {
+        window.draw(m_menuBgSprite);
+    } else {
+        window.draw(m_bgTop);
+        window.draw(m_bgBottom);
+    }
 
     // Vẽ đám mây
     for (auto& cloud : m_clouds) {
-        window.draw(cloud.shape);
+        if (m_cloudLoaded) window.draw(cloud.sprite);
+        else window.draw(cloud.shape);
     }
 
     // Vẽ tiêu đề và phụ đề

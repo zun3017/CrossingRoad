@@ -14,6 +14,11 @@ Lilypad::Lilypad(float x, float y, float speed, int direction)
     // Viền xanh đậm hơn
     m_fallbackShape.setOutlineThickness(2.f);
     m_fallbackShape.setOutlineColor(sf::Color(0, 80, 0));
+    
+    if (loadTexture("assets/textures/log.png")) {
+        auto texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setScale(LILYPAD_WIDTH / texSize.x, LILYPAD_HEIGHT / texSize.y);
+    }
 }
 
 void Lilypad::update(float dt) {

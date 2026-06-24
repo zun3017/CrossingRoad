@@ -15,6 +15,7 @@ River::River(float posY, float lilypadSpeed, int direction)
 {
     // Nền xanh dương cho sông
     m_background.setFillColor(sf::Color(30, 100, 200));
+    loadTexture("assets/textures/river.png");
 
     // Khoảng cách spawn ngẫu nhiên
     std::uniform_real_distribution<float> intervalDist(1.5f, 3.5f);

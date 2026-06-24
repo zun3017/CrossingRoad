@@ -8,6 +8,7 @@
 // Cấu trúc đám mây trang trí nền
 struct Cloud {
     sf::RectangleShape shape;
+    sf::Sprite sprite;
     float speed;
 };
 
@@ -30,6 +31,13 @@ public:
 private:
     sf::Font m_font;
     bool m_fontLoaded = false;
+    
+    sf::Texture m_cloudTexture;
+    bool m_cloudLoaded = false;
+    
+    sf::Texture m_menuBgTexture;
+    sf::Sprite m_menuBgSprite;
+    bool m_menuBgLoaded = false;
 
     // Background gradient
     sf::RectangleShape m_bgTop;

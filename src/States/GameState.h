@@ -55,9 +55,30 @@ public:
     
     void loadGame(const std::string& sessionName, const SaveData& data);
 
-private:
     sf::Font m_font;
     bool m_fontLoaded = false;
+    
+    // Đồ hoạ thật
+    bool m_texturesLoaded = false;
+    sf::Sprite m_playerSprite;
+    sf::Sprite m_grassSprite;
+    sf::Sprite m_roadSprite;
+    sf::Sprite m_riverSprite;
+    sf::Sprite m_logSprite;
+    sf::Sprite m_carBlueSprite;
+    sf::Sprite m_carRedSprite;
+    sf::Sprite m_carYellowSprite;
+    sf::Texture m_itemTexture;
+    sf::Sprite m_itemSprite;
+    
+    sf::Texture m_hitByCarTexture;
+    bool m_hitByCarLoaded = false;
+    
+    // UI Game Over Animation
+    int m_playerAnimRow = 0;   // 0: Lên, 1: Xuống, 2: Phải, 3: Trái
+    int m_playerAnimFrame = 0; // 0, 1, 2, 3
+    bool m_isPlayerAnimating = false;
+    float m_playerAnimTimer = 0.f;
 
     // Player
     sf::RectangleShape m_playerShape;
@@ -141,7 +162,7 @@ private:
     void createExactRow(const SavedTerrainRow& savedRow);
     void updateObstacles(float dt);
     void updateLilyPads(float dt);
-    void checkCollisions();
+    void checkCollisions(float dt);
     void checkWinCondition();
     void movePlayer(float dx, float dy);
     void resetForNextLevel();

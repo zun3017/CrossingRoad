@@ -1,4 +1,6 @@
 #include "Terrain.h"
+#include "../Core/ResourceManager.h"
+#include <iostream>
 
 Terrain::Terrain(float posY, float width, float height)
     : m_posY(posY)
@@ -15,6 +17,27 @@ sf::FloatRect Terrain::getBounds() const {
     return sf::FloatRect(0.f, m_posY, m_width, m_height);
 }
 
+bool Terrain::loadTexture(const std::string& path) {
+    try {
+        auto& tex = ResourceManager<sf::Texture>::getInstance().get(path);
+        if (tex.getSize().x > 0) {
+            m_sprite.setTexture(tex);
+            // Scale sprite to fit the width and height
+            m_sprite.setScale(m_width / tex.getSize().x, m_height / tex.getSize().y);
+            m_sprite.setPosition(0.f, m_posY);
+            m_hasTexture = true;
+            return true;
+        }
+    } catch (...) {}
+    
+    m_hasTexture = false;
+    return false;
+}
+
 void Terrain::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    target.draw(m_background, states);
+    if (m_hasTexture) {
+        target.draw(m_sprite, states);
+    } else {
+        target.draw(m_background, states);
+    }
 }

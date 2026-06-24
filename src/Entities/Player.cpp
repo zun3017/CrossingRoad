@@ -17,6 +17,13 @@ Player::Player(CharacterType type)
     }
 
     setupFallback();
+    
+    // Load hình ảnh
+    if (loadTexture("assets/textures/player.png")) {
+        // Player scale
+        auto texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setScale(PLAYER_SIZE / texSize.x, PLAYER_SIZE / texSize.y);
+    }
 
     // Vị trí khởi đầu: giữa dưới màn hình, căn vào lưới
     // Tính ô giữa theo chiều ngang

@@ -20,6 +20,9 @@ public:
 
     // Lấy hình chữ nhật bao quanh toàn bộ hàng
     sf::FloatRect getBounds() const;
+    
+    // Tải hình ảnh nền (tuỳ chọn)
+    bool loadTexture(const std::string& path);
 
 protected:
     // Vẽ nền hàng
@@ -29,4 +32,6 @@ protected:
     float m_width;   // Chiều rộng (800px)
     float m_height;  // Chiều cao (48px = 1 ô lưới)
     sf::RectangleShape m_background;  // Nền màu của hàng
+    sf::Sprite m_sprite;
+    bool m_hasTexture = false;
 };

@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "../Core/ResourceManager.h"
 #include <iostream>
 
 Entity::Entity()
@@ -11,13 +12,18 @@ Entity::Entity()
 }
 
 bool Entity::loadTexture(const std::string& path) {
-    if (m_texture.loadFromFile(path)) {
-        m_sprite.setTexture(m_texture);
-        m_usesFallback = false;
-        return true;
-    }
+    try {
+        auto& tex = ResourceManager<sf::Texture>::getInstance().get(path);
+        // Kiểm tra xem texture có tồn tại không (size > 0)
+        if (tex.getSize().x > 0) {
+            m_sprite.setTexture(tex);
+            m_usesFallback = false;
+            return true;
+        }
+    } catch (...) {}
+    
     // Không tìm thấy texture -> dùng hình dạng dự phòng
-    std::cerr << "[Entity] Khong the tai texture: " << path
+    std::cerr << "[Entity] Khong the tai texture hoac loi: " << path
               << " -> su dung hinh du phong.\n";
     m_usesFallback = true;
     return false;

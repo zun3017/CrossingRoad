@@ -19,6 +19,7 @@ Road::Road(float posY, float vehicleSpeed, int direction)
 {
     // Nền xám đậm cho đường
     m_background.setFillColor(sf::Color(60, 60, 60));
+    loadTexture("assets/textures/road.png");
 
     // Khoảng cách spawn ngẫu nhiên ban đầu
     std::uniform_real_distribution<float> intervalDist(1.5f, 3.5f);

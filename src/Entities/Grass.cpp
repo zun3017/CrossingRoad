@@ -13,6 +13,7 @@ Grass::Grass(float posY)
 {
     // Nền xanh lá cây
     m_background.setFillColor(sf::Color(34, 139, 34));
+    loadTexture("assets/textures/grass.png");
 }
 
 void Grass::update(float dt) {

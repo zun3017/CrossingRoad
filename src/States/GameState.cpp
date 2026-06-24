@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "GameState.h"
 #include "MainMenuState.h"
+#include "../Core/ResourceManager.h"
 #include "../Core/Game.h"
 #include "../Managers/SaveManager.h"
 #include <iostream>
@@ -26,6 +27,47 @@ GameState::GameState(int level, int score)
 void GameState::init() {
     std::srand(static_cast<unsigned>(std::time(nullptr)));
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
+
+    try {
+        auto& tPlayer = ResourceManager<sf::Texture>::getInstance().get("assets/textures/player.png");
+        auto& tGrass = ResourceManager<sf::Texture>::getInstance().get("assets/textures/grass.png");
+        auto& tRoad = ResourceManager<sf::Texture>::getInstance().get("assets/textures/road.png");
+        auto& tRiver = ResourceManager<sf::Texture>::getInstance().get("assets/textures/river.png");
+        auto& tLog = ResourceManager<sf::Texture>::getInstance().get("assets/textures/log.png");
+        auto& tCarBlue = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_blue.png");
+        auto& tCarRed = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_red.png");
+        auto& tCarYellow = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_yellow.png");
+        auto& tItem = ResourceManager<sf::Texture>::getInstance().get("assets/textures/item.png");
+        
+        if (tPlayer.getSize().x > 0) {
+            m_playerSprite.setTexture(tPlayer);
+            int frameW = tPlayer.getSize().x / 4;
+            int frameH = tPlayer.getSize().y / 4;
+            m_playerSprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
+            m_playerSprite.setScale(m_playerSize / frameW, m_playerSize / frameH);
+            
+            m_grassSprite.setTexture(tGrass);
+            m_grassSprite.setScale(800.f / tGrass.getSize().x, m_cellSize / tGrass.getSize().y);
+            
+            m_roadSprite.setTexture(tRoad);
+            m_roadSprite.setScale(800.f / tRoad.getSize().x, m_cellSize / tRoad.getSize().y);
+            
+            m_riverSprite.setTexture(tRiver);
+            m_riverSprite.setScale(800.f / tRiver.getSize().x, m_cellSize / tRiver.getSize().y);
+            
+            m_logSprite.setTexture(tLog);
+            m_logSprite.setScale(56.f / tLog.getSize().x, 40.f / tLog.getSize().y);
+            
+            if (tCarBlue.getSize().x > 0) m_carBlueSprite.setTexture(tCarBlue);
+            if (tCarRed.getSize().x > 0) m_carRedSprite.setTexture(tCarRed);
+            if (tCarYellow.getSize().x > 0) m_carYellowSprite.setTexture(tCarYellow);
+            if (tItem.getSize().x > 0) m_itemSprite.setTexture(tItem);
+            
+            m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+            
+            m_texturesLoaded = true;
+        }
+    } catch (...) {}
 
     if (!m_isLoadedGame) {
         initPlayer();
@@ -106,9 +148,9 @@ void GameState::createGrassRow(float y, bool safeZone) {
     if (!safeZone && std::rand() % 100 < 30) {
         Item item;
         float itemX = static_cast<float>(50 + std::rand() % 700);
-        item.shape.setRadius(8.f);
+        item.shape.setRadius(14.f); // To hơn để dễ nhìn (bán kính 14 -> đường kính 28)
         item.shape.setFillColor(sf::Color(255, 215, 0)); // Vàng gold
-        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 8.f);
+        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
         item.collected = false;
         item.points = 10 + (m_level - 1) * 5;
         row.items.push_back(item);
@@ -132,17 +174,17 @@ void GameState::createRoadRow(float y) {
     // Vẽ vạch kẻ đường (trang trí, lưu vào obstacles sẽ phức tạp quá)
     // Tạo 2-4 xe ngẫu nhiên trên mỗi hàng đường
     int numVehicles = 2 + std::rand() % 3;
-    bool movingRight = (std::rand() % 2 == 0);
+    bool movingRight = false; // Luôn chạy từ phải sang trái
     float baseSpeed = 80.f + static_cast<float>(m_level * 15 + std::rand() % 40);
 
     for (int v = 0; v < numVehicles; v++) {
         Obstacle obs;
-        float vehicleWidth = 50.f + static_cast<float>(std::rand() % 40);
-        float vehicleHeight = m_cellSize - 10.f;
+        float vehicleWidth = 80.f + static_cast<float>(std::rand() % 40); // To hơn
+        float vehicleHeight = m_cellSize - 4.f; // Gần bằng chiều cao làn đường (44px)
 
         obs.shape.setSize(sf::Vector2f(vehicleWidth, vehicleHeight));
         float startX = static_cast<float>(v * 200 + std::rand() % 100);
-        obs.shape.setPosition(startX, y + 5.f);
+        obs.shape.setPosition(startX, y + 2.f); // Căn giữa làn đường
 
         // Màu ngẫu nhiên cho xe
         sf::Color vehicleColors[] = {
@@ -461,6 +503,19 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 // Di chuyển người chơi với kiểm tra giới hạn màn hình
 // ============================================================
 void GameState::movePlayer(float dx, float dy) {
+    // Không cho phép đi ngang khi đang trên khúc gỗ (sông)
+    if (dx != 0.f) {
+        for (auto& row : m_terrains) {
+            if (row.type == TerrainType::River) {
+                sf::FloatRect rowBounds = row.background.getGlobalBounds();
+                float playerCenterY = m_playerPos.y + m_playerSize / 2.f;
+                if (playerCenterY > rowBounds.top && playerCenterY < rowBounds.top + rowBounds.height) {
+                    return; // Chặn di chuyển trái phải
+                }
+            }
+        }
+    }
+
     sf::Vector2f newPos = m_playerPos + sf::Vector2f(dx, dy);
 
     // Giới hạn trong màn hình
@@ -471,6 +526,25 @@ void GameState::movePlayer(float dx, float dy) {
 
     m_playerPos = newPos;
     m_playerShape.setPosition(m_playerPos);
+    
+    // Cập nhật hoạt ảnh (Animation)
+    if (m_texturesLoaded) {
+        if (dy < 0.f) m_playerAnimRow = 0;      // Lên
+        else if (dy > 0.f) m_playerAnimRow = 1; // Xuống
+        else if (dx > 0.f) m_playerAnimRow = 2; // Phải
+        else if (dx < 0.f) m_playerAnimRow = 3; // Trái
+
+        m_isPlayerAnimating = true;
+        m_playerAnimTimer = 0.f;
+        m_playerAnimFrame = 1; // Bắt đầu ở khung thứ 1 (khung 0 là đứng yên)
+        
+        auto tex = m_playerSprite.getTexture();
+        if (tex) {
+            int frameW = tex->getSize().x / 4;
+            int frameH = tex->getSize().y / 4;
+            m_playerSprite.setTextureRect(sf::IntRect(m_playerAnimFrame * frameW, m_playerAnimRow * frameH, frameW, frameH));
+        }
+    }
 
     // Tăng điểm khi tiến lên (chỉ thưởng nếu đi lên cao hơn mức cao nhất từng đạt được)
     if (m_playerPos.y < m_maxPlayerY) {
@@ -521,8 +595,29 @@ void GameState::update(float dt) {
 
     updateObstacles(dt);
     updateLilyPads(dt);
-    checkCollisions();
+    checkCollisions(dt);
     checkWinCondition();
+    
+    // Cập nhật hoạt ảnh người chơi
+    if (m_isPlayerAnimating && !m_playerDead) {
+        m_playerAnimTimer += dt;
+        if (m_playerAnimTimer >= 0.05f) { // Chuyển frame mỗi 0.05 giây
+            m_playerAnimTimer = 0.f;
+            m_playerAnimFrame++;
+            
+            if (m_playerAnimFrame >= 4) {
+                m_playerAnimFrame = 0; // Quay về đứng yên
+                m_isPlayerAnimating = false; // Kết thúc hoạt ảnh
+            }
+            
+            auto tex = m_playerSprite.getTexture();
+            if (tex) {
+                int frameW = tex->getSize().x / 4;
+                int frameH = tex->getSize().y / 4;
+                m_playerSprite.setTextureRect(sf::IntRect(m_playerAnimFrame * frameW, m_playerAnimRow * frameH, frameW, frameH));
+            }
+        }
+    }
 
     // Cập nhật HUD
     m_levelText.setString("Level: " + std::to_string(m_level));
@@ -578,7 +673,7 @@ void GameState::updateLilyPads(float dt) {
 // ============================================================
 // Kiểm tra va chạm giữa người chơi và các vật thể
 // ============================================================
-void GameState::checkCollisions() {
+void GameState::checkCollisions(float dt) {
     sf::FloatRect playerBounds = m_playerShape.getGlobalBounds();
     // Thu nhỏ hitbox để gameplay fair hơn
     sf::FloatRect playerHitbox(
@@ -590,7 +685,14 @@ void GameState::checkCollisions() {
         // Kiểm tra va chạm xe cộ
         if (row.type == TerrainType::Road) {
             for (auto& obs : row.obstacles) {
-                if (playerHitbox.intersects(obs.shape.getGlobalBounds())) {
+                // Thu nhỏ hitbox của xe cộ vì hình ảnh png có thể có viền trong suốt
+                sf::FloatRect carHitbox = obs.shape.getGlobalBounds();
+                carHitbox.left += 15.f; // Cắt viền trái
+                carHitbox.width -= 30.f; // Cắt viền phải
+                carHitbox.top += 8.f; // Cắt viền trên
+                carHitbox.height -= 16.f; // Cắt viền dưới
+
+                if (playerHitbox.intersects(carHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
                         m_deathTimer = 0.f;
@@ -598,6 +700,17 @@ void GameState::checkCollisions() {
                         if (!m_currentSaveSession.empty()) {
                             SaveManager::deleteGame(m_currentSaveSession);
                             m_currentSaveSession = "";
+                        }
+                        
+                        if (m_hitByCarLoaded) {
+                            m_playerSprite.setTexture(m_hitByCarTexture, true);
+                            auto texSize = m_hitByCarTexture.getSize();
+                            // Không thiết lập TextureRect nếu sprite là nguyên bản
+                            m_playerSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+                            // Thiết lập tỉ lệ sao cho to hơn 1 chút
+                            m_playerSprite.setScale(m_playerSize * 1.5f / texSize.x, m_playerSize * 1.5f / texSize.y);
+                            // Điều chỉnh lại vị trí cho khớp tâm
+                            m_playerSprite.move(-m_playerSize * 0.25f, -m_playerSize * 0.25f);
                         }
                     }
                     m_playerShape.setFillColor(sf::Color::Red);
@@ -616,8 +729,8 @@ void GameState::checkCollisions() {
                 for (auto& pad : row.lilyPads) {
                     if (playerHitbox.intersects(pad.shape.getGlobalBounds())) {
                         onPad = true;
-                        // Di chuyển theo lá sen
-                        float padMove = pad.speed * (1.f / 60.f) * (pad.movingRight ? 1.f : -1.f);
+                        // Di chuyển theo lá sen đồng bộ với dt
+                        float padMove = pad.speed * dt * (pad.movingRight ? 1.f : -1.f);
                         m_playerPos.x += padMove;
                         m_playerShape.setPosition(m_playerPos);
 
@@ -694,10 +807,16 @@ void GameState::draw(sf::RenderWindow& window) {
 
     // Vẽ các hàng địa hình
     for (auto& row : m_terrains) {
-        window.draw(row.background);
+        if (m_texturesLoaded) {
+            if (row.type == TerrainType::Grass) { m_grassSprite.setPosition(0, row.yPosition); window.draw(m_grassSprite); }
+            else if (row.type == TerrainType::Road) { m_roadSprite.setPosition(0, row.yPosition); window.draw(m_roadSprite); }
+            else if (row.type == TerrainType::River) { m_riverSprite.setPosition(0, row.yPosition); window.draw(m_riverSprite); }
+        } else {
+            window.draw(row.background);
+        }
 
-        // Vẽ vạch kẻ đường cho hàng đường
-        if (row.type == TerrainType::Road) {
+        // Vẽ vạch kẻ đường cho đường
+        if (row.type == TerrainType::Road && !m_texturesLoaded) {
             // Vạch kẻ giữa đường
             for (float x = 0.f; x < 800.f; x += 60.f) {
                 sf::RectangleShape dashLine(sf::Vector2f(30.f, 3.f));
@@ -708,7 +827,7 @@ void GameState::draw(sf::RenderWindow& window) {
         }
 
         // Vẽ sóng nước cho sông
-        if (row.type == TerrainType::River) {
+        if (row.type == TerrainType::River && !m_texturesLoaded) {
             for (float x = 10.f; x < 800.f; x += 40.f) {
                 sf::RectangleShape wave(sf::Vector2f(20.f, 2.f));
                 wave.setPosition(x, row.yPosition + m_cellSize / 2.f);
@@ -719,56 +838,97 @@ void GameState::draw(sf::RenderWindow& window) {
 
         // Vẽ xe cộ
         for (auto& obs : row.obstacles) {
-            window.draw(obs.shape);
-            // Vẽ cửa sổ xe (chi tiết nhỏ)
-            sf::RectangleShape carWindow(sf::Vector2f(10.f, 8.f));
-            carWindow.setFillColor(sf::Color(150, 200, 255, 180));
-            carWindow.setPosition(
-                obs.shape.getPosition().x + obs.shape.getSize().x / 2.f - 5.f,
-                obs.shape.getPosition().y + 5.f
-            );
-            window.draw(carWindow);
+            if (m_texturesLoaded) {
+                // Chọn ngẫu nhiên xe dựa trên tốc độ để ổn định
+                int carType = static_cast<int>(obs.speed) % 3;
+                sf::Sprite* carSprite = nullptr;
+                if (carType == 0 && m_carBlueSprite.getTexture()) carSprite = &m_carBlueSprite;
+                else if (carType == 1 && m_carRedSprite.getTexture()) carSprite = &m_carRedSprite;
+                else if (carType == 2 && m_carYellowSprite.getTexture()) carSprite = &m_carYellowSprite;
+                
+                if (!carSprite) {
+                    if (m_carBlueSprite.getTexture()) carSprite = &m_carBlueSprite;
+                    else if (m_carRedSprite.getTexture()) carSprite = &m_carRedSprite;
+                    else if (m_carYellowSprite.getTexture()) carSprite = &m_carYellowSprite;
+                }
+
+                if (carSprite) {
+                    auto texSize = carSprite->getTexture()->getSize();
+                    carSprite->setScale(obs.shape.getSize().x / texSize.x, obs.shape.getSize().y / texSize.y);
+                    carSprite->setPosition(obs.shape.getPosition());
+                    window.draw(*carSprite);
+                } else {
+                    window.draw(obs.shape);
+                }
+            } else {
+                window.draw(obs.shape);
+                // Vẽ cửa sổ xe (chi tiết nhỏ)
+                sf::RectangleShape carWindow(sf::Vector2f(10.f, 8.f));
+                carWindow.setFillColor(sf::Color(150, 200, 255, 180));
+                carWindow.setPosition(
+                    obs.shape.getPosition().x + obs.shape.getSize().x / 2.f - 5.f,
+                    obs.shape.getPosition().y + 5.f
+                );
+                window.draw(carWindow);
+            }
         }
 
         // Vẽ lá sen
         for (auto& pad : row.lilyPads) {
-            window.draw(pad.shape);
-            // Vẽ chi tiết trên lá sen
-            sf::CircleShape padDetail(5.f);
-            padDetail.setFillColor(sf::Color(0, 200, 0, 120));
-            padDetail.setPosition(
-                pad.shape.getPosition().x + pad.shape.getSize().x / 2.f - 5.f,
-                pad.shape.getPosition().y + pad.shape.getSize().y / 2.f - 5.f
-            );
-            window.draw(padDetail);
+            if (m_texturesLoaded) {
+                m_logSprite.setPosition(pad.shape.getPosition());
+                window.draw(m_logSprite);
+            } else {
+                window.draw(pad.shape);
+                // Vẽ chi tiết trên lá sen
+                sf::CircleShape padDetail(5.f);
+                padDetail.setFillColor(sf::Color(0, 200, 0, 120));
+                padDetail.setPosition(
+                    pad.shape.getPosition().x + pad.shape.getSize().x / 2.f - 5.f,
+                    pad.shape.getPosition().y + pad.shape.getSize().y / 2.f - 5.f
+                );
+                window.draw(padDetail);
+            }
         }
 
         // Vẽ items chưa thu thập
         for (auto& item : row.items) {
             if (!item.collected) {
-                window.draw(item.shape);
+                if (m_texturesLoaded && m_itemSprite.getTexture()) {
+                    auto texSize = m_itemSprite.getTexture()->getSize();
+                    float diam = item.shape.getRadius() * 2.f;
+                    m_itemSprite.setScale(diam / texSize.x, diam / texSize.y);
+                    m_itemSprite.setPosition(item.shape.getPosition());
+                    window.draw(m_itemSprite);
+                } else {
+                    window.draw(item.shape);
+                }
             }
         }
     }
 
     // Vẽ người chơi
-    window.draw(m_playerShape);
-
-    // Vẽ mắt cho nhân vật (chi tiết vui)
     if (!m_playerDead) {
-        sf::CircleShape eye(3.f);
-        eye.setFillColor(sf::Color::White);
-        eye.setPosition(m_playerPos.x + 8.f, m_playerPos.y + 8.f);
-        window.draw(eye);
-        eye.setPosition(m_playerPos.x + m_playerSize - 14.f, m_playerPos.y + 8.f);
-        window.draw(eye);
-
-        sf::CircleShape pupil(1.5f);
-        pupil.setFillColor(sf::Color::Black);
-        pupil.setPosition(m_playerPos.x + 9.5f, m_playerPos.y + 9.5f);
-        window.draw(pupil);
-        pupil.setPosition(m_playerPos.x + m_playerSize - 12.5f, m_playerPos.y + 9.5f);
-        window.draw(pupil);
+        if (m_texturesLoaded) {
+            m_playerSprite.setPosition(m_playerPos);
+            window.draw(m_playerSprite);
+        } else {
+            window.draw(m_playerShape);
+            // Vẽ mắt cho nhân vật
+            sf::CircleShape eye(3.f);
+            eye.setFillColor(sf::Color::White);
+            eye.setPosition(m_playerPos.x + 8.f, m_playerPos.y + 8.f);
+            window.draw(eye);
+            eye.setPosition(m_playerPos.x + m_playerSize - 14.f, m_playerPos.y + 8.f);
+            window.draw(eye);
+            
+            sf::CircleShape pupil(1.5f);
+            pupil.setFillColor(sf::Color::Black);
+            pupil.setPosition(m_playerPos.x + 9.5f, m_playerPos.y + 9.5f);
+            window.draw(pupil);
+            pupil.setPosition(m_playerPos.x + m_playerSize - 12.5f, m_playerPos.y + 9.5f);
+            window.draw(pupil);
+        }
     }
 
     // Vẽ HUD
