@@ -1,0 +1,151 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+#include <vector>
+#include <memory>
+#include <string>
+#include "../Core/State.h"
+#include "../UI/TextBox.h"
+#include "../UI/Button.h"
+#include "../Managers/SaveManager.h"
+
+// ============================================================
+// Terrain - Lớp cơ sở cho các hàng địa hình (Cỏ, Đường, Sông)
+// ============================================================
+enum class TerrainType { Grass, Road, River };
+
+struct Obstacle {
+    sf::RectangleShape shape;
+    float speed;
+    bool movingRight;
+};
+
+struct LilyPad {
+    sf::RectangleShape shape;
+    float speed;
+    bool movingRight;
+};
+
+struct Item {
+    sf::CircleShape shape;
+    bool collected = false;
+    int points = 10;
+};
+
+struct TerrainRow {
+    TerrainType type;
+    float yPosition;
+    sf::RectangleShape background;
+    std::vector<Obstacle> obstacles;   // Xe cộ trên đường
+    std::vector<LilyPad> lilyPads;     // Lá sen trên sông
+    std::vector<Item> items;           // Vật phẩm thu thập
+};
+
+struct SaveData;
+
+class GameState : public State {
+public:
+    GameState();
+    GameState(int level, int score); // Constructor cho load game
+
+    void init() override;
+    void handleInput(sf::RenderWindow& window, sf::Event& event) override;
+    void update(float dt) override;
+    void draw(sf::RenderWindow& window) override;
+    
+    void loadGame(const std::string& sessionName, const SaveData& data);
+
+private:
+    sf::Font m_font;
+    bool m_fontLoaded = false;
+
+    // Player
+    sf::RectangleShape m_playerShape;
+    sf::Vector2f m_playerPos;
+    float m_playerSize = 40.f;
+    bool m_playerDead = false;
+    float m_deathTimer = 0.f;
+    float m_maxPlayerY = 600.f; // theo dõi độ cao cao nhất đạt được để tính điểm
+
+    // Map terrain
+    std::vector<TerrainRow> m_terrains;
+    int m_totalRows = 13;
+    float m_cellSize = 48.f;
+
+    // Game stats
+    int m_level = 1;
+    int m_score = 0;
+
+    // HUD text
+    sf::Text m_levelText;
+    sf::Text m_scoreText;
+
+    // Game over overlay
+    sf::RectangleShape m_gameOverOverlay;
+    sf::Text m_gameOverText;
+    
+    // UI Game Over
+    enum class GameOverUIState { None, Delay, EnterName, ConfirmIdentity, ShowScore };
+    GameOverUIState m_goState = GameOverUIState::None;
+
+    enum class DeferredAction { None, Restart, Quit };
+    DeferredAction m_deferredAction = DeferredAction::None;
+
+    std::unique_ptr<TextBox> m_nameInput;
+    std::unique_ptr<Button> m_btnOk;
+    std::unique_ptr<Button> m_playAgainBtn;
+    std::unique_ptr<Button> m_menuBtn;
+    
+    sf::Text m_confirmText;
+    std::unique_ptr<Button> m_btnYes;
+    std::unique_ptr<Button> m_btnNo;
+
+    sf::RectangleShape m_scoreBoard;
+    sf::RectangleShape m_enterNameBoard;
+    sf::Text m_rankText;
+    sf::Text m_enterNameText;
+    int m_finalRank = 0;
+    bool m_scoreSaved = false;
+    
+    std::function<void()> m_submitNameFunc;
+
+    // Pause overlay
+    bool m_paused = false;
+    sf::RectangleShape m_pauseOverlay;
+    sf::Text m_pauseText;
+    sf::Text m_pauseInstruction;
+    
+    // Save Game UI
+    enum class PauseUIState { Main, EnterSaveName };
+    PauseUIState m_pauseUIState = PauseUIState::Main;
+    std::unique_ptr<TextBox> m_saveNameInput;
+    bool m_ignoreNextText = false;
+    std::unique_ptr<Button> m_btnSaveOk;
+    sf::RectangleShape m_saveNameBoard;
+    sf::Text m_saveNamePrompt;
+    
+    float m_totalPlaytime = 0.f;
+    std::string m_currentSaveSession = "";
+    bool m_isLoadedGame = false;
+    void saveCurrentGameState(const std::string& sessionName);
+    
+    // Nút tạm
+    std::unique_ptr<Button> m_testBtn;
+
+    // Phương thức nội bộ
+    void initPlayer();
+    void generateMap();
+    void createGrassRow(float y, bool safeZone = false);
+    void createRoadRow(float y);
+    void createRiverRow(float y);
+    void createExactRow(const SavedTerrainRow& savedRow);
+    void updateObstacles(float dt);
+    void updateLilyPads(float dt);
+    void checkCollisions();
+    void checkWinCondition();
+    void movePlayer(float dx, float dy);
+    void resetForNextLevel();
+    void initHUD();
+    void initOverlays();
+    void setupGameOverUI();
+};
