@@ -19,6 +19,9 @@ Game::Game()
     // Giới hạn FPS
     m_window.setFramerateLimit(FRAME_RATE);
 
+    // Tắt tính năng lặp phím khi giữ phím (chống lỗi nhân vật chạy quá nhanh dẫn đến chết đột ngột)
+    m_window.setKeyRepeatEnabled(false);
+
     // Đặt icon cửa sổ (nếu có) - bỏ qua nếu file không tồn tại
     // sf::Image icon;
     // if (icon.loadFromFile("assets/icon.png")) {

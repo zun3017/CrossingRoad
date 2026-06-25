@@ -12,7 +12,23 @@
 // ============================================================
 // Terrain - Lớp cơ sở cho các hàng địa hình (Cỏ, Đường, Sông)
 // ============================================================
-enum class TerrainType { Grass, Road, River };
+enum class TerrainType { Grass, Road, River, Railway };
+
+enum class LightState { Green, Blinking, Red };
+
+struct TrafficLightData {
+    LightState state = LightState::Green;
+    float timer = 0.f;
+    float animTimer = 0.f;
+    int frameIndex = 0;
+};
+
+struct TrainData {
+    sf::RectangleShape shape;
+    float speed = 0.f;
+    bool movingRight = true;
+    bool isActive = false;
+};
 
 struct Obstacle {
     sf::RectangleShape shape;
@@ -39,6 +55,8 @@ struct TerrainRow {
     std::vector<Obstacle> obstacles;   // Xe cộ trên đường
     std::vector<LilyPad> lilyPads;     // Lá sen trên sông
     std::vector<Item> items;           // Vật phẩm thu thập
+    TrafficLightData trafficLight;     // Đèn giao thông (cho đường ray)
+    TrainData train;                   // Tàu hoả (cho đường ray)
 };
 
 struct SaveData;
@@ -60,6 +78,10 @@ public:
     
     // Đồ hoạ thật
     bool m_texturesLoaded = false;
+    
+    // Flag for drowning
+    bool m_playerDrowned = false;
+
     sf::Sprite m_playerSprite;
     sf::Sprite m_grassSprite;
     sf::Sprite m_roadSprite;
@@ -68,6 +90,11 @@ public:
     sf::Sprite m_carBlueSprite;
     sf::Sprite m_carRedSprite;
     sf::Sprite m_carYellowSprite;
+    sf::Sprite m_trackSprite;
+    sf::Sprite m_trainSprite;
+    sf::Sprite m_lightGreenSprite;
+    sf::Sprite m_lightRedSprite;
+    sf::Sprite m_lightBlinkSprite;
     sf::Texture m_itemTexture;
     sf::Sprite m_itemSprite;
     
@@ -86,6 +113,7 @@ public:
     float m_playerSize = 40.f;
     bool m_playerDead = false;
     float m_deathTimer = 0.f;
+    float m_moveCooldownTimer = 0.f; // Thời gian chờ giữa 2 lần di chuyển
     float m_maxPlayerY = 600.f; // theo dõi độ cao cao nhất đạt được để tính điểm
 
     // Map terrain
@@ -159,9 +187,11 @@ public:
     void createGrassRow(float y, bool safeZone = false);
     void createRoadRow(float y);
     void createRiverRow(float y);
+    void createRailwayRow(float y);
     void createExactRow(const SavedTerrainRow& savedRow);
     void updateObstacles(float dt);
     void updateLilyPads(float dt);
+    void updateRailway(float dt);
     void checkCollisions(float dt);
     void checkWinCondition();
     void movePlayer(float dx, float dy);

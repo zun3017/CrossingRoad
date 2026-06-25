@@ -38,6 +38,11 @@ void GameState::init() {
         auto& tCarRed = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_red.png");
         auto& tCarYellow = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_yellow.png");
         auto& tItem = ResourceManager<sf::Texture>::getInstance().get("assets/textures/item.png");
+        auto& tTrack = ResourceManager<sf::Texture>::getInstance().get("assets/textures/track.png");
+        auto& tTrain = ResourceManager<sf::Texture>::getInstance().get("assets/textures/train.png");
+        auto& tLightGreen = ResourceManager<sf::Texture>::getInstance().get("assets/textures/light_green.png");
+        auto& tLightRed = ResourceManager<sf::Texture>::getInstance().get("assets/textures/light_red.png");
+        auto& tLightBlink = ResourceManager<sf::Texture>::getInstance().get("assets/textures/light_blink.png");
         
         if (tPlayer.getSize().x > 0) {
             m_playerSprite.setTexture(tPlayer);
@@ -63,6 +68,12 @@ void GameState::init() {
             if (tCarYellow.getSize().x > 0) m_carYellowSprite.setTexture(tCarYellow);
             if (tItem.getSize().x > 0) m_itemSprite.setTexture(tItem);
             
+            if (tTrack.getSize().x > 0) m_trackSprite.setTexture(tTrack);
+            if (tTrain.getSize().x > 0) m_trainSprite.setTexture(tTrain);
+            if (tLightGreen.getSize().x > 0) m_lightGreenSprite.setTexture(tLightGreen);
+            if (tLightRed.getSize().x > 0) m_lightRedSprite.setTexture(tLightRed);
+            if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
+            
             m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
             
             m_texturesLoaded = true;
@@ -85,6 +96,12 @@ void GameState::initPlayer() {
     m_playerShape.setFillColor(sf::Color(0, 200, 0)); // Màu xanh lá
     m_playerShape.setOutlineColor(sf::Color::White);
     m_playerShape.setOutlineThickness(2.f);
+
+    m_playerDrowned = false;
+    m_playerSprite.setColor(sf::Color::White); // Reset màu sắc nếu có thay đổi từ màn trước
+
+    m_playerDead = false;
+    m_deathTimer = 0.f;
 
     // Vị trí khởi đầu: giữa dưới cùng
     m_playerPos = sf::Vector2f(400.f - m_playerSize / 2.f,
@@ -113,6 +130,9 @@ void GameState::initPlayer() {
             m_playerSprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
             m_playerSprite.setScale(m_playerSize / frameW, m_playerSize / frameH);
             m_playerSprite.setColor(sf::Color::White);
+            m_playerSprite.setOrigin(0.f, 0.f); // Reset origin
+            
+            m_playerDrowned = false; // Reset drowned flag
             
             // Khôi phục animation
             m_playerAnimRow = 0;
@@ -140,10 +160,12 @@ void GameState::generateMap() {
         if (i == m_totalRows - 1) {
             // Hàng trên cùng luôn là cỏ (vùng đích)
             createGrassRow(y, true);
-        } else if (terrainRoll < 40) {
+        } else if (terrainRoll < 30) {
             createRoadRow(y);
-        } else if (terrainRoll < 65) {
+        } else if (terrainRoll < 60) {
             createRiverRow(y);
+        } else if (terrainRoll < 80) {
+            createRailwayRow(y);
         } else {
             createGrassRow(y, false);
         }
@@ -259,6 +281,35 @@ void GameState::createRiverRow(float y) {
 
         row.lilyPads.push_back(pad);
     }
+
+    m_terrains.push_back(row);
+}
+
+// ============================================================
+// Tạo hàng đường ray và tàu hoả
+// ============================================================
+void GameState::createRailwayRow(float y) {
+    TerrainRow row;
+    row.type = TerrainType::Railway;
+    row.yPosition = y;
+
+    row.background.setSize(sf::Vector2f(800.f, m_cellSize));
+    row.background.setPosition(0.f, y);
+    row.background.setFillColor(sf::Color(70, 50, 30)); // Nền sỏi đường ray
+
+    // Khởi tạo đèn giao thông
+    row.trafficLight.state = LightState::Green;
+    row.trafficLight.timer = 3.f + static_cast<float>(std::rand() % 3); // 3-5s đèn xanh
+
+    // Khởi tạo tàu hoả
+    row.train.movingRight = false; // Luôn chạy từ phải sang trái vì đầu tàu hướng sang trái
+    row.train.speed = 1200.f; // Tàu chạy cực nhanh
+    row.train.isActive = false;
+
+    float trainWidth = 800.f; // Tàu dài bằng màn hình
+    float trainHeight = m_cellSize;
+    row.train.shape.setSize(sf::Vector2f(trainWidth, trainHeight));
+    row.train.shape.setPosition(800.f + 100.f, y);
 
     m_terrains.push_back(row);
 }
@@ -521,6 +572,9 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 // Di chuyển người chơi với kiểm tra giới hạn màn hình
 // ============================================================
 void GameState::movePlayer(float dx, float dy) {
+    if (m_moveCooldownTimer > 0.f) return;
+    m_moveCooldownTimer = 0.15f; // Thời gian chờ giữa các lần di chuyển là 0.15s (ngăn spam)
+
     // Không cho phép đi ngang khi đang trên khúc gỗ (sông)
     if (dx != 0.f) {
         for (auto& row : m_terrains) {
@@ -575,6 +629,8 @@ void GameState::movePlayer(float dx, float dy) {
 // Cập nhật trạng thái trò chơi (chạy mỗi frame)
 // ============================================================
 void GameState::update(float dt) {
+    if (m_moveCooldownTimer > 0.f) m_moveCooldownTimer -= dt;
+
     if (!m_paused && !m_playerDead) {
         m_totalPlaytime += dt;
     }
@@ -613,6 +669,7 @@ void GameState::update(float dt) {
 
     updateObstacles(dt);
     updateLilyPads(dt);
+    updateRailway(dt);
     checkCollisions(dt);
     checkWinCondition();
     
@@ -689,14 +746,73 @@ void GameState::updateLilyPads(float dt) {
 }
 
 // ============================================================
+// Cập nhật tín hiệu đèn giao thông và tàu hoả
+// ============================================================
+void GameState::updateRailway(float dt) {
+    for (auto& row : m_terrains) {
+        if (row.type != TerrainType::Railway) continue;
+
+        // Cập nhật hoạt ảnh đèn giao thông
+        row.trafficLight.animTimer += dt;
+        if (row.trafficLight.animTimer >= 0.15f) { // Chuyển frame mỗi 0.15s
+            row.trafficLight.animTimer = 0.f;
+            row.trafficLight.frameIndex++;
+        }
+
+        row.trafficLight.timer -= dt;
+
+        if (row.trafficLight.state == LightState::Green) {
+            if (row.trafficLight.timer <= 0.f) {
+                row.trafficLight.state = LightState::Blinking;
+                row.trafficLight.timer = 2.f; // 2 giây nhấp nháy
+            }
+        } else if (row.trafficLight.state == LightState::Blinking) {
+            if (row.trafficLight.timer <= 0.f) {
+                row.trafficLight.state = LightState::Red;
+                row.train.isActive = true;
+                
+                // Cập nhật lại chiều rộng hitbox tàu cho khớp với ảnh mới
+                if (m_texturesLoaded && m_trainSprite.getTexture()) {
+                    auto texSize = m_trainSprite.getTexture()->getSize();
+                    float scale = 96.f / texSize.y; // Tàu cao 2 ô
+                    row.train.shape.setSize(sf::Vector2f(texSize.x * scale, m_cellSize));
+                }
+
+                // Đặt lại vị trí tàu (chỉ đi từ phải qua trái)
+                row.train.shape.setPosition(800.f + 100.f, row.yPosition);
+            }
+        } else if (row.trafficLight.state == LightState::Red) {
+            if (row.train.isActive) {
+                float moveX = row.train.speed * dt * (row.train.movingRight ? 1.f : -1.f);
+                row.train.shape.move(moveX, 0.f);
+
+                sf::Vector2f pos = row.train.shape.getPosition();
+                float w = row.train.shape.getSize().x;
+                
+                // Kiểm tra tàu đi qua hết màn hình
+                if (row.train.movingRight && pos.x > 800.f) {
+                    row.train.isActive = false;
+                } else if (!row.train.movingRight && pos.x + w < 0.f) {
+                    row.train.isActive = false;
+                }
+            } else {
+                // Tàu đã chạy xong, trở về đèn xanh
+                row.trafficLight.state = LightState::Green;
+                row.trafficLight.timer = 3.f + static_cast<float>(std::rand() % 4);
+            }
+        }
+    }
+}
+
+// ============================================================
 // Kiểm tra va chạm giữa người chơi và các vật thể
 // ============================================================
 void GameState::checkCollisions(float dt) {
     sf::FloatRect playerBounds = m_playerShape.getGlobalBounds();
     // Thu nhỏ hitbox để gameplay fair hơn
     sf::FloatRect playerHitbox(
-        playerBounds.left + 4.f, playerBounds.top + 4.f,
-        playerBounds.width - 8.f, playerBounds.height - 8.f
+        playerBounds.left + 4.f, playerBounds.top + 10.f, // Cắt viền trên nhiều hơn để tránh chạm nhầm hàng địa hình phía trên
+        playerBounds.width - 8.f, playerBounds.height - 16.f // Cắt viền dưới để hitbox nằm lọt thỏm trong 1 ô
     );
 
     for (auto& row : m_terrains) {
@@ -727,8 +843,42 @@ void GameState::checkCollisions(float dt) {
                             m_playerSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
                             // Thiết lập tỉ lệ sao cho to hơn 1 chút
                             m_playerSprite.setScale(m_playerSize * 1.5f / texSize.x, m_playerSize * 1.5f / texSize.y);
-                            // Điều chỉnh lại vị trí cho khớp tâm
-                            m_playerSprite.move(-m_playerSize * 0.25f, -m_playerSize * 0.25f);
+                            // Điều chỉnh lại origin cho khớp tâm
+                            m_playerSprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
+                        }
+                    }
+                    m_playerShape.setFillColor(sf::Color::Red);
+                    return;
+                }
+            }
+        }
+
+        // Kiểm tra va chạm tàu hoả
+        if (row.type == TerrainType::Railway) {
+            if (row.train.isActive) {
+                sf::FloatRect trainHitbox = row.train.shape.getGlobalBounds();
+                trainHitbox.top += 8.f;
+                trainHitbox.height -= 16.f;
+
+                if (playerHitbox.intersects(trainHitbox)) {
+                    if (!m_playerDead) {
+                        m_playerDead = true;
+                        m_deathTimer = 0.f;
+                        m_goState = GameOverUIState::Delay;
+                        if (!m_currentSaveSession.empty()) {
+                            SaveManager::deleteGame(m_currentSaveSession);
+                            m_currentSaveSession = "";
+                        }
+                        
+                        if (m_hitByCarLoaded) {
+                            m_playerSprite.setTexture(m_hitByCarTexture, true);
+                            auto texSize = m_hitByCarTexture.getSize();
+                            // Không thiết lập TextureRect nếu sprite là nguyên bản
+                            m_playerSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+                            // Thiết lập tỉ lệ sao cho to hơn 1 chút
+                            m_playerSprite.setScale(m_playerSize * 1.5f / texSize.x, m_playerSize * 1.5f / texSize.y);
+                            // Điều chỉnh lại origin cho khớp tâm
+                            m_playerSprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
                         }
                     }
                     m_playerShape.setFillColor(sf::Color::Red);
@@ -740,9 +890,8 @@ void GameState::checkCollisions(float dt) {
         // Kiểm tra sông: phải đứng trên lá sen
         if (row.type == TerrainType::River) {
             sf::FloatRect rowBounds = row.background.getGlobalBounds();
-            // Kiểm tra nếu người chơi đang ở trên hàng sông này
-            float playerCenterY = m_playerPos.y + m_playerSize / 2.f;
-            if (playerCenterY > rowBounds.top && playerCenterY < rowBounds.top + rowBounds.height) {
+            // Sử dụng intersects với playerHitbox để tránh sai số vị trí y
+            if (playerHitbox.intersects(rowBounds)) {
                 bool onPad = false;
                 for (auto& pad : row.lilyPads) {
                     if (playerHitbox.intersects(pad.shape.getGlobalBounds())) {
@@ -779,9 +928,11 @@ void GameState::checkCollisions(float dt) {
                             SaveManager::deleteGame(m_currentSaveSession);
                             m_currentSaveSession = "";
                         }
-                        
-                        // Làm nhân vật tàng hình để giả hiệu ứng chìm xuống nước
-                        m_playerSprite.setColor(sf::Color::Transparent);
+                        // Đánh dấu là đã chết chìm để không vẽ
+                        m_playerDrowned = true;
+                        if (m_texturesLoaded) {
+                            m_playerSprite.setColor(sf::Color(50, 100, 200, 150)); // Đổi màu chìm nghỉm, hơi trong suốt
+                        }
                     }
                     m_playerShape.setFillColor(sf::Color(0, 50, 150)); // Đổi màu xanh (chìm)
                     return;
@@ -826,12 +977,14 @@ void GameState::draw(sf::RenderWindow& window) {
     // Nền đen
     window.clear(sf::Color(20, 20, 20));
 
-    // Vẽ các hàng địa hình
-    for (auto& row : m_terrains) {
+    // Vẽ các hàng địa hình từ trên (xa) xuống dưới (gần) để sửa lỗi đè hình (Z-index)
+    for (auto it = m_terrains.rbegin(); it != m_terrains.rend(); ++it) {
+        auto& row = *it;
         if (m_texturesLoaded) {
             if (row.type == TerrainType::Grass) { m_grassSprite.setPosition(0, row.yPosition); window.draw(m_grassSprite); }
             else if (row.type == TerrainType::Road) { m_roadSprite.setPosition(0, row.yPosition); window.draw(m_roadSprite); }
             else if (row.type == TerrainType::River) { m_riverSprite.setPosition(0, row.yPosition); window.draw(m_riverSprite); }
+            else if (row.type == TerrainType::Railway) { m_trackSprite.setPosition(0, row.yPosition); window.draw(m_trackSprite); }
         } else {
             window.draw(row.background);
         }
@@ -894,9 +1047,87 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
+        // Vẽ đèn giao thông và tàu hoả
+        if (row.type == TerrainType::Railway) {
+            // Vẽ đèn
+            sf::Sprite* lightSprite = nullptr;
+            int numFrames = 1;
+            if (row.trafficLight.state == LightState::Green) {
+                lightSprite = &m_lightGreenSprite;
+                numFrames = 1;
+            } else if (row.trafficLight.state == LightState::Blinking) {
+                lightSprite = &m_lightBlinkSprite;
+                numFrames = 2;
+            } else if (row.trafficLight.state == LightState::Red) {
+                lightSprite = &m_lightRedSprite;
+                numFrames = 1;
+            }
+
+            if (m_texturesLoaded && lightSprite && lightSprite->getTexture()) {
+                auto texSize = lightSprite->getTexture()->getSize();
+                int frameW = texSize.x / numFrames;
+                int currentFrame = row.trafficLight.frameIndex % numFrames;
+                
+                lightSprite->setTextureRect(sf::IntRect(currentFrame * frameW, 0, frameW, texSize.y));
+                
+                // Giữ nguyên aspect ratio, cho đèn cao bằng 2 ô (96px)
+                float desiredHeight = 96.f; 
+                float scale = desiredHeight / texSize.y;
+                lightSprite->setScale(scale, scale);
+                
+                // Tính toán điểm neo (origin X) để bù trừ độ lệch cắt ảnh của các khung hình
+                float originX = frameW / 2.f; 
+                if (row.trafficLight.state == LightState::Green) {
+                    originX = 85.f;
+                } else if (row.trafficLight.state == LightState::Blinking) {
+                    originX = (currentFrame == 0) ? 85.f : 116.f;
+                } else if (row.trafficLight.state == LightState::Red) {
+                    originX = 91.5f;
+                }
+                
+                // Cố định điểm neo (origin) bằng toạ độ bù trừ chống giật
+                lightSprite->setOrigin(originX, texSize.y);
+                
+                // Đặt vị trí cột đèn cắm xuống đáy của hàng hiện tại
+                lightSprite->setPosition(750.f, row.yPosition + m_cellSize);
+                
+                window.draw(*lightSprite);
+            } else {
+                sf::CircleShape lightShape(10.f);
+                lightShape.setPosition(750.f, row.yPosition + 14.f); // Chuyển sang bên phải
+                if (row.trafficLight.state == LightState::Green) lightShape.setFillColor(sf::Color::Green);
+                else if (row.trafficLight.state == LightState::Blinking) {
+                    if (static_cast<int>(row.trafficLight.timer * 10) % 2 == 0) lightShape.setFillColor(sf::Color::Green);
+                    else lightShape.setFillColor(sf::Color(100, 100, 100)); // Nhấp nháy tắt
+                } else if (row.trafficLight.state == LightState::Red) lightShape.setFillColor(sf::Color::Red);
+                window.draw(lightShape);
+            }
+
+            // Vẽ tàu
+            if (row.train.isActive) {
+                if (m_texturesLoaded && m_trainSprite.getTexture()) {
+                    auto texSize = m_trainSprite.getTexture()->getSize();
+                    // Giữ nguyên aspect ratio, cho tàu cao gấp đôi (96px)
+                    float scale = 96.f / texSize.y;
+                    m_trainSprite.setScale(scale, scale);
+                    // Đặt origin ở góc dưới cùng bên trái
+                    m_trainSprite.setOrigin(0, texSize.y);
+                    // Vẽ ở vị trí chân tàu (đáy của ô)
+                    m_trainSprite.setPosition(row.train.shape.getPosition().x, row.yPosition + m_cellSize);
+                    window.draw(m_trainSprite);
+                } else {
+                    row.train.shape.setFillColor(sf::Color(50, 50, 50));
+                    window.draw(row.train.shape);
+                }
+            }
+        }
+
         // Vẽ lá sen
         for (auto& pad : row.lilyPads) {
-            if (m_texturesLoaded) {
+            if (m_texturesLoaded && m_logSprite.getTexture()) {
+                auto texSize = m_logSprite.getTexture()->getSize();
+                // Ép hình ảnh khúc gỗ co giãn đúng bằng kích thước hitbox vật lý
+                m_logSprite.setScale(pad.shape.getSize().x / texSize.x, pad.shape.getSize().y / texSize.y);
                 m_logSprite.setPosition(pad.shape.getPosition());
                 window.draw(m_logSprite);
             } else {
@@ -929,7 +1160,7 @@ void GameState::draw(sf::RenderWindow& window) {
     }
 
     // Vẽ người chơi
-    if (true) {
+    if (!m_playerDrowned) {
         if (m_texturesLoaded) {
             m_playerSprite.setPosition(m_playerPos);
             window.draw(m_playerSprite);
