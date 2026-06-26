@@ -5,23 +5,19 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <filesystem>
+#define NOMINMAX
+#include <windows.h>
 #include <cstdio>
 #include <iostream>
 #include <ctime>
-#include <cstdio>
-#include <iostream>
 
 // Đường dẫn thư mục lưu trữ
 const std::string SaveManager::DATA_DIR = "assets/data/";
 
 void SaveManager::ensureDataDirectory() {
     // Tạo thư mục nếu chưa tồn tại
-    try {
-        std::filesystem::create_directories(DATA_DIR);
-    } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "[SaveManager] Loi tao thu muc: " << e.what() << std::endl;
-    }
+    CreateDirectoryA("assets", NULL);
+    CreateDirectoryA(DATA_DIR.c_str(), NULL);
 }
 
 // ============================================================
@@ -247,28 +243,30 @@ std::vector<SaveFileInfo> SaveManager::getSaveList() {
 
     ensureDataDirectory();
 
-    try {
-        for (const auto& entry : std::filesystem::directory_iterator(DATA_DIR)) {
-            if (entry.is_regular_file()) {
-                std::string ext = entry.path().extension().string();
-                if (ext == ".sav") {
-                    std::string stem = entry.path().stem().string();
-                    SaveData temp;
-                    if (loadGame(stem, temp)) {
-                        // Bỏ qua file cũ bị lỗi hoặc không có địa hình (do phiên bản cũ)
-                        if (temp.numTerrains > 0 && !temp.terrains.empty()) {
-                            SaveFileInfo info;
-                            info.filename = stem;
-                            info.playTimeSeconds = temp.playTimeSeconds;
-                            info.timestamp = temp.timestamp;
-                            saveFiles.push_back(info);
-                        }
+    WIN32_FIND_DATAA findData;
+    std::string searchPath = DATA_DIR + "*.sav";
+    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                std::string filename = findData.cFileName;
+                std::string stem = filename.substr(0, filename.find_last_of("."));
+                
+                SaveData temp;
+                if (loadGame(stem, temp)) {
+                    // Bỏ qua file cũ bị lỗi hoặc không có địa hình (do phiên bản cũ)
+                    if (temp.numTerrains > 0 && !temp.terrains.empty()) {
+                        SaveFileInfo info;
+                        info.filename = stem;
+                        info.playTimeSeconds = temp.playTimeSeconds;
+                        info.timestamp = temp.timestamp;
+                        saveFiles.push_back(info);
                     }
                 }
             }
-        }
-    } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "[SaveManager] Loi quet thu muc: " << e.what() << std::endl;
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
     }
 
     // Sắp xếp theo alphabet
