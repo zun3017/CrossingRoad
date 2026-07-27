@@ -9,7 +9,7 @@
 struct Cloud {
     sf::RectangleShape shape;
     sf::Sprite sprite;
-    float speed;
+    float speed = 0.f;
 };
 
 // Cấu trúc nút menu

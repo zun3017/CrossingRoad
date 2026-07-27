@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run CrossingRoad (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/x64/Debug/CrossingRoad.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/x64/Debug",
+            "environment": [],
+            "console": "internalConsole",
+            "preLaunchTask": "Build CrossingRoad (Debug)"
+        }
+    ]
+}

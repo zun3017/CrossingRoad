@@ -54,9 +54,9 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
         if (i < static_cast<int>(data.terrains.size())) {
             const auto& row = data.terrains[i];
             file << row.type << " " << row.yPosition << "\n";
-            file << row.obstacles.size() << "\n";
-            for (const auto& obs : row.obstacles) {
-                file << obs.x << " " << obs.y << " " << obs.width << " " << obs.height << " " << obs.speed << " " << obs.movingRight << " " << obs.r << " " << obs.g << " " << obs.b << "\n";
+            file << row.vehicles.size() << "\n";
+            for (const auto& v : row.vehicles) {
+                file << v.type << " " << v.x << " " << v.y << " " << v.speed << " " << v.direction << "\n";
             }
             file << row.lilyPads.size() << "\n";
             for (const auto& pad : row.lilyPads) {
@@ -149,15 +149,24 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
         std::stringstream ss(line);
         ss >> row.type >> row.yPosition;
 
-        // obstacles
+        // vehicles
         if (!std::getline(file, line)) break;
-        int numObs = std::stoi(line);
-        for (int j = 0; j < numObs; j++) {
+        int numVeh = std::stoi(line);
+        for (int j = 0; j < numVeh; j++) {
             if (!std::getline(file, line)) break;
-            std::stringstream ssObs(line);
-            SavedObstacle obs;
-            ssObs >> obs.x >> obs.y >> obs.width >> obs.height >> obs.speed >> obs.movingRight >> obs.r >> obs.g >> obs.b;
-            row.obstacles.push_back(obs);
+            std::stringstream ssVeh(line);
+            SavedVehicle v;
+            ssVeh >> v.type >> v.x >> v.y >> v.speed >> v.direction;
+            row.vehicles.push_back(v);
+        }
+        
+        // (animals removed - skip for backward compat with old saves: read count and discard)
+        if (std::getline(file, line)) {
+            int numAnim = 0;
+            try { numAnim = std::stoi(line); } catch (...) { numAnim = 0; }
+            for (int j = 0; j < numAnim; j++) {
+                std::getline(file, line); // discard old animal data
+            }
         }
 
         // lilyPads

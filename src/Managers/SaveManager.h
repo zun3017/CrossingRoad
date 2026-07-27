@@ -6,11 +6,12 @@
 #include <string>
 #include <vector>
 
-struct SavedObstacle {
-    float x, y, width, height, speed;
-    bool movingRight;
-    int r, g, b;
+struct SavedVehicle {
+    int type; // 0=Car, 1=Truck
+    float x, y, speed;
+    int direction;
 };
+
 
 struct SavedLilyPad {
     float x, y, width, height, speed;
@@ -27,7 +28,7 @@ struct SavedItem {
 struct SavedTerrainRow {
     int type; // 0=Grass, 1=Road, 2=River
     float yPosition;
-    std::vector<SavedObstacle> obstacles;
+    std::vector<SavedVehicle> vehicles;
     std::vector<SavedLilyPad> lilyPads;
     std::vector<SavedItem> items;
 };

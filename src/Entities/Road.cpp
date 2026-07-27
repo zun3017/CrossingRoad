@@ -1,6 +1,6 @@
 #include "Road.h"
-#include "Car.h"
-#include "Truck.h"
+#include "CCAR.h"
+#include "CTRUCK.h"
 #include <random>
 #include <algorithm>
 
@@ -69,7 +69,7 @@ void Road::update(float dt) {
     // Xóa xe đã đi ra ngoài màn hình
     m_vehicles.erase(
         std::remove_if(m_vehicles.begin(), m_vehicles.end(),
-            [](const std::unique_ptr<Vehicle>& v) {
+            [](const std::unique_ptr<CVEHICLE>& v) {
                 return v->isOffScreen();
             }),
         m_vehicles.end()
@@ -105,14 +105,14 @@ void Road::spawnVehicle() {
         std::uniform_real_distribution<float> speedDist(100.f, 200.f);
         float speed = speedDist(getRoadRNG());
         float y = m_posY + 4.f; // Căn giữa xe 40px trong hàng 48px
-        m_vehicles.push_back(std::make_unique<Car>(startX, y, speed, m_direction));
+        m_vehicles.push_back(std::make_unique<CCAR>(startX, y, speed, m_direction));
     }
     else {
         // Xe tải: lớn và chậm (60-120 px/s)
         std::uniform_real_distribution<float> speedDist(60.f, 120.f);
         float speed = speedDist(getRoadRNG());
         float y = m_posY + 2.f; // Căn giữa xe 44px trong hàng 48px
-        m_vehicles.push_back(std::make_unique<Truck>(startX, y, speed, m_direction));
+        m_vehicles.push_back(std::make_unique<CTRUCK>(startX, y, speed, m_direction));
     }
 }
 

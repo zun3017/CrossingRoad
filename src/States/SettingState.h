@@ -12,7 +12,7 @@ struct SettingToggle {
     sf::RectangleShape checkbox;
     sf::Text label;
     sf::Text statusText;
-    SettingId settingId;
+    SettingId settingId = SettingId::Sound;
     bool hovered = false;
 };
 

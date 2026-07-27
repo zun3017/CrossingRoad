@@ -73,7 +73,7 @@ void AboutState::init() {
     centerText(m_line4, "Teacher: Truong Toan Thinh",
                20, sf::Color(200, 200, 200), 365.f);
 
-    centerText(m_line5, "HCMUS - 2024",
+    centerText(m_line5, "HCMUS ",
                24, sf::Color(100, 200, 255), 420.f);
 
     // Nút BACK

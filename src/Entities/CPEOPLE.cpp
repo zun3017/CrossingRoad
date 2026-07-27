@@ -1,21 +1,13 @@
 #include "CPEOPLE.h"
 #include "../Core/CGAME.h"  // Cho WINDOW_WIDTH, WINDOW_HEIGHT
 
-CPEOPLE::CPEOPLE(CharacterType type)
-    : m_type(type)
-    , m_score(0)
+CPEOPLE::CPEOPLE()
+    : m_score(0)
     , m_lives(3)
     , m_isDead(false)
     , m_frameIndex(0)
     , m_animTimer(0.f)
 {
-    // Đặt tên theo loại nhân vật
-    switch (m_type) {
-    case CharacterType::Pikachu: m_name = "Pikachu"; break;
-    case CharacterType::Kirby:   m_name = "Kirby";   break;
-    case CharacterType::Mario:   m_name = "Mario";    break;
-    }
-
     setupFallback();
     
     // Load hình ảnh
@@ -29,12 +21,10 @@ CPEOPLE::CPEOPLE(CharacterType type)
     }
 
     // Vị trí khởi đầu: giữa dưới màn hình, căn vào lưới
-    // Tính ô giữa theo chiều ngang
     int gridCenterX = (WINDOW_WIDTH / GRID_SIZE) / 2;
     int gridBottomY = (WINDOW_HEIGHT / GRID_SIZE) - 1;
 
-    // Đặt vị trí, căn giữa nhân vật trong ô lưới
-    float offsetX = (GRID_SIZE - PLAYER_SIZE) / 2.f; // 4px padding mỗi bên
+    float offsetX = (GRID_SIZE - PLAYER_SIZE) / 2.f;
     float offsetY = (GRID_SIZE - PLAYER_SIZE) / 2.f;
 
     setPosition(
@@ -44,23 +34,8 @@ CPEOPLE::CPEOPLE(CharacterType type)
 }
 
 void CPEOPLE::setupFallback() {
-    // Kích thước nhỏ hơn ô lưới để có padding đẹp
     setFallbackSize({ PLAYER_SIZE, PLAYER_SIZE });
-
-    // Màu khác nhau cho từng loại nhân vật
-    switch (m_type) {
-    case CharacterType::Pikachu:
-        setFallbackColor(sf::Color::Yellow);
-        break;
-    case CharacterType::Kirby:
-        setFallbackColor(sf::Color(255, 105, 180)); // Hồng
-        break;
-    case CharacterType::Mario:
-        setFallbackColor(sf::Color::Red);
-        break;
-    }
-
-    // Viền đen để dễ nhìn trên mọi nền
+    setFallbackColor(sf::Color::Yellow); // Màu vàng mặc định
     m_fallbackShape.setOutlineThickness(2.f);
     m_fallbackShape.setOutlineColor(sf::Color::Black);
 }
@@ -168,15 +143,44 @@ void CPEOPLE::moveRight() {
 void CPEOPLE::reset(float x, float y) {
     setPosition(x, y);
     m_isDead = false;
+    m_isDrowned = false;
     m_animTimer = 0.f;
     m_frameIndex = 0;
+    // Khôi phục lại kích thước và màu sắc mặc định
+    if (m_texturesLoaded && m_texture.getSize().x > 0) {
+        m_sprite.setTexture(m_texture, true);
+        auto texSize = m_texture.getSize();
+        int frameW = static_cast<int>(texSize.x) / 4;
+        int frameH = static_cast<int>(texSize.y) / 4;
+        m_sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
+        m_sprite.setScale(PLAYER_SIZE / static_cast<float>(frameW), PLAYER_SIZE / static_cast<float>(frameH));
+        m_sprite.setOrigin(0.f, 0.f);
+    }
+    m_sprite.setColor(sf::Color::White);
 }
 
-void CPEOPLE::die() {
+void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
     if (!m_isDead) {
         m_isDead = true;
         m_lives--;
+        
+        if (type == DeathType::HitByCar && deathTexture != nullptr) {
+            m_sprite.setTexture(*deathTexture, true);
+            auto texSize = deathTexture->getSize();
+            m_sprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+            m_sprite.setScale(PLAYER_SIZE * 1.5f / texSize.x, PLAYER_SIZE * 1.5f / texSize.y);
+            m_sprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
+        } else if (type == DeathType::Drowned) {
+            m_isDrowned = true;
+        } else {
+            m_fallbackShape.setFillColor(sf::Color::Red);
+        }
     }
+}
+
+void CPEOPLE::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    if (m_isDrowned) return; // Không vẽ nếu chết chìm
+    Entity::draw(target, states);
 }
 
 bool CPEOPLE::isAlive() const {

@@ -92,23 +92,10 @@ void GameState::init() {
 // Khởi tạo nhân vật người chơi
 // ============================================================
 void GameState::initPlayer() {
-    m_playerShape.setSize(sf::Vector2f(m_playerSize, m_playerSize));
-    m_playerShape.setFillColor(sf::Color(0, 200, 0)); // Màu xanh lá
-    m_playerShape.setOutlineColor(sf::Color::White);
-    m_playerShape.setOutlineThickness(2.f);
-
-    m_playerDrowned = false;
-    m_playerSprite.setColor(sf::Color::White); // Reset màu sắc nếu có thay đổi từ màn trước
-
+    m_player = std::make_unique<CPEOPLE>();
+    m_player->forcePosition(400.f - 20.f, 600.f - m_cellSize - 4.f);
     m_playerDead = false;
-    m_deathTimer = 0.f;
-
-    // Vị trí khởi đầu: giữa dưới cùng
-    m_playerPos = sf::Vector2f(400.f - m_playerSize / 2.f,
-                                600.f - m_cellSize - 4.f);
-    m_playerShape.setPosition(m_playerPos);
-    m_playerDead = false;
-    m_maxPlayerY = m_playerPos.y;
+    m_maxPlayerY = m_player->getPosition().y;
     m_scoreSaved = false;
     m_goState = GameOverUIState::None;
     m_deferredAction = DeferredAction::None;
@@ -122,23 +109,8 @@ void GameState::initPlayer() {
 
     // Khôi phục lại hình ảnh ban đầu (nếu trước đó chết đổi thành hitbycar hoặc tàng hình)
     if (m_texturesLoaded) {
-        try {
-            auto& tPlayer = ResourceManager<sf::Texture>::getInstance().get("assets/textures/player.png");
-            m_playerSprite.setTexture(tPlayer, true);
-            int frameW = tPlayer.getSize().x / 4;
-            int frameH = tPlayer.getSize().y / 4;
-            m_playerSprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
-            m_playerSprite.setScale(m_playerSize / frameW, m_playerSize / frameH);
-            m_playerSprite.setColor(sf::Color::White);
-            m_playerSprite.setOrigin(0.f, 0.f); // Reset origin
-            
-            m_playerDrowned = false; // Reset drowned flag
-            
-            // Khôi phục animation
-            m_playerAnimRow = 0;
-            m_playerAnimFrame = 0;
-            m_isPlayerAnimating = false;
-        } catch(...) {}
+        m_player->setTextureLoaded(true);
+        m_playerDrowned = false; // Reset drowned flag
     }
 }
 
@@ -157,8 +129,8 @@ void GameState::generateMap() {
         float y = 600.f - (i + 1) * m_cellSize;
         int terrainRoll = std::rand() % 100;
 
-        if (i == m_totalRows - 1) {
-            // Hàng trên cùng luôn là cỏ (vùng đích)
+        if (i >= m_totalRows - 2) {
+            // Hàng trên cùng luôn là cỏ (vùng đích và để UI không bị xe đè)
             createGrassRow(y, true);
         } else if (terrainRoll < 30) {
             createRoadRow(y);
@@ -195,8 +167,11 @@ void GameState::createGrassRow(float y, bool safeZone) {
         item.points = 10 + (m_level - 1) * 5;
         row.items.push_back(item);
     }
+    
 
-    m_terrains.push_back(row);
+
+
+    m_terrains.push_back(std::move(row));
 }
 
 // ============================================================
@@ -214,37 +189,35 @@ void GameState::createRoadRow(float y) {
     // Vẽ vạch kẻ đường (trang trí, lưu vào obstacles sẽ phức tạp quá)
     // Tạo 2-4 xe ngẫu nhiên trên mỗi hàng đường
     int numVehicles = 2 + std::rand() % 3;
-    bool movingRight = false; // Luôn chạy từ phải sang trái
+    bool movingRight = (std::rand() % 2 == 0); // Hướng chạy ngẫu nhiên
     float baseSpeed = 80.f + static_cast<float>(m_level * 15 + std::rand() % 40);
 
     for (int v = 0; v < numVehicles; v++) {
-        Obstacle obs;
-        float vehicleWidth = 80.f + static_cast<float>(std::rand() % 40); // To hơn
-        float vehicleHeight = m_cellSize - 4.f; // Gần bằng chiều cao làn đường (44px)
+        // Spawn vehicles spread across the full route so they enter naturally:
+        // - Right-moving: spread from -200 to 600 (some off-screen left, some on-screen)
+        // - Left-moving:  spread from 200 to 1000 (some on-screen, some off-screen right)
+        float startX;
+        if (movingRight) {
+            // First vehicle guaranteed off-screen, rest spread across route
+            float spacing = 900.f / numVehicles;
+            startX = -150.f + static_cast<float>(v) * spacing + static_cast<float>(std::rand() % 60);
+        } else {
+            // Vehicles enter from the right side naturally
+            float spacing = 900.f / numVehicles;
+            startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 60);
+        }
 
-        obs.shape.setSize(sf::Vector2f(vehicleWidth, vehicleHeight));
-        float startX = static_cast<float>(v * 200 + std::rand() % 100);
-        obs.shape.setPosition(startX, y + 2.f); // Căn giữa làn đường
-
-        // Màu ngẫu nhiên cho xe
-        sf::Color vehicleColors[] = {
-            sf::Color(200, 0, 0),    // Đỏ
-            sf::Color(0, 0, 200),    // Xanh dương
-            sf::Color(200, 200, 0),  // Vàng
-            sf::Color(200, 100, 0),  // Cam
-            sf::Color(150, 0, 150)   // Tím
-        };
-        obs.shape.setFillColor(vehicleColors[std::rand() % 5]);
-        obs.shape.setOutlineColor(sf::Color(30, 30, 30));
-        obs.shape.setOutlineThickness(1.f);
-
-        obs.speed = baseSpeed + static_cast<float>(std::rand() % 30);
-        obs.movingRight = movingRight;
-
-        row.obstacles.push_back(obs);
+        float speed = baseSpeed;
+        int direction = movingRight ? 1 : -1;
+        
+        if (std::rand() % 2 == 0) {
+            row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, speed, direction));
+        } else {
+            row.vehicles.push_back(std::make_unique<CTRUCK>(startX, y + 2.f, speed, direction));
+        }
     }
 
-    m_terrains.push_back(row);
+    m_terrains.push_back(std::move(row));
 }
 
 // ============================================================
@@ -282,7 +255,7 @@ void GameState::createRiverRow(float y) {
         row.lilyPads.push_back(pad);
     }
 
-    m_terrains.push_back(row);
+    m_terrains.push_back(std::move(row));
 }
 
 // ============================================================
@@ -311,13 +284,18 @@ void GameState::createRailwayRow(float y) {
     row.train.shape.setSize(sf::Vector2f(trainWidth, trainHeight));
     row.train.shape.setPosition(800.f + 100.f, y);
 
-    m_terrains.push_back(row);
+    m_terrains.push_back(std::move(row));
 }
 
 // ============================================================
 // Khởi tạo HUD hiển thị level và điểm
 // ============================================================
 void GameState::initHUD() {
+    // Panel nền mờ cho HUD (che sprite nhân vật phía sau)
+    m_hudBg.setSize(sf::Vector2f(130.f, 55.f));
+    m_hudBg.setPosition(0.f, 0.f);
+    m_hudBg.setFillColor(sf::Color(0, 0, 0, 160)); // Đen bán trong suốt
+
     m_levelText.setFont(m_font);
     m_levelText.setCharacterSize(18);
     m_levelText.setFillColor(sf::Color::White);
@@ -409,29 +387,27 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
     data.playerName = "Player";
     data.score = m_score;
     data.level = m_level;
-    data.playerX = m_playerPos.x;
-    data.playerY = m_playerPos.y;
+    data.playerX = m_player->getPosition().x;
+    data.playerY = m_player->getPosition().y;
     data.maxPlayerY = m_maxPlayerY;
     
-    data.numTerrains = m_terrains.size();
+    data.numTerrains = static_cast<int>(m_terrains.size());
     for (auto& row : m_terrains) {
         SavedTerrainRow sRow;
         sRow.type = static_cast<int>(row.type);
         sRow.yPosition = row.yPosition;
         
-        for (auto& obs : row.obstacles) {
-            SavedObstacle sObs;
-            sObs.x = obs.shape.getPosition().x;
-            sObs.y = obs.shape.getPosition().y;
-            sObs.width = obs.shape.getSize().x;
-            sObs.height = obs.shape.getSize().y;
-            sObs.speed = obs.speed;
-            sObs.movingRight = obs.movingRight;
-            sf::Color c = obs.shape.getFillColor();
-            sObs.r = c.r; sObs.g = c.g; sObs.b = c.b;
-            sRow.obstacles.push_back(sObs);
+        for (auto& v : row.vehicles) {
+            SavedVehicle sVeh;
+            sVeh.type = (dynamic_cast<CCAR*>(v.get()) != nullptr) ? 0 : 1;
+            sVeh.x = v->getPosition().x;
+            sVeh.y = v->getPosition().y;
+            sVeh.speed = v->getSpeed();
+            sVeh.direction = v->getDirection();
+            sRow.vehicles.push_back(sVeh);
         }
         
+
         for (auto& pad : row.lilyPads) {
             SavedLilyPad sPad;
             sPad.x = pad.shape.getPosition().x;
@@ -454,7 +430,7 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
             sRow.items.push_back(sItem);
         }
         
-        data.terrains.push_back(sRow);
+        data.terrains.push_back(std::move(sRow));
     }
     data.playTimeSeconds = static_cast<int>(m_totalPlaytime);
     
@@ -573,6 +549,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 // ============================================================
 void GameState::movePlayer(float dx, float dy) {
     if (m_moveCooldownTimer > 0.f) return;
+    if (m_player->m_isAnimating) return; // Chặn di chuyển nếu đang LERP animation
     m_moveCooldownTimer = 0.15f; // Thời gian chờ giữa các lần di chuyển là 0.15s (ngăn spam)
 
     // Không cho phép đi ngang khi đang trên khúc gỗ (sông)
@@ -580,7 +557,7 @@ void GameState::movePlayer(float dx, float dy) {
         for (auto& row : m_terrains) {
             if (row.type == TerrainType::River) {
                 sf::FloatRect rowBounds = row.background.getGlobalBounds();
-                float playerCenterY = m_playerPos.y + m_playerSize / 2.f;
+                float playerCenterY = m_player->getPosition().y + m_playerSize / 2.f;
                 if (playerCenterY > rowBounds.top && playerCenterY < rowBounds.top + rowBounds.height) {
                     return; // Chặn di chuyển trái phải
                 }
@@ -588,7 +565,7 @@ void GameState::movePlayer(float dx, float dy) {
         }
     }
 
-    sf::Vector2f newPos = m_playerPos + sf::Vector2f(dx, dy);
+    sf::Vector2f newPos = m_player->getPosition() + sf::Vector2f(dx, dy);
 
     // Giới hạn trong màn hình
     if (newPos.x < 0.f) newPos.x = 0.f;
@@ -596,32 +573,13 @@ void GameState::movePlayer(float dx, float dy) {
     if (newPos.y > 600.f - m_cellSize) newPos.y = 600.f - m_cellSize;
     // Cho phép y đi lên trên cùng để kiểm tra win
 
-    m_playerPos = newPos;
-    m_playerShape.setPosition(m_playerPos);
+    // Gọi startMove để kích hoạt animation thay vì setPosition dịch chuyển tức thời
+    m_player->startMove(newPos.x - m_player->getPosition().x, newPos.y - m_player->getPosition().y);
     
-    // Cập nhật hoạt ảnh (Animation)
-    if (m_texturesLoaded) {
-        if (dy < 0.f) m_playerAnimRow = 0;      // Lên
-        else if (dy > 0.f) m_playerAnimRow = 1; // Xuống
-        else if (dx > 0.f) m_playerAnimRow = 2; // Phải
-        else if (dx < 0.f) m_playerAnimRow = 3; // Trái
-
-        m_isPlayerAnimating = true;
-        m_playerAnimTimer = 0.f;
-        m_playerAnimFrame = 1; // Bắt đầu ở khung thứ 1 (khung 0 là đứng yên)
-        
-        auto tex = m_playerSprite.getTexture();
-        if (tex) {
-            int frameW = tex->getSize().x / 4;
-            int frameH = tex->getSize().y / 4;
-            m_playerSprite.setTextureRect(sf::IntRect(m_playerAnimFrame * frameW, m_playerAnimRow * frameH, frameW, frameH));
-        }
-    }
-
     // Tăng điểm khi tiến lên (chỉ thưởng nếu đi lên cao hơn mức cao nhất từng đạt được)
-    if (m_playerPos.y < m_maxPlayerY) {
+    if (newPos.y < m_maxPlayerY) {
         m_score += 5;
-        m_maxPlayerY = m_playerPos.y;
+        m_maxPlayerY = newPos.y;
     }
 }
 
@@ -673,26 +631,8 @@ void GameState::update(float dt) {
     checkCollisions(dt);
     checkWinCondition();
     
-    // Cập nhật hoạt ảnh người chơi
-    if (m_isPlayerAnimating && !m_playerDead) {
-        m_playerAnimTimer += dt;
-        if (m_playerAnimTimer >= 0.05f) { // Chuyển frame mỗi 0.05 giây
-            m_playerAnimTimer = 0.f;
-            m_playerAnimFrame++;
-            
-            if (m_playerAnimFrame >= 4) {
-                m_playerAnimFrame = 0; // Quay về đứng yên
-                m_isPlayerAnimating = false; // Kết thúc hoạt ảnh
-            }
-            
-            auto tex = m_playerSprite.getTexture();
-            if (tex) {
-                int frameW = tex->getSize().x / 4;
-                int frameH = tex->getSize().y / 4;
-                m_playerSprite.setTextureRect(sf::IntRect(m_playerAnimFrame * frameW, m_playerAnimRow * frameH, frameW, frameH));
-            }
-        }
-    }
+    // m_player has its own update and animation logic if we use it, but for now we just call update.
+    m_player->update(dt);
 
     // Cập nhật HUD
     m_levelText.setString("Level: " + std::to_string(m_level));
@@ -704,19 +644,17 @@ void GameState::update(float dt) {
 // ============================================================
 void GameState::updateObstacles(float dt) {
     for (auto& row : m_terrains) {
-        if (row.type != TerrainType::Road) continue;
-
-        for (auto& obs : row.obstacles) {
-            float moveX = obs.speed * dt * (obs.movingRight ? 1.f : -1.f);
-            obs.shape.move(moveX, 0.f);
-
-            // Quay vòng khi ra khỏi màn hình
-            sf::Vector2f pos = obs.shape.getPosition();
-            float w = obs.shape.getSize().x;
-            if (obs.movingRight && pos.x > 820.f) {
-                obs.shape.setPosition(-w, pos.y);
-            } else if (!obs.movingRight && pos.x + w < -20.f) {
-                obs.shape.setPosition(820.f, pos.y);
+        if (row.type == TerrainType::Road) {
+            for (auto& v : row.vehicles) {
+                v->update(dt);
+                
+                // Wrap around logic cho xe cộ (Logic Game)
+                // Wrap khi xe vừa thoát hết khỏi màn hình
+                if (v->getDirection() > 0 && v->getPosition().x > 860.f) {
+                    v->setPosition(-180.f, v->getPosition().y);
+                } else if (v->getDirection() < 0 && v->getPosition().x < -90.f) {
+                    v->setPosition(860.f, v->getPosition().y);
+                }
             }
         }
     }
@@ -808,7 +746,7 @@ void GameState::updateRailway(float dt) {
 // Kiểm tra va chạm giữa người chơi và các vật thể
 // ============================================================
 void GameState::checkCollisions(float dt) {
-    sf::FloatRect playerBounds = m_playerShape.getGlobalBounds();
+    sf::FloatRect playerBounds = m_player->getBounds();
     // Thu nhỏ hitbox để gameplay fair hơn
     sf::FloatRect playerHitbox(
         playerBounds.left + 4.f, playerBounds.top + 10.f, // Cắt viền trên nhiều hơn để tránh chạm nhầm hàng địa hình phía trên
@@ -818,9 +756,8 @@ void GameState::checkCollisions(float dt) {
     for (auto& row : m_terrains) {
         // Kiểm tra va chạm xe cộ
         if (row.type == TerrainType::Road) {
-            for (auto& obs : row.obstacles) {
-                // Thu nhỏ hitbox của xe cộ vì hình ảnh png có thể có viền trong suốt
-                sf::FloatRect carHitbox = obs.shape.getGlobalBounds();
+            for (auto& v : row.vehicles) {
+                sf::FloatRect carHitbox = v->getBounds();
                 carHitbox.left += 15.f; // Cắt viền trái
                 carHitbox.width -= 30.f; // Cắt viền phải
                 carHitbox.top += 8.f; // Cắt viền trên
@@ -829,29 +766,20 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(carHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
                         if (!m_currentSaveSession.empty()) {
                             SaveManager::deleteGame(m_currentSaveSession);
                             m_currentSaveSession = "";
                         }
-                        
-                        if (m_hitByCarLoaded) {
-                            m_playerSprite.setTexture(m_hitByCarTexture, true);
-                            auto texSize = m_hitByCarTexture.getSize();
-                            // Không thiết lập TextureRect nếu sprite là nguyên bản
-                            m_playerSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
-                            // Thiết lập tỉ lệ sao cho to hơn 1 chút
-                            m_playerSprite.setScale(m_playerSize * 1.5f / texSize.x, m_playerSize * 1.5f / texSize.y);
-                            // Điều chỉnh lại origin cho khớp tâm
-                            m_playerSprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
-                        }
                     }
-                    m_playerShape.setFillColor(sf::Color::Red);
                     return;
                 }
             }
         }
+
+        // [Animals removed from gameplay - no collision check needed]
 
         // Kiểm tra va chạm tàu hoả
         if (row.type == TerrainType::Railway) {
@@ -863,25 +791,14 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(trainHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
                         if (!m_currentSaveSession.empty()) {
                             SaveManager::deleteGame(m_currentSaveSession);
                             m_currentSaveSession = "";
                         }
-                        
-                        if (m_hitByCarLoaded) {
-                            m_playerSprite.setTexture(m_hitByCarTexture, true);
-                            auto texSize = m_hitByCarTexture.getSize();
-                            // Không thiết lập TextureRect nếu sprite là nguyên bản
-                            m_playerSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
-                            // Thiết lập tỉ lệ sao cho to hơn 1 chút
-                            m_playerSprite.setScale(m_playerSize * 1.5f / texSize.x, m_playerSize * 1.5f / texSize.y);
-                            // Điều chỉnh lại origin cho khớp tâm
-                            m_playerSprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
-                        }
                     }
-                    m_playerShape.setFillColor(sf::Color::Red);
                     return;
                 }
             }
@@ -890,21 +807,26 @@ void GameState::checkCollisions(float dt) {
         // Kiểm tra sông: phải đứng trên lá sen
         if (row.type == TerrainType::River) {
             sf::FloatRect rowBounds = row.background.getGlobalBounds();
-            // Sử dụng intersects với playerHitbox để tránh sai số vị trí y
             if (playerHitbox.intersects(rowBounds)) {
+                // Nếu đang animation LERP nhảy LÊN khỏi hàng sông (về phía bờ),
+                // bỏ qua kiểm tra chết đuối để tránh chết nhầm khi nhảy lên bờ
+                if (m_player->m_isAnimating && m_player->m_targetPos.y < rowBounds.top) {
+                    continue; // Đang nhảy lên bờ -> bỏ qua
+                }
+
                 bool onPad = false;
                 for (auto& pad : row.lilyPads) {
                     if (playerHitbox.intersects(pad.shape.getGlobalBounds())) {
                         onPad = true;
                         // Di chuyển theo lá sen đồng bộ với dt
                         float padMove = pad.speed * dt * (pad.movingRight ? 1.f : -1.f);
-                        m_playerPos.x += padMove;
-                        m_playerShape.setPosition(m_playerPos);
+                        m_player->setPosition(m_player->getPosition().x + padMove, m_player->getPosition().y);
 
                         // Nếu bị đẩy ra ngoài màn hình thì chết
-                        if (m_playerPos.x < -m_playerSize || m_playerPos.x > 800.f) {
+                        if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
                             if (!m_playerDead) {
                                 m_playerDead = true;
+                                m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                                 m_deathTimer = 0.f;
                                 m_goState = GameOverUIState::Delay;
                                 if (!m_currentSaveSession.empty()) {
@@ -912,7 +834,6 @@ void GameState::checkCollisions(float dt) {
                                     m_currentSaveSession = "";
                                 }
                             }
-                            m_playerShape.setFillColor(sf::Color::Red);
                             return;
                         }
                         break;
@@ -922,23 +843,19 @@ void GameState::checkCollisions(float dt) {
                     // Rơi xuống sông -> chết
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        m_player->die(DeathType::Drowned);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
                         if (!m_currentSaveSession.empty()) {
                             SaveManager::deleteGame(m_currentSaveSession);
                             m_currentSaveSession = "";
                         }
-                        // Đánh dấu là đã chết chìm để không vẽ
-                        m_playerDrowned = true;
-                        if (m_texturesLoaded) {
-                            m_playerSprite.setColor(sf::Color(50, 100, 200, 150)); // Đổi màu chìm nghỉm, hơi trong suốt
-                        }
                     }
-                    m_playerShape.setFillColor(sf::Color(0, 50, 150)); // Đổi màu xanh (chìm)
                     return;
                 }
             }
         }
+
 
         // Kiểm tra thu thập item
         for (auto& item : row.items) {
@@ -954,7 +871,7 @@ void GameState::checkCollisions(float dt) {
 // Kiểm tra điều kiện thắng (qua được hết màn hình)
 // ============================================================
 void GameState::checkWinCondition() {
-    if (m_playerPos.y <= 0.f) {
+    if (m_player->getPosition().y <= 0.f) {
         m_level++;
         m_score += 50 * m_level; // Thưởng qua level
         resetForNextLevel();
@@ -1011,39 +928,9 @@ void GameState::draw(sf::RenderWindow& window) {
         }
 
         // Vẽ xe cộ
-        for (auto& obs : row.obstacles) {
-            if (m_texturesLoaded) {
-                // Chọn ngẫu nhiên xe dựa trên tốc độ để ổn định
-                int carType = static_cast<int>(obs.speed) % 3;
-                sf::Sprite* carSprite = nullptr;
-                if (carType == 0 && m_carBlueSprite.getTexture()) carSprite = &m_carBlueSprite;
-                else if (carType == 1 && m_carRedSprite.getTexture()) carSprite = &m_carRedSprite;
-                else if (carType == 2 && m_carYellowSprite.getTexture()) carSprite = &m_carYellowSprite;
-                
-                if (!carSprite) {
-                    if (m_carBlueSprite.getTexture()) carSprite = &m_carBlueSprite;
-                    else if (m_carRedSprite.getTexture()) carSprite = &m_carRedSprite;
-                    else if (m_carYellowSprite.getTexture()) carSprite = &m_carYellowSprite;
-                }
-
-                if (carSprite) {
-                    auto texSize = carSprite->getTexture()->getSize();
-                    carSprite->setScale(obs.shape.getSize().x / texSize.x, obs.shape.getSize().y / texSize.y);
-                    carSprite->setPosition(obs.shape.getPosition());
-                    window.draw(*carSprite);
-                } else {
-                    window.draw(obs.shape);
-                }
-            } else {
-                window.draw(obs.shape);
-                // Vẽ cửa sổ xe (chi tiết nhỏ)
-                sf::RectangleShape carWindow(sf::Vector2f(10.f, 8.f));
-                carWindow.setFillColor(sf::Color(150, 200, 255, 180));
-                carWindow.setPosition(
-                    obs.shape.getPosition().x + obs.shape.getSize().x / 2.f - 5.f,
-                    obs.shape.getPosition().y + 5.f
-                );
-                window.draw(carWindow);
+        if (row.type == TerrainType::Road) {
+            for (auto& v : row.vehicles) {
+                window.draw(*v);
             }
         }
 
@@ -1086,7 +973,7 @@ void GameState::draw(sf::RenderWindow& window) {
                 }
                 
                 // Cố định điểm neo (origin) bằng toạ độ bù trừ chống giật
-                lightSprite->setOrigin(originX, texSize.y);
+                lightSprite->setOrigin(originX, static_cast<float>(texSize.y));
                 
                 // Đặt vị trí cột đèn cắm xuống đáy của hàng hiện tại
                 lightSprite->setPosition(750.f, row.yPosition + m_cellSize);
@@ -1111,7 +998,7 @@ void GameState::draw(sf::RenderWindow& window) {
                     float scale = 96.f / texSize.y;
                     m_trainSprite.setScale(scale, scale);
                     // Đặt origin ở góc dưới cùng bên trái
-                    m_trainSprite.setOrigin(0, texSize.y);
+                    m_trainSprite.setOrigin(0.f, static_cast<float>(texSize.y));
                     // Vẽ ở vị trí chân tàu (đáy của ô)
                     m_trainSprite.setPosition(row.train.shape.getPosition().x, row.yPosition + m_cellSize);
                     window.draw(m_trainSprite);
@@ -1161,30 +1048,12 @@ void GameState::draw(sf::RenderWindow& window) {
 
     // Vẽ người chơi
     if (!m_playerDrowned) {
-        if (m_texturesLoaded) {
-            m_playerSprite.setPosition(m_playerPos);
-            window.draw(m_playerSprite);
-        } else {
-            window.draw(m_playerShape);
-            // Vẽ mắt cho nhân vật
-            sf::CircleShape eye(3.f);
-            eye.setFillColor(sf::Color::White);
-            eye.setPosition(m_playerPos.x + 8.f, m_playerPos.y + 8.f);
-            window.draw(eye);
-            eye.setPosition(m_playerPos.x + m_playerSize - 14.f, m_playerPos.y + 8.f);
-            window.draw(eye);
-            
-            sf::CircleShape pupil(1.5f);
-            pupil.setFillColor(sf::Color::Black);
-            pupil.setPosition(m_playerPos.x + 9.5f, m_playerPos.y + 9.5f);
-            window.draw(pupil);
-            pupil.setPosition(m_playerPos.x + m_playerSize - 12.5f, m_playerPos.y + 9.5f);
-            window.draw(pupil);
-        }
+        window.draw(*m_player);
     }
 
-    // Vẽ HUD
+    // Vẽ HUD (panel nền + text)
     if (m_fontLoaded) {
+        window.draw(m_hudBg);   // Vẽ nền trước để che mọi thứ phía sau
         window.draw(m_levelText);
         window.draw(m_scoreText);
     }
@@ -1341,9 +1210,7 @@ void GameState::loadGame(const std::string& sessionName, const SaveData& data) {
     
     // Khôi phục nhân vật
     initPlayer(); // init default
-    m_playerPos.x = data.playerX;
-    m_playerPos.y = data.playerY;
-    m_playerShape.setPosition(m_playerPos);
+    m_player->forcePosition(data.playerX, data.playerY);
     m_maxPlayerY = data.maxPlayerY;
     
     m_isLoadedGame = true;
@@ -1379,18 +1246,15 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         row.items.push_back(item);
     }
 
-    // Khôi phục obstacles
-    for (const auto& sObs : savedRow.obstacles) {
-        Obstacle obs;
-        obs.shape.setSize(sf::Vector2f(sObs.width, sObs.height));
-        obs.shape.setPosition(sObs.x, sObs.y);
-        obs.shape.setFillColor(sf::Color(sObs.r, sObs.g, sObs.b));
-        obs.shape.setOutlineColor(sf::Color(30, 30, 30));
-        obs.shape.setOutlineThickness(1.f);
-        obs.speed = sObs.speed;
-        obs.movingRight = sObs.movingRight;
-        row.obstacles.push_back(obs);
+    // Khôi phục vehicles
+    for (const auto& sVeh : savedRow.vehicles) {
+        if (sVeh.type == 0) {
+            row.vehicles.push_back(std::make_unique<CCAR>(sVeh.x, sVeh.y, sVeh.speed, sVeh.direction));
+        } else {
+            row.vehicles.push_back(std::make_unique<CTRUCK>(sVeh.x, sVeh.y, sVeh.speed, sVeh.direction));
+        }
     }
+    
 
     // Khôi phục lilypads
     for (const auto& sPad : savedRow.lilyPads) {
@@ -1405,5 +1269,5 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         row.lilyPads.push_back(pad);
     }
 
-    m_terrains.push_back(row);
+    m_terrains.push_back(std::move(row));
 }

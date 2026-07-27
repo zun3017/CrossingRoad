@@ -1,22 +1,19 @@
 #pragma once
 #include "Entity.h"
-#include <string>
 
 // Hằng số riêng cho CPEOPLE (WINDOW_WIDTH, WINDOW_HEIGHT đã khai báo trong CGAME.h)
 constexpr int GRID_SIZE = 48;
 constexpr float PLAYER_SIZE = 40.f;
 
-// Loại nhân vật người chơi
-enum class CharacterType {
-    Pikachu,  // Vàng
-    Kirby,    // Hồng
-    Mario     // Đỏ
+enum class DeathType {
+    HitByCar,
+    Drowned
 };
 
 // Nhân vật chính - di chuyển theo lưới, có mạng sống và điểm
 class CPEOPLE : public Entity {
 public:
-    explicit CPEOPLE(CharacterType type = CharacterType::Pikachu);
+    CPEOPLE();
     ~CPEOPLE() override = default;
 
     void update(float dt) override;
@@ -32,7 +29,7 @@ public:
     void reset(float x, float y);
 
     // Xử lý khi nhân vật chết
-    void die();
+    void die(DeathType type = DeathType::HitByCar, const sf::Texture* deathTexture = nullptr);
     bool isAlive() const;
 
     // Hồi sinh (bỏ trạng thái chết, KHÔNG tăng mạng)
@@ -44,21 +41,21 @@ public:
     void setScore(int score) { m_score = score; }
     int getLives() const { return m_lives; }
     void setLives(int lives) { m_lives = lives; }
-    CharacterType getCharacterType() const { return m_type; }
-    std::string getName() const { return m_name; }
     bool isDead() const { return m_isDead; }
 
 private:
-    // Thiết lập màu và kích thước fallback theo loại nhân vật
     void setupFallback();
 
-    CharacterType m_type;
-    std::string m_name;
+protected:
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
+private:
     int m_score = 0;
     int m_lives = 3;
     bool m_isDead = false;
+    bool m_isDrowned = false;
 
-    // Animation (chuẩn bị cho khi có sprite sheet)
+    // Animation
     sf::IntRect m_currentFrame;
     
 public:
@@ -77,5 +74,3 @@ public:
     static constexpr float ANIM_FRAME_TIME = 0.15f;
     static constexpr int ANIM_FRAME_COUNT = 4;
 };
-
-

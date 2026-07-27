@@ -81,7 +81,7 @@ void Game::run() {
             
             // Xử lý resize cửa sổ (giữ nguyên view để tự động scale nội dung)
             if (event.type == sf::Event::Resized) {
-                sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+                sf::FloatRect visibleArea(0.f, 0.f, static_cast<float>(event.size.width), static_cast<float>(event.size.height));
                 m_window.setView(sf::View(sf::FloatRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)));
             }
 

@@ -17,12 +17,12 @@ CCAR::CCAR(float x, float y, float speed, int direction)
         if (tex.getSize().x > 0) {
             m_sprite.setTexture(tex);
             m_usesFallback = false;
-            m_sprite.setTextureRect(sf::IntRect(0, 0, tex.getSize().x, tex.getSize().y));
-            float scaleX = 60.f / tex.getSize().x;
-            float scaleY = 40.f / tex.getSize().y;
-            if (m_direction < 0) {
+            m_sprite.setTextureRect(sf::IntRect(0, 0, static_cast<int>(tex.getSize().x), static_cast<int>(tex.getSize().y)));
+            float scaleY = 40.f / static_cast<float>(tex.getSize().y);
+            float scaleX = scaleY; // Maintain aspect ratio!
+            if (m_direction > 0) {
                 m_sprite.setScale(-scaleX, scaleY);
-                m_sprite.setOrigin(tex.getSize().x, 0.f);
+                m_sprite.setOrigin(static_cast<float>(tex.getSize().x), 0.f);
             } else {
                 m_sprite.setScale(scaleX, scaleY);
                 m_sprite.setOrigin(0.f, 0.f);

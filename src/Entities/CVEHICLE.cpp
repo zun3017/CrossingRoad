@@ -24,25 +24,8 @@ void CVEHICLE::Move(float dt) {
 }
 
 void CVEHICLE::updateAnimation(float dt) {
-    if (!m_usesFallback && m_sprite.getTexture() != nullptr) {
-        m_animTimer += dt;
-        if (m_animTimer >= 0.1f) {
-            m_animTimer = 0.f;
-            m_frameIndex = (m_frameIndex + 1) % m_totalFrames;
-            
-            auto texSize = m_sprite.getTexture()->getSize();
-            int frameW = texSize.x / m_totalFrames;
-            int frameH = m_sprite.getTextureRect().height;
-            int rowY = m_sprite.getTextureRect().top;
-            
-            // Lật ngược hình ảnh xe nếu xe đang đi sang trái
-            if (m_direction < 0) {
-                m_sprite.setTextureRect(sf::IntRect(m_frameIndex * frameW + frameW, rowY, -frameW, frameH));
-            } else {
-                m_sprite.setTextureRect(sf::IntRect(m_frameIndex * frameW, rowY, frameW, frameH));
-            }
-        }
-    }
+    // Không làm gì cả vì xe cộ trong game này là ảnh đơn (không phải spritesheet)
+    // Việc lật ảnh đã được xử lý trong constructor của CCAR và CTRUCK.
 }
 
 sf::FloatRect CVEHICLE::getBounds() const {

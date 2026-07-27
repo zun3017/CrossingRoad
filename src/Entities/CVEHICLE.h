@@ -11,7 +11,7 @@ public:
     void update(float dt) override;
     sf::FloatRect getBounds() const override;
     
-    // Đa hình theo yêu cầu của thầy giáo
+    // Đa hình 
     virtual void Move(float dt);
     virtual void updateAnimation(float dt);
 

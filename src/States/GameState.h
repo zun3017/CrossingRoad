@@ -8,20 +8,17 @@
 #include "../UI/TextBox.h"
 #include "../UI/Button.h"
 #include "../Managers/SaveManager.h"
-
-// ============================================================
+#include "../Entities/CVEHICLE.h"
+#include "../Entities/CPEOPLE.h"
+#include "../Entities/CTRAFFICLIGHT.h"
+#include "../Entities/CCAR.h"
+#include "../Entities/CTRUCK.h"
 // Terrain - Lớp cơ sở cho các hàng địa hình (Cỏ, Đường, Sông)
 // ============================================================
 enum class TerrainType { Grass, Road, River, Railway };
 
-enum class LightState { Green, Blinking, Red };
 
-struct TrafficLightData {
-    LightState state = LightState::Green;
-    float timer = 0.f;
-    float animTimer = 0.f;
-    int frameIndex = 0;
-};
+// Removed TrafficLightData (using CTRAFFICLIGHT instead)
 
 struct TrainData {
     sf::RectangleShape shape;
@@ -30,11 +27,7 @@ struct TrainData {
     bool isActive = false;
 };
 
-struct Obstacle {
-    sf::RectangleShape shape;
-    float speed;
-    bool movingRight;
-};
+// Removed Obstacle
 
 struct LilyPad {
     sf::RectangleShape shape;
@@ -52,11 +45,15 @@ struct TerrainRow {
     TerrainType type;
     float yPosition;
     sf::RectangleShape background;
-    std::vector<Obstacle> obstacles;   // Xe cộ trên đường
+    std::vector<std::unique_ptr<CVEHICLE>> vehicles;
     std::vector<LilyPad> lilyPads;     // Lá sen trên sông
     std::vector<Item> items;           // Vật phẩm thu thập
-    TrafficLightData trafficLight;     // Đèn giao thông (cho đường ray)
+    CTRAFFICLIGHT trafficLight;     // Đèn giao thông (cho đường ray)
     TrainData train;                   // Tàu hoả (cho đường ray)
+
+    TerrainRow() = default;
+    TerrainRow(TerrainRow&&) noexcept = default;
+    TerrainRow& operator=(TerrainRow&&) noexcept = default;
 };
 
 struct SaveData;
@@ -101,15 +98,9 @@ public:
     sf::Texture m_hitByCarTexture;
     bool m_hitByCarLoaded = false;
     
-    // UI Game Over Animation
-    int m_playerAnimRow = 0;   // 0: Lên, 1: Xuống, 2: Phải, 3: Trái
-    int m_playerAnimFrame = 0; // 0, 1, 2, 3
-    bool m_isPlayerAnimating = false;
-    float m_playerAnimTimer = 0.f;
 
     // Player
-    sf::RectangleShape m_playerShape;
-    sf::Vector2f m_playerPos;
+    std::unique_ptr<CPEOPLE> m_player;
     float m_playerSize = 40.f;
     bool m_playerDead = false;
     float m_deathTimer = 0.f;
@@ -128,6 +119,7 @@ public:
     // HUD text
     sf::Text m_levelText;
     sf::Text m_scoreText;
+    sf::RectangleShape m_hudBg; // Panel nền cho HUD
 
     // Game over overlay
     sf::RectangleShape m_gameOverOverlay;
