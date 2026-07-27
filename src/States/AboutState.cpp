@@ -62,25 +62,22 @@ void AboutState::init() {
     };
 
     centerText(m_line1, "Crossing Road - OOP Project",
-               26, sf::Color(255, 215, 0), 220.f);
+               26, sf::Color(255, 215, 0), 230.f);
 
-    centerText(m_line2, "Built with C++ & SFML 2.6",
-               20, sf::Color(180, 200, 255), 270.f);
+    centerText(m_line2, "Built with C++ & SFML 2.5",
+               20, sf::Color(180, 200, 255), 280.f);
 
-    centerText(m_line3, "Developed by: Group 6",
-               22, sf::Color::White, 320.f);
+    centerText(m_line3, "Developed by: Group 10",
+               22, sf::Color::White, 330.f);
 
-    centerText(m_line4, "Teacher: Truong Toan Thinh",
-               20, sf::Color(200, 200, 200), 365.f);
-
-    centerText(m_line5, "HCMUS ",
-               24, sf::Color(100, 200, 255), 420.f);
+    centerText(m_line5, "HCMUS",
+               24, sf::Color(100, 200, 255), 380.f);
 
     // Nút BACK
     float backW = 160.f, backH = 45.f;
     m_backBtnBg.setSize(sf::Vector2f(backW, backH));
     m_backBtnBg.setOrigin(backW / 2.f, backH / 2.f);
-    m_backBtnBg.setPosition(400.f, 530.f);
+    m_backBtnBg.setPosition(400.f, 510.f);
     m_backBtnBg.setFillColor(sf::Color(80, 80, 100));
     m_backBtnBg.setOutlineColor(sf::Color(120, 120, 160));
     m_backBtnBg.setOutlineThickness(2.f);
@@ -92,31 +89,32 @@ void AboutState::init() {
     sf::FloatRect backBounds = m_backBtnText.getLocalBounds();
     m_backBtnText.setOrigin(backBounds.left + backBounds.width / 2.f,
                              backBounds.top + backBounds.height / 2.f);
-    m_backBtnText.setPosition(400.f, 530.f);
+    m_backBtnText.setPosition(400.f, 510.f);
 }
 
 void AboutState::handleInput(sf::RenderWindow& window, sf::Event& event) {
     if (event.type == sf::Event::MouseButtonPressed &&
         event.mouseButton.button == sf::Mouse::Left)
     {
-        sf::Vector2f mousePos = window.mapPixelToCoords(
-            sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+        sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x),
+                              static_cast<float>(event.mouseButton.y));
 
         if (m_backBtnBg.getGlobalBounds().contains(mousePos)) {
-            Game::instance().popState();
+            Game::instance().getStateMachine().popState();
         }
     }
 
     if (event.type == sf::Event::KeyPressed &&
         event.key.code == sf::Keyboard::Escape)
     {
-        Game::instance().popState();
+        Game::instance().getStateMachine().popState();
     }
 }
 
 void AboutState::update(float dt) {
     sf::Vector2i mousePixel = sf::Mouse::getPosition(Game::instance().getWindow());
-    sf::Vector2f mousePos = Game::instance().getWindow().mapPixelToCoords(mousePixel);
+    sf::Vector2f mousePos(static_cast<float>(mousePixel.x),
+                          static_cast<float>(mousePixel.y));
 
     m_backHovered = m_backBtnBg.getGlobalBounds().contains(mousePos);
     m_backBtnBg.setFillColor(m_backHovered
@@ -125,6 +123,8 @@ void AboutState::update(float dt) {
 }
 
 void AboutState::draw(sf::RenderWindow& window) {
+    window.setView(window.getDefaultView());
+
     window.draw(m_background);
     window.draw(m_topBar);
 
@@ -143,7 +143,7 @@ void AboutState::draw(sf::RenderWindow& window) {
     window.draw(divider);
 
     // Nền nội dung
-    sf::RectangleShape contentBg(sf::Vector2f(500.f, 250.f));
+    sf::RectangleShape contentBg(sf::Vector2f(500.f, 220.f));
     contentBg.setOrigin(250.f, 0.f);
     contentBg.setPosition(400.f, 200.f);
     contentBg.setFillColor(sf::Color(30, 30, 55, 180));
@@ -155,26 +155,13 @@ void AboutState::draw(sf::RenderWindow& window) {
     window.draw(m_line1);
     window.draw(m_line2);
     window.draw(m_line3);
-    window.draw(m_line4);
     window.draw(m_line5);
 
     // Đường kẻ dưới nội dung
     sf::RectangleShape bottomDivider(sf::Vector2f(300.f, 1.f));
-    bottomDivider.setPosition(250.f, 455.f);
+    bottomDivider.setPosition(250.f, 435.f);
     bottomDivider.setFillColor(sf::Color(100, 150, 255, 80));
     window.draw(bottomDivider);
-
-    // Footer trang trí
-    sf::Text footerText;
-    footerText.setFont(m_font);
-    footerText.setString("Made with love <3");
-    footerText.setCharacterSize(14);
-    footerText.setFillColor(sf::Color(120, 120, 150));
-    sf::FloatRect ftBounds = footerText.getLocalBounds();
-    footerText.setOrigin(ftBounds.left + ftBounds.width / 2.f,
-                          ftBounds.top + ftBounds.height / 2.f);
-    footerText.setPosition(400.f, 475.f);
-    window.draw(footerText);
 
     // Nút BACK
     window.draw(m_backBtnBg);

@@ -30,8 +30,7 @@ private:
     sf::Text m_line1; // Game name
     sf::Text m_line2; // Built with
     sf::Text m_line3; // Developed by
-    sf::Text m_line4; // Teacher
-    sf::Text m_line5; // School + year
+    sf::Text m_line5; // School
 
     // Decorative logo placeholder
     sf::RectangleShape m_logoBg;
