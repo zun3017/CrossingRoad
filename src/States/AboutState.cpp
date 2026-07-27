@@ -123,8 +123,6 @@ void AboutState::update(float dt) {
 }
 
 void AboutState::draw(sf::RenderWindow& window) {
-    window.setView(window.getDefaultView());
-
     window.draw(m_background);
     window.draw(m_topBar);
 
