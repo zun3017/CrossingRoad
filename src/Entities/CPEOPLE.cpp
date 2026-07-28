@@ -12,6 +12,7 @@ CPEOPLE::CPEOPLE()
     
     // Load hình ảnh
     if (loadTexture("assets/textures/player.png")) {
+        m_texturesLoaded = true;
         // CPEOPLE scale
         auto texSize = m_sprite.getTexture()->getSize();
         int frameW = texSize.x / 4;

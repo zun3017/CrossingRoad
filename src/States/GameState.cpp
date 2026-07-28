@@ -571,7 +571,26 @@ void GameState::movePlayer(float dx, float dy) {
     if (newPos.x < 0.f) newPos.x = 0.f;
     if (newPos.x > 800.f - m_playerSize) newPos.x = 800.f - m_playerSize;
     if (newPos.y > 600.f - m_cellSize) newPos.y = 600.f - m_cellSize;
-    // Cho phép y đi lên trên cùng để kiểm tra win
+
+    // Nếu di chuyển lên/xuống sang vùng không phải sông, căn x về cột lưới gần nhất
+    if (dy != 0.f) {
+        float targetY = newPos.y + m_playerSize / 2.f;
+        bool isTargetRiver = false;
+        for (auto& row : m_terrains) {
+            if (row.type == TerrainType::River) {
+                sf::FloatRect rowBounds = row.background.getGlobalBounds();
+                if (targetY > rowBounds.top && targetY < rowBounds.top + rowBounds.height) {
+                    isTargetRiver = true;
+                    break;
+                }
+            }
+        }
+        if (!isTargetRiver) {
+            float offsetX = (m_cellSize - m_playerSize) / 2.f;
+            int col = static_cast<int>(std::round((newPos.x - offsetX) / m_cellSize));
+            newPos.x = col * m_cellSize + offsetX;
+        }
+    }
 
     // Gọi startMove để kích hoạt animation thay vì setPosition dịch chuyển tức thời
     m_player->startMove(newPos.x - m_player->getPosition().x, newPos.y - m_player->getPosition().y);
