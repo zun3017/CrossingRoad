@@ -159,15 +159,6 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
             ssVeh >> v.type >> v.x >> v.y >> v.speed >> v.direction;
             row.vehicles.push_back(v);
         }
-        
-        // (animals removed - skip for backward compat with old saves: read count and discard)
-        if (std::getline(file, line)) {
-            int numAnim = 0;
-            try { numAnim = std::stoi(line); } catch (...) { numAnim = 0; }
-            for (int j = 0; j < numAnim; j++) {
-                std::getline(file, line); // discard old animal data
-            }
-        }
 
         // lilyPads
         if (!std::getline(file, line)) break;
