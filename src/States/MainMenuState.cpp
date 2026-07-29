@@ -1,4 +1,5 @@
 #include "MainMenuState.h"
+
 #include "../Core/Game.h"
 #include "GameState.h"
 #include "LoadGameState.h"
@@ -6,248 +7,1005 @@
 #include "HelpState.h"
 #include "AboutState.h"
 #include "SettingState.h"
+
 #include <memory>
 
 // ============================================================
-// MainMenuState - Màn hình menu chính của game
+// MainMenuState - Main Menu
 // ============================================================
 
-void MainMenuState::init() {
-    // Tải font chữ
-    m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
-    m_cloudLoaded = m_cloudTexture.loadFromFile("assets/textures/cloud.png");
-    
-    m_menuBgLoaded = m_menuBgTexture.loadFromFile("assets/textures/menu.png");
-    if (m_menuBgLoaded) {
-        m_menuBgSprite.setTexture(m_menuBgTexture);
-        auto size = m_menuBgTexture.getSize();
-        m_menuBgSprite.setScale(800.f / size.x, 600.f / size.y);
+void MainMenuState::init()
+{
+    // ========================================================
+    // LOAD FONT
+    // ========================================================
+
+    m_fontLoaded = m_font.loadFromFile(
+        "assets/fonts/arial.ttf");
+
+    if (!m_fontLoaded)
+    {
+        // Không crash game nếu font không load được
     }
 
-    // Nhãn viết tắt cho các nút hình vuông
-    m_buttonLabels = { "PL", "LD", "RK", "HP", "AB", "ST", "EX" };
+    // ========================================================
+    // LOAD BACKGROUND
+    // ========================================================
+
+    m_menuBgLoaded = m_menuBgTexture.loadFromFile(
+        "assets/textures/menu.png");
+
+    if (m_menuBgLoaded)
+    {
+        m_menuBgSprite.setTexture(m_menuBgTexture);
+
+        sf::Vector2u size = m_menuBgTexture.getSize();
+
+        if (size.x > 0 && size.y > 0)
+        {
+            m_menuBgSprite.setScale(
+                800.f / static_cast<float>(size.x),
+                600.f / static_cast<float>(size.y));
+        }
+    }
+
+    // ========================================================
+    // LOAD CLOUD
+    // ========================================================
+
+    m_cloudLoaded = m_cloudTexture.loadFromFile(
+        "assets/textures/cloud.png");
+
+    // ========================================================
+    // LOAD 7 BUTTON SPRITE SHEETS
+    //
+    // 0 = PLAY
+    // 1 = LOAD
+    // 2 = RANK
+    // 3 = HELP
+    // 4 = SETTINGS
+    // 5 = CREDIT
+    // 6 = EXIT
+    // ========================================================
+
+    const char *buttonFiles[BUTTON_COUNT] =
+        {
+            "assets/textures/play.png",
+            "assets/textures/load.png",
+            "assets/textures/rank.png",
+            "assets/textures/help.png",
+            "assets/textures/settings.png",
+            "assets/textures/credit.png",
+            "assets/textures/exit.png"};
+
+    for (int i = 0; i < BUTTON_COUNT; ++i)
+    {
+        m_buttonLoaded[i] =
+            m_buttonTextures[i].loadFromFile(buttonFiles[i]);
+
+        if (!m_buttonLoaded[i])
+        {
+            // Không crash game nếu một texture bị lỗi.
+            // Button đó sẽ không được vẽ.
+        }
+    }
+
+    // ========================================================
+    // BACKGROUND
+    // ========================================================
 
     initBackground();
+
+    // ========================================================
+    // CLOUDS
+    // ========================================================
+
     initClouds();
+
+    // ========================================================
+    // BUTTONS
+    // ========================================================
+
     initButtons();
 
-    // Tiêu đề game
-    m_titleText.setFont(m_font);
-    m_titleText.setString("CROSSING ROAD");
-    m_titleText.setCharacterSize(48);
-    m_titleText.setFillColor(sf::Color(255, 215, 0)); // Màu vàng gold
-    m_titleText.setStyle(sf::Text::Bold);
-    sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-    m_titleText.setOrigin(titleBounds.left + titleBounds.width / 2.f,
-                          titleBounds.top + titleBounds.height / 2.f);
-    m_titleText.setPosition(400.f, 60.f);
+    // ========================================================
+    // TITLE
+    // ========================================================
 
-    // Phụ đề nhấp nháy
-    m_subtitleText.setFont(m_font);
-    m_subtitleText.setString("Press any button to start");
-    m_subtitleText.setCharacterSize(18);
-    m_subtitleText.setFillColor(sf::Color(200, 200, 200));
-    sf::FloatRect subBounds = m_subtitleText.getLocalBounds();
-    m_subtitleText.setOrigin(subBounds.left + subBounds.width / 2.f,
-                             subBounds.top + subBounds.height / 2.f);
-    m_subtitleText.setPosition(400.f, 110.f);
+    if (m_fontLoaded)
+    {
+        m_titleText.setFont(m_font);
+        m_titleText.setString("CROSSING ROAD");
+        m_titleText.setCharacterSize(48);
+        m_titleText.setFillColor(
+            sf::Color(255, 215, 0));
+        m_titleText.setStyle(sf::Text::Bold);
+
+        sf::FloatRect titleBounds =
+            m_titleText.getLocalBounds();
+
+        m_titleText.setOrigin(
+            titleBounds.left + titleBounds.width / 2.f,
+            titleBounds.top + titleBounds.height / 2.f);
+
+        m_titleText.setPosition(
+            400.f,
+            60.f);
+
+        // ====================================================
+        // SUBTITLE
+        // ====================================================
+
+        m_subtitleText.setFont(m_font);
+        m_subtitleText.setString(
+            "Press any button to start");
+
+        m_subtitleText.setCharacterSize(18);
+
+        m_subtitleText.setFillColor(
+            sf::Color(200, 200, 200));
+
+        sf::FloatRect subBounds =
+            m_subtitleText.getLocalBounds();
+
+        m_subtitleText.setOrigin(
+            subBounds.left + subBounds.width / 2.f,
+            subBounds.top + subBounds.height / 2.f);
+
+        m_subtitleText.setPosition(
+            400.f,
+            110.f);
+    }
 }
 
-void MainMenuState::initBackground() {
-    // Gradient nền: phần trên sáng hơn, phần dưới tối hơn
-    m_bgTop.setSize(sf::Vector2f(800.f, 300.f));
-    m_bgTop.setPosition(0.f, 0.f);
-    m_bgTop.setFillColor(sf::Color(25, 25, 80)); // Xanh đậm nhạt
+// ============================================================
+// INIT BACKGROUND
+// ============================================================
 
-    m_bgBottom.setSize(sf::Vector2f(800.f, 300.f));
-    m_bgBottom.setPosition(0.f, 300.f);
-    m_bgBottom.setFillColor(sf::Color(10, 10, 50)); // Xanh đậm tối
+void MainMenuState::initBackground()
+{
+    // Phần trên
+    m_bgTop.setSize(
+        sf::Vector2f(800.f, 300.f));
+
+    m_bgTop.setPosition(
+        0.f,
+        0.f);
+
+    m_bgTop.setFillColor(
+        sf::Color(25, 25, 80));
+
+    // Phần dưới
+    m_bgBottom.setSize(
+        sf::Vector2f(800.f, 300.f));
+
+    m_bgBottom.setPosition(
+        0.f,
+        300.f);
+
+    m_bgBottom.setFillColor(
+        sf::Color(10, 10, 50));
 }
 
-void MainMenuState::initClouds() {
-    // Tạo 4 đám mây trang trí bay ngang phần trên màn hình
-    float cloudData[][4] = {
-        // x, y, width, speed
-        { 50.f,  30.f, 120.f, 30.f },
-        { 300.f, 55.f,  90.f, 20.f },
-        { 550.f, 20.f, 110.f, 40.f },
-        { 700.f, 70.f,  80.f, 25.f }
-    };
+// ============================================================
+// INIT CLOUDS
+// ============================================================
 
-    for (int i = 0; i < 4; i++) {
+void MainMenuState::initClouds()
+{
+    float cloudData[][4] =
+        {
+            // x,     y,     width, speed
+            {50.f, 30.f, 120.f, 30.f},
+            {300.f, 55.f, 90.f, 20.f},
+            {550.f, 20.f, 110.f, 40.f},
+            {700.f, 70.f, 80.f, 25.f}};
+
+    for (int i = 0; i < 4; ++i)
+    {
         Cloud cloud;
-        cloud.shape.setSize(sf::Vector2f(cloudData[i][2], 25.f));
-        cloud.shape.setPosition(cloudData[i][0], cloudData[i][1]);
-        cloud.shape.setFillColor(sf::Color(255, 255, 255, 80)); // Trắng mờ
+
+        // ====================================================
+        // Fallback rectangle
+        // ====================================================
+
+        cloud.shape.setSize(
+            sf::Vector2f(
+                cloudData[i][2],
+                25.f));
+
+        cloud.shape.setPosition(
+            cloudData[i][0],
+            cloudData[i][1]);
+
+        cloud.shape.setFillColor(
+            sf::Color(255, 255, 255, 80));
+
         cloud.shape.setOutlineThickness(0.f);
+
         cloud.speed = cloudData[i][3];
 
-        if (m_cloudLoaded) {
-            cloud.sprite.setTexture(m_cloudTexture);
-            auto texSize = m_cloudTexture.getSize();
-            float scaleX = cloudData[i][2] / texSize.x;
-            float scaleY = scaleX; // Giữ tỷ lệ thật của ảnh
-            cloud.sprite.setScale(scaleX, scaleY);
-            // Giảm opacity một chút cho mây mờ ảo
-            cloud.sprite.setColor(sf::Color(255, 255, 255, 200)); 
-            cloud.sprite.setPosition(cloudData[i][0], cloudData[i][1]);
+        // ====================================================
+        // Cloud sprite
+        // ====================================================
+
+        if (m_cloudLoaded)
+        {
+            cloud.sprite.setTexture(
+                m_cloudTexture);
+
+            sf::Vector2u texSize =
+                m_cloudTexture.getSize();
+
+            if (texSize.x > 0 && texSize.y > 0)
+            {
+                float scaleX =
+                    cloudData[i][2] /
+                    static_cast<float>(texSize.x);
+
+                float scaleY = scaleX;
+
+                cloud.sprite.setScale(
+                    scaleX,
+                    scaleY);
+            }
+
+            cloud.sprite.setColor(
+                sf::Color(255, 255, 255, 200));
+
+            cloud.sprite.setPosition(
+                cloudData[i][0],
+                cloudData[i][1]);
         }
 
         m_clouds.push_back(cloud);
     }
 }
 
-void MainMenuState::initButtons() {
-    // Tạo các nút menu xếp ngang ở góc dưới bên phải màn hình
-    float buttonSize = 50.f; // Nút hình vuông
-    float spacing = 10.f;
-    
-    // Tính tổng chiều rộng của tất cả các nút
-    float totalWidth = m_buttonLabels.size() * buttonSize + (m_buttonLabels.size() - 1) * spacing;
-    
-    // Đặt ở góc dưới bên phải (cách lề phải 20px, lề dưới 20px)
-    float startX = 800.f - 20.f - totalWidth + (buttonSize / 2.f); 
-    float startY = 600.f - 20.f - (buttonSize / 2.f);
+// ============================================================
+// INIT BUTTONS
+// ============================================================
 
-    for (size_t i = 0; i < m_buttonLabels.size(); i++) {
-        MenuButton btn;
+void MainMenuState::initButtons()
+{
+    m_buttons.clear();
 
-        // Nền nút
-        btn.background.setSize(sf::Vector2f(buttonSize, buttonSize));
-        btn.background.setOrigin(buttonSize / 2.f, buttonSize / 2.f);
-        
-        float xPos = startX + i * (buttonSize + spacing);
-        btn.background.setPosition(xPos, startY);
-        
-        btn.background.setFillColor(sf::Color(60, 60, 120, 200)); // Hơi trong suốt
-        btn.background.setOutlineColor(sf::Color(100, 100, 180));
-        btn.background.setOutlineThickness(2.f);
+    // ========================================================
+    // Tổng chiều rộng của 7 button
+    // ========================================================
 
-        // Chữ trên nút
-        btn.label.setFont(m_font);
-        btn.label.setString(m_buttonLabels[i]);
-        btn.label.setCharacterSize(20);
-        btn.label.setFillColor(sf::Color::White);
-        sf::FloatRect textBounds = btn.label.getLocalBounds();
-        btn.label.setOrigin(textBounds.left + textBounds.width / 2.f,
-                            textBounds.top + textBounds.height / 2.f);
-        btn.label.setPosition(xPos, startY);
+    float totalWidth =
+        BUTTON_COUNT * BUTTON_SIZE +
+        (BUTTON_COUNT - 1) * BUTTON_SPACING;
 
-        btn.hovered = false;
-        m_buttons.push_back(btn);
+    // ========================================================
+    // Đặt cả cụm button ở góc dưới bên phải
+    // ========================================================
+
+    float startX =
+        800.f -
+        20.f -
+        totalWidth +
+        BUTTON_SIZE / 2.f;
+
+    float startY =
+        600.f -
+        20.f -
+        BUTTON_SIZE / 2.f;
+
+    // ========================================================
+    // Tạo 7 button
+    // ========================================================
+
+    for (int i = 0; i < BUTTON_COUNT; ++i)
+    {
+        MenuButton button;
+
+        float xPos =
+            startX +
+            i * (BUTTON_SIZE + BUTTON_SPACING);
+
+        // ====================================================
+        // HITBOX
+        // ====================================================
+
+        button.hitbox.setSize(
+            sf::Vector2f(
+                BUTTON_SIZE,
+                BUTTON_SIZE));
+
+        button.hitbox.setOrigin(
+            BUTTON_SIZE / 2.f,
+            BUTTON_SIZE / 2.f);
+
+        button.hitbox.setPosition(
+            xPos,
+            startY);
+
+        button.hitbox.setFillColor(
+            sf::Color::Transparent);
+
+        // ====================================================
+        // VỊ TRÍ GỐC
+        // ====================================================
+
+        button.basePosition =
+            sf::Vector2f(
+                xPos,
+                startY);
+
+        button.width = BUTTON_SIZE;
+        button.height = BUTTON_SIZE;
+
+        button.hovered = false;
+        button.pressed = false;
+        button.currentFrame = 0;
+
+        // ====================================================
+        // LOAD SPRITE
+        // ====================================================
+
+        if (m_buttonLoaded[i])
+        {
+            button.sprite.setTexture(
+                m_buttonTextures[i]);
+
+            sf::Vector2u textureSize =
+                m_buttonTextures[i].getSize();
+
+            if (textureSize.x > 0 &&
+                textureSize.y > 0)
+            {
+                // =================================================
+                // Sprite sheet:
+                //
+                // +----------+----------+----------+
+                // | NORMAL   | HOVER    | PRESSED  |
+                // +----------+----------+----------+
+                //
+                // Chia texture thành 3 frame theo chiều ngang.
+                // =================================================
+
+                int frameWidth =
+                    static_cast<int>(
+                        textureSize.x / 3);
+
+                int frameHeight =
+                    static_cast<int>(
+                        textureSize.y);
+
+                // =================================================
+                // QUAN TRỌNG:
+                //
+                // Không scale frame 512x1024 thành 50x50.
+                //
+                // Thay vào đó lấy một vùng VUÔNG bên trong frame.
+                // =================================================
+
+                int squareSize =
+                    std::min(
+                        frameWidth,
+                        frameHeight);
+
+                // =================================================
+                // Căn giữa vùng vuông trong frame.
+                // =================================================
+
+                int offsetX =
+                    (frameWidth - squareSize) / 2;
+
+                int offsetY =
+                    (frameHeight - squareSize) / 2;
+
+                // =================================================
+                // Frame NORMAL
+                // =================================================
+
+                button.sprite.setTextureRect(
+                    sf::IntRect(
+                        offsetX,
+                        offsetY,
+                        squareSize,
+                        squareSize));
+
+                // =================================================
+                // Origin chính giữa icon
+                // =================================================
+
+                button.sprite.setOrigin(
+                    squareSize / 2.f,
+                    squareSize / 2.f);
+
+                // =================================================
+                // SCALE ĐỒNG ĐỀU
+                //
+                // X = Y
+                //
+                // => hình tròn KHÔNG BAO GIỜ bị méo.
+                // =================================================
+
+                float scale =
+                    BUTTON_SIZE /
+                    static_cast<float>(squareSize);
+
+                button.sprite.setScale(
+                    scale,
+                    scale);
+
+                // =================================================
+                // Vị trí
+                // =================================================
+
+                button.sprite.setPosition(
+                    xPos,
+                    startY);
+            }
+        }
+
+        m_buttons.push_back(button);
     }
 }
 
-void MainMenuState::handleInput(sf::RenderWindow& window, sf::Event& event) {
-    if (event.type == sf::Event::MouseButtonPressed &&
-        event.mouseButton.button == sf::Mouse::Left)
-    {
-        sf::Vector2f mousePos = sf::Vector2f(
-            static_cast<float>(event.mouseButton.x),
-            static_cast<float>(event.mouseButton.y)
-        );
+// ============================================================
+// SET BUTTON FRAME
+// ============================================================
 
-        for (size_t i = 0; i < m_buttons.size(); i++) {
-            if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
-                onButtonClick(static_cast<int>(i));
-                break;
+void MainMenuState::setButtonFrame(
+    MenuButton &button,
+    int frame)
+{
+    // ========================================================
+    // Giới hạn frame
+    // ========================================================
+
+    if (frame < 0)
+        frame = 0;
+
+    if (frame > 2)
+        frame = 2;
+
+    // ========================================================
+    // Kiểm tra texture
+    // ========================================================
+
+    if (button.sprite.getTexture() == nullptr)
+        return;
+
+    sf::Vector2u textureSize =
+        button.sprite.getTexture()->getSize();
+
+    if (textureSize.x == 0 ||
+        textureSize.y == 0)
+    {
+        return;
+    }
+
+    // ========================================================
+    // Chia sprite sheet thành 3 frame
+    // ========================================================
+
+    int frameWidth =
+        static_cast<int>(
+            textureSize.x / 3);
+
+    int frameHeight =
+        static_cast<int>(
+            textureSize.y);
+
+    if (frameWidth <= 0 ||
+        frameHeight <= 0)
+    {
+        return;
+    }
+
+    // ========================================================
+    // Lấy vùng vuông lớn nhất trong frame
+    // ========================================================
+
+    int squareSize =
+        std::min(
+            frameWidth,
+            frameHeight);
+
+    // ========================================================
+    // Căn giữa vùng vuông
+    // ========================================================
+
+    int offsetX =
+        (frameWidth - squareSize) / 2;
+
+    int offsetY =
+        (frameHeight - squareSize) / 2;
+
+    // ========================================================
+    // Chọn frame
+    //
+    // frame 0 = NORMAL
+    // frame 1 = HOVER
+    // frame 2 = PRESSED
+    // ========================================================
+
+    button.sprite.setTextureRect(
+        sf::IntRect(
+            frame * frameWidth + offsetX,
+            offsetY,
+            squareSize,
+            squareSize));
+
+    // ========================================================
+    // Origin luôn ở chính giữa icon
+    // ========================================================
+
+    button.sprite.setOrigin(
+        squareSize / 2.f,
+        squareSize / 2.f);
+
+    // ========================================================
+    // SCALE ĐỒNG ĐỀU
+    //
+    // Đây là phần sửa lỗi hình tròn bị méo.
+    // ========================================================
+
+    float scale =
+        BUTTON_SIZE /
+        static_cast<float>(squareSize);
+
+    button.sprite.setScale(
+        scale,
+        scale);
+
+    // ========================================================
+    // Lưu frame hiện tại
+    // ========================================================
+
+    button.currentFrame = frame;
+}
+
+// ============================================================
+// HANDLE INPUT
+// ============================================================
+
+void MainMenuState::handleInput(
+    sf::RenderWindow &window,
+    sf::Event &event)
+{
+    // ========================================================
+    // MOUSE PRESSED
+    // ========================================================
+
+    if (event.type ==
+        sf::Event::MouseButtonPressed)
+    {
+        if (event.mouseButton.button ==
+            sf::Mouse::Left)
+        {
+            sf::Vector2i mousePixel =
+                sf::Mouse::getPosition(window);
+
+            sf::Vector2f mousePos =
+                window.mapPixelToCoords(
+                    mousePixel);
+
+            for (int i = 0;
+                 i < BUTTON_COUNT;
+                 ++i)
+            {
+                if (!m_buttonLoaded[i])
+                    continue;
+
+                if (m_buttons[i]
+                        .hitbox
+                        .getGlobalBounds()
+                        .contains(mousePos))
+                {
+                    m_buttons[i].pressed = true;
+
+                    // Frame PRESSED
+                    setButtonFrame(
+                        m_buttons[i],
+                        2);
+
+                    // Di chuyển lên một chút
+                    m_buttons[i].sprite.setPosition(
+                        m_buttons[i].basePosition.x,
+                        m_buttons[i].basePosition.y -
+                            PRESSED_OFFSET);
+
+                    break;
+                }
+            }
+        }
+    }
+
+    // ========================================================
+    // MOUSE RELEASED
+    // ========================================================
+
+    if (event.type ==
+        sf::Event::MouseButtonReleased)
+    {
+        if (event.mouseButton.button ==
+            sf::Mouse::Left)
+        {
+            sf::Vector2i mousePixel =
+                sf::Mouse::getPosition(window);
+
+            sf::Vector2f mousePos =
+                window.mapPixelToCoords(
+                    mousePixel);
+
+            for (int i = 0;
+                 i < BUTTON_COUNT;
+                 ++i)
+            {
+                if (!m_buttonLoaded[i])
+                    continue;
+
+                bool inside =
+                    m_buttons[i]
+                        .hitbox
+                        .getGlobalBounds()
+                        .contains(mousePos);
+
+                if (m_buttons[i].pressed)
+                {
+                    m_buttons[i].pressed = false;
+
+                    if (inside)
+                    {
+                        onButtonClick(i);
+                    }
+                }
             }
         }
     }
 }
 
-void MainMenuState::update(float dt) {
-    // Cập nhật hiệu ứng nhấp nháy phụ đề
+// ============================================================
+// UPDATE
+// ============================================================
+
+void MainMenuState::update(float dt)
+{
+    // ========================================================
+    // Subtitle blinking
+    // ========================================================
+
     m_blinkTimer += dt;
-    if (m_blinkTimer >= 0.6f) {
+
+    if (m_blinkTimer >= 0.6f)
+    {
         m_blinkTimer = 0.f;
-        m_subtitleVisible = !m_subtitleVisible;
-        m_subtitleText.setFillColor(m_subtitleVisible
-            ? sf::Color(200, 200, 200)
-            : sf::Color::Transparent);
-    }
 
-    // Cập nhật đám mây bay
-    for (auto& cloud : m_clouds) {
-        cloud.shape.move(cloud.speed * dt, 0.f);
-        if (m_cloudLoaded) cloud.sprite.move(cloud.speed * dt, 0.f);
-        // Nếu bay ra khỏi bên phải, quay lại bên trái
-        if (cloud.shape.getPosition().x > 820.f) {
-            cloud.shape.setPosition(-cloud.shape.getSize().x, cloud.shape.getPosition().y);
-            if (m_cloudLoaded) cloud.sprite.setPosition(-cloud.shape.getSize().x, cloud.shape.getPosition().y);
+        m_subtitleVisible =
+            !m_subtitleVisible;
+
+        if (m_fontLoaded)
+        {
+            m_subtitleText.setFillColor(
+                m_subtitleVisible
+                    ? sf::Color(200, 200, 200)
+                    : sf::Color::Transparent);
         }
     }
 
-    // Cập nhật hover cho nút menu
-    sf::Vector2i mousePixel = sf::Mouse::getPosition(Game::instance().getWindow());
-    sf::Vector2f mousePos = sf::Vector2f(static_cast<float>(mousePixel.x),
-                                          static_cast<float>(mousePixel.y));
+    // ========================================================
+    // Clouds
+    // ========================================================
 
-    for (auto& btn : m_buttons) {
-        btn.hovered = btn.background.getGlobalBounds().contains(mousePos);
-        if (btn.hovered) {
-            btn.background.setFillColor(sf::Color(100, 100, 200));
-            btn.label.setFillColor(sf::Color(255, 215, 0)); // Gold khi hover
-        } else {
-            btn.background.setFillColor(sf::Color(60, 60, 120));
-            btn.label.setFillColor(sf::Color::White);
+    for (auto &cloud : m_clouds)
+    {
+        cloud.shape.move(
+            cloud.speed * dt,
+            0.f);
+
+        if (m_cloudLoaded)
+        {
+            cloud.sprite.move(
+                cloud.speed * dt,
+                0.f);
+        }
+
+        // Nếu ra ngoài màn hình
+        if (cloud.shape.getPosition().x > 820.f)
+        {
+            float newX =
+                -cloud.shape.getSize().x;
+
+            float y =
+                cloud.shape.getPosition().y;
+
+            cloud.shape.setPosition(
+                newX,
+                y);
+
+            if (m_cloudLoaded)
+            {
+                cloud.sprite.setPosition(
+                    newX,
+                    y);
+            }
+        }
+    }
+
+    // ========================================================
+    // BUTTON HOVER
+    // ========================================================
+
+    updateButtonHover();
+}
+
+// ============================================================
+// UPDATE BUTTON HOVER
+// ============================================================
+
+void MainMenuState::updateButtonHover()
+{
+    sf::RenderWindow &window =
+        Game::instance().getWindow();
+
+    sf::Vector2i mousePixel =
+        sf::Mouse::getPosition(window);
+
+    sf::Vector2f mousePos =
+        window.mapPixelToCoords(
+            mousePixel);
+
+    // ========================================================
+    // Duyệt 7 button
+    // ========================================================
+
+    for (int i = 0;
+         i < BUTTON_COUNT;
+         ++i)
+    {
+        MenuButton &button =
+            m_buttons[i];
+
+        if (!m_buttonLoaded[i])
+            continue;
+
+        // ====================================================
+        // Kiểm tra hover
+        // ====================================================
+
+        bool mouseOver =
+            button.hitbox
+                .getGlobalBounds()
+                .contains(mousePos);
+
+        button.hovered = mouseOver;
+
+        // ====================================================
+        // Nếu đang nhấn chuột
+        // ====================================================
+
+        if (button.pressed)
+        {
+            setButtonFrame(
+                button,
+                2);
+
+            button.sprite.setPosition(
+                button.basePosition.x,
+                button.basePosition.y - PRESSED_OFFSET);
+
+            continue;
+        }
+
+        // ====================================================
+        // HOVER
+        // ====================================================
+
+        if (button.hovered)
+        {
+            // Frame 1 = HOVER
+            setButtonFrame(
+                button,
+                1);
+
+            // Di chuyển lên 4 px
+            button.sprite.setPosition(
+                button.basePosition.x,
+                button.basePosition.y - HOVER_OFFSET);
+        }
+
+        // ====================================================
+        // NORMAL
+        // ====================================================
+
+        else
+        {
+            // Frame 0 = NORMAL
+            setButtonFrame(
+                button,
+                0);
+
+            // Trở lại vị trí ban đầu
+            button.sprite.setPosition(
+                button.basePosition);
         }
     }
 }
 
-void MainMenuState::draw(sf::RenderWindow& window) {
-    // Vẽ nền
-    if (m_menuBgLoaded) {
-        window.draw(m_menuBgSprite);
-    } else {
-        window.draw(m_bgTop);
-        window.draw(m_bgBottom);
+// ============================================================
+// DRAW
+// ============================================================
+
+void MainMenuState::draw(
+    sf::RenderWindow &window)
+{
+    // ========================================================
+    // BACKGROUND
+    // ========================================================
+
+    if (m_menuBgLoaded)
+    {
+        window.draw(
+            m_menuBgSprite);
+    }
+    else
+    {
+        window.draw(
+            m_bgTop);
+
+        window.draw(
+            m_bgBottom);
     }
 
-    // Vẽ đám mây
-    for (auto& cloud : m_clouds) {
-        if (m_cloudLoaded) window.draw(cloud.sprite);
-        else window.draw(cloud.shape);
+    // ========================================================
+    // CLOUDS
+    // ========================================================
+
+    for (auto &cloud : m_clouds)
+    {
+        if (m_cloudLoaded)
+        {
+            window.draw(
+                cloud.sprite);
+        }
+        else
+        {
+            window.draw(
+                cloud.shape);
+        }
     }
 
-    // Vẽ tiêu đề và phụ đề
-    if (m_fontLoaded) {
-        window.draw(m_titleText);
-        window.draw(m_subtitleText);
+    // ========================================================
+    // TITLE & SUBTITLE
+    // ========================================================
+
+    if (m_fontLoaded)
+    {
+        window.draw(
+            m_titleText);
+
+        window.draw(
+            m_subtitleText);
     }
 
-    // Vẽ nút menu
-    for (auto& btn : m_buttons) {
-        window.draw(btn.background);
-        if (m_fontLoaded) {
-            window.draw(btn.label);
+    // ========================================================
+    // BUTTONS
+    // ========================================================
+
+    for (int i = 0;
+         i < BUTTON_COUNT;
+         ++i)
+    {
+        if (m_buttonLoaded[i])
+        {
+            window.draw(
+                m_buttons[i].sprite);
         }
     }
 }
 
-void MainMenuState::onButtonClick(int index) {
-    switch (index) {
-    case 0: // PLAY -> đẩy GameState vào stack
-        Game::instance().getStateMachine().pushState(std::make_unique<GameState>());
+// ============================================================
+// BUTTON CLICK
+// ============================================================
+
+void MainMenuState::onButtonClick(
+    int index)
+{
+    switch (index)
+    {
+        // ====================================================
+        // 0 - PLAY
+        // ====================================================
+
+    case 0:
+    {
+        Game::instance()
+            .getStateMachine()
+            .pushState(
+                std::make_unique<GameState>());
+
         break;
-    case 1: // LOAD GAME
-        Game::instance().getStateMachine().pushState(std::make_unique<LoadGameState>());
+    }
+
+        // ====================================================
+        // 1 - LOAD GAME
+        // ====================================================
+
+    case 1:
+    {
+        Game::instance()
+            .getStateMachine()
+            .pushState(
+                std::make_unique<LoadGameState>());
+
         break;
-    case 2: // RANKING
-        Game::instance().getStateMachine().pushState(std::make_unique<RankingState>());
+    }
+
+        // ====================================================
+        // 2 - RANKING
+        // ====================================================
+
+    case 2:
+    {
+        Game::instance()
+            .getStateMachine()
+            .pushState(
+                std::make_unique<RankingState>());
+
         break;
-    case 3: // HELP
-        Game::instance().getStateMachine().pushState(std::make_unique<HelpState>());
+    }
+
+        // ====================================================
+        // 3 - HELP
+        // ====================================================
+
+    case 3:
+    {
+        Game::instance()
+            .getStateMachine()
+            .pushState(
+                std::make_unique<HelpState>());
+
         break;
-    case 4: // ABOUT
-        Game::instance().getStateMachine().pushState(std::make_unique<AboutState>());
+    }
+
+        // ====================================================
+        // 4 - CREDIT / ABOUT
+        // ====================================================
+
+    case 4:
+    {
+        Game::instance()
+            .getStateMachine()
+            .pushState(
+                std::make_unique<AboutState>());
+
         break;
-    case 5: // SETTINGS
-        Game::instance().getStateMachine().pushState(std::make_unique<SettingState>());
+    }
+
+        // ====================================================
+        // 5 - SETTINGS
+        // ====================================================
+
+    case 5:
+    {
+        Game::instance()
+            .getStateMachine()
+            .pushState(
+                std::make_unique<SettingState>());
+
         break;
-    case 6: // EXIT -> đóng cửa sổ game
-        Game::instance().getWindow().close();
+    }
+
+        // ====================================================
+        // 6 - EXIT
+        // ====================================================
+
+    case 6:
+    {
+        Game::instance()
+            .getWindow()
+            .close();
+
         break;
+    }
+
     default:
         break;
     }
