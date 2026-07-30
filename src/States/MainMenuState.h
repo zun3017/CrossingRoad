@@ -103,6 +103,10 @@ private:
 
     sf::Texture m_buttonTextures[BUTTON_COUNT];
     bool m_buttonLoaded[BUTTON_COUNT];
+    
+    sf::Texture m_hoverTextTextures[BUTTON_COUNT];
+    bool m_hoverTextLoaded[BUTTON_COUNT];
+    sf::Sprite m_hoverTextSprites[BUTTON_COUNT];
 
     std::vector<MenuButton> m_buttons;
 

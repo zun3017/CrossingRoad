@@ -78,10 +78,22 @@ void MainMenuState::init()
             "assets/textures/settings.png",
             "assets/textures/exit.png"};
 
+    const char *textFiles[BUTTON_COUNT] =
+        {
+            "assets/textures/play_text.png",
+            "assets/textures/load_text.png",
+            "assets/textures/rank_text.png",
+            "assets/textures/help_text.png",
+            "assets/textures/credit_text.png",
+            "assets/textures/settings_text.png",
+            "assets/textures/exit_text.png"};
+
     for (int i = 0; i < BUTTON_COUNT; ++i)
     {
         m_buttonLoaded[i] =
             m_buttonTextures[i].loadFromFile(buttonFiles[i]);
+
+        m_hoverTextLoaded[i] = m_hoverTextTextures[i].loadFromFile(textFiles[i]);
 
         if (!m_buttonLoaded[i])
         {
@@ -439,6 +451,30 @@ void MainMenuState::initButtons()
                 button.sprite.setPosition(
                     xPos,
                     startY);
+            }
+        }
+
+        // Setup Hover Text Sprite
+        if (m_hoverTextLoaded[i])
+        {
+            m_hoverTextSprites[i].setTexture(m_hoverTextTextures[i]);
+            sf::Vector2u textTexSize = m_hoverTextTextures[i].getSize();
+            if (textTexSize.x > 0 && textTexSize.y > 0)
+            {
+                // Scale sao cho chữ có kích thước cố định mà không méo
+                float textScale = 25.f / static_cast<float>(textTexSize.y);
+                m_hoverTextSprites[i].setScale(textScale, textScale);
+                
+                m_hoverTextSprites[i].setOrigin(
+                    static_cast<float>(textTexSize.x) / 2.f,
+                    static_cast<float>(textTexSize.y) / 2.f
+                );
+                
+                // Đặt text ở phía trên nút
+                m_hoverTextSprites[i].setPosition(
+                    xPos,
+                    startY - BUTTON_SIZE / 2.f - 20.f
+                );
             }
         }
 
@@ -896,6 +932,12 @@ void MainMenuState::draw(
         {
             window.draw(
                 m_buttons[i].sprite);
+                
+            // Draw hover text if hovered
+            if (m_buttons[i].hovered && m_hoverTextLoaded[i])
+            {
+                window.draw(m_hoverTextSprites[i]);
+            }
         }
     }
 }
