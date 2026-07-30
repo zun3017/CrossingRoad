@@ -570,27 +570,7 @@ void GameState::movePlayer(float dx, float dy) {
     if (newPos.x > 800.f - m_playerSize) newPos.x = 800.f - m_playerSize;
     if (newPos.y > 600.f - m_cellSize) newPos.y = 600.f - m_cellSize;
 
-    // Nếu di chuyển lên/xuống sang vùng không phải sông, căn x về cột lưới gần nhất
-    if (dy != 0.f) {
-        float targetY = newPos.y + m_playerSize / 2.f;
-        
-        bool isTargetRiver = false;
-        for (auto& row : m_terrains) {
-            if (row.type == TerrainType::River) {
-                sf::FloatRect rowBounds = row.background.getGlobalBounds();
-                if (targetY > rowBounds.top && targetY < rowBounds.top + rowBounds.height) {
-                    isTargetRiver = true;
-                    break;
-                }
-            }
-        }
-        if (!isTargetRiver) {
-            float offsetX = (m_cellSize - m_playerSize) / 2.f;
-            int col = static_cast<int>(std::round((newPos.x - offsetX) / m_cellSize));
-            newPos.x = col * m_cellSize + offsetX;
-            
-        }
-    }
+    // Không còn ép grid X nữa, người chơi nhảy thẳng tắp từ vị trí hiện tại
 
     // Gọi startMove để kích hoạt animation
     m_player->startMove(newPos.x - m_player->getPosition().x, newPos.y - m_player->getPosition().y);
@@ -830,9 +810,9 @@ void GameState::checkCollisions(float dt) {
             rowBounds.left = -10000.f;
             rowBounds.width = 20000.f;
             if (playerHitbox.intersects(rowBounds)) {
-                // Nếu đang animation LERP nhảy LÊN khỏi hàng sông (về phía bờ),
-                // bỏ qua kiểm tra chết đuối để tránh chết nhầm khi nhảy lên bờ
-                if (m_player->m_isAnimating && m_player->m_targetPos.y < rowBounds.top) {
+                // Nếu đang animation LERP nhảy RA KHỎI hàng sông (lên bờ trước hoặc lùi về bờ sau),
+                // bỏ qua kiểm tra chết đuối và không bị khúc gỗ đẩy đi nữa
+                if (m_player->m_isAnimating && (m_player->m_targetPos.y < rowBounds.top || m_player->m_targetPos.y > rowBounds.top + rowBounds.height)) {
                     continue; // Đang nhảy lên bờ -> bỏ qua
                 }
 
