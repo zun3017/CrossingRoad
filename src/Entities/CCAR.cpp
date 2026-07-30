@@ -1,19 +1,12 @@
 #include "CCAR.h"
 #include "../Core/ResourceManager.h"
-#include <random>
-
-static std::mt19937& getCarRNG() {
-    static std::mt19937 engine(std::random_device{}());
-    return engine;
-}
-
 CCAR::CCAR(float x, float y, float speed, int direction)
     : CVEHICLE(x, y, speed, direction)
 {
     try {
         std::string carFiles[] = { "assets/textures/car_blue.png", "assets/textures/car_red.png", "assets/textures/car_yellow.png" };
-        std::uniform_int_distribution<int> colorDist(0, 2);
-        auto& tex = ResourceManager<sf::Texture>::getInstance().get(carFiles[colorDist(getCarRNG())]);
+        int colorIdx = std::rand() % 3;
+        auto& tex = ResourceManager<sf::Texture>::getInstance().get(carFiles[colorIdx]);
         if (tex.getSize().x > 0) {
             m_sprite.setTexture(tex);
             m_usesFallback = false;

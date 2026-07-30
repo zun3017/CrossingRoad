@@ -201,9 +201,9 @@ void GameState::createRoadRow(float y) {
             startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 150 - 50);
         }
 
-        // Tốc độ thay đổi ngẫu nhiên từng xe (thêm bớt 30) để có hiện tượng vượt nhau
-        float speed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
-        if (speed < 40.f) speed = 40.f; // Giới hạn tốc độ tối thiểu
+        // Tất cả các xe trên CÙNG MỘT HÀNG phải có cùng tốc độ (baseSpeed).
+        // Nếu để tốc độ khác nhau, xe đi nhanh sẽ đuổi kịp và đè lên xe đi chậm (như trong hình bị 3 xe đè lên nhau).
+        float speed = baseSpeed;
 
         int direction = movingRight ? 1 : -1;
         
