@@ -187,7 +187,8 @@ void GameState::createRoadRow(float y) {
     // Vẽ vạch kẻ đường (trang trí, lưu vào obstacles sẽ phức tạp quá)
     // Tạo 2-4 xe ngẫu nhiên trên mỗi hàng đường
     int numVehicles = 2 + std::rand() % 3;
-    bool movingRight = (std::rand() % 2 == 0); // Hướng chạy ngẫu nhiên
+    // Dùng toạ độ y để luân phiên hướng chạy, đảm bảo các hàng liền kề luôn đi ngược chiều nhau
+    bool movingRight = (static_cast<int>(std::round(std::abs(y) / m_cellSize)) % 2 == 0);
     float baseSpeed = 80.f + static_cast<float>(m_level * 15 + std::rand() % 40);
 
     for (int v = 0; v < numVehicles; v++) {
@@ -232,7 +233,8 @@ void GameState::createRiverRow(float y) {
 
     // Tạo 3-5 khúc gỗ trên sông
     int numLogs = 3 + std::rand() % 3;
-    bool movingRight = (std::rand() % 2 == 0);
+    // Dùng toạ độ y để luân phiên hướng chạy, tránh 2 hàng gỗ đi cùng chiều bị so le làm kẹt người chơi
+    bool movingRight = (static_cast<int>(std::round(std::abs(y) / m_cellSize)) % 2 == 0);
     float logSpeed = 50.f + static_cast<float>(m_level * 10 + std::rand() % 30);
 
     for (int p = 0; p < numLogs; p++) {
