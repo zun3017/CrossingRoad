@@ -137,7 +137,8 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
 
         // vehicles
         if (!std::getline(file, line)) break;
-        int numVeh = std::stoi(line);
+        int numVeh = 0;
+        try { numVeh = std::stoi(line); } catch (...) { numVeh = 0; }
         for (int j = 0; j < numVeh; j++) {
             if (!std::getline(file, line)) break;
             std::stringstream ssVeh(line);
@@ -148,7 +149,8 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
 
         // lilyPads
         if (!std::getline(file, line)) break;
-        int numPads = std::stoi(line);
+        int numPads = 0;
+        try { numPads = std::stoi(line); } catch (...) { numPads = 0; }
         for (int j = 0; j < numPads; j++) {
             if (!std::getline(file, line)) break;
             std::stringstream ssPad(line);
@@ -159,7 +161,8 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
 
         // items
         if (!std::getline(file, line)) break;
-        int numItems = std::stoi(line);
+        int numItems = 0;
+        try { numItems = std::stoi(line); } catch (...) { numItems = 0; }
         for (int j = 0; j < numItems; j++) {
             if (!std::getline(file, line)) break;
             std::stringstream ssItem(line);
