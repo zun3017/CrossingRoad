@@ -589,13 +589,10 @@ void GameState::movePlayer(float dx, float dy) {
             int col = static_cast<int>(std::round((newPos.x - offsetX) / m_cellSize));
             newPos.x = col * m_cellSize + offsetX;
             
-            // Snap toạ độ X hiện tại về đúng lưới TRƯỚC KHI nhảy 
-            // để animation nhảy lên/xuống là đường thẳng, không bị xéo
-            m_player->setPosition(newPos.x, m_player->getPosition().y);
         }
     }
 
-    // Gọi startMove để kích hoạt animation thay vì setPosition dịch chuyển tức thời
+    // Gọi startMove để kích hoạt animation
     m_player->startMove(newPos.x - m_player->getPosition().x, newPos.y - m_player->getPosition().y);
     
     // Tăng điểm khi tiến lên (chỉ thưởng nếu đi lên cao hơn mức cao nhất từng đạt được)
