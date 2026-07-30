@@ -106,7 +106,6 @@ sf::FloatRect CPEOPLE::getBounds() const {
 
 void CPEOPLE::moveUp() {
     if (m_isDead) return;
-    sf::Vector2f pos = getPosition();
     // Cho phép đi lên trên màn hình (để hoàn thành level)
     startMove(0.f, -static_cast<float>(GRID_SIZE));
 }

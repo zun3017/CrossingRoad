@@ -71,6 +71,4 @@ private:
     bool m_isDead   = false;
     bool m_isDrowned = false;
 
-    // Animation frame rect
-    sf::IntRect m_currentFrame;
 };

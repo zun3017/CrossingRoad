@@ -29,7 +29,7 @@ struct TrainData {
 
 // Removed Obstacle
 
-struct LilyPad {
+struct Log {
     sf::RectangleShape shape;
     float speed;
     bool movingRight;
@@ -46,7 +46,7 @@ struct TerrainRow {
     float yPosition;
     sf::RectangleShape background;
     std::vector<std::unique_ptr<CVEHICLE>> vehicles;
-    std::vector<LilyPad> lilyPads;     // Lá sen trên sông
+    std::vector<Log> logs;              // Khúc gỗ trôi trên sông
     std::vector<ItemData> items;           // Vật phẩm thu thập
     CTRAFFICLIGHT trafficLight;     // Đèn giao thông (cho đường ray)
     TrainData train;                   // Tàu hoả (cho đường ray)
@@ -69,7 +69,7 @@ public:
     void draw(sf::RenderWindow& window) override;
     
     void loadGame(const std::string& sessionName, const SaveData& data);
-
+private:
     sf::Font m_font;
     bool m_fontLoaded = false;
     
@@ -84,9 +84,6 @@ public:
     sf::Sprite m_roadSprite;
     sf::Sprite m_riverSprite;
     sf::Sprite m_logSprite;
-    sf::Sprite m_carBlueSprite;
-    sf::Sprite m_carRedSprite;
-    sf::Sprite m_carYellowSprite;
     sf::Sprite m_trackSprite;
     sf::Sprite m_trainSprite;
     sf::Sprite m_lightGreenSprite;

@@ -29,6 +29,8 @@ void GameState::init() {
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
 
     try {
+        // Preload player texture vào ResourceManager cache,
+        // để CPEOPLE constructor dùng lại mà không cần load từ file lần nữa.
         auto& tPlayer = ResourceManager<sf::Texture>::getInstance().get("assets/textures/player.png");
         auto& tGrass = ResourceManager<sf::Texture>::getInstance().get("assets/textures/grass.png");
         auto& tRoad = ResourceManager<sf::Texture>::getInstance().get("assets/textures/road.png");
@@ -59,9 +61,7 @@ void GameState::init() {
             m_logSprite.setTexture(tLog);
             m_logSprite.setScale(56.f / tLog.getSize().x, 40.f / tLog.getSize().y);
             
-            if (tCarBlue.getSize().x > 0) m_carBlueSprite.setTexture(tCarBlue);
-            if (tCarRed.getSize().x > 0) m_carRedSprite.setTexture(tCarRed);
-            if (tCarYellow.getSize().x > 0) m_carYellowSprite.setTexture(tCarYellow);
+
             if (tItem.getSize().x > 0) m_itemSprite.setTexture(tItem);
             
             if (tTrack.getSize().x > 0) m_trackSprite.setTexture(tTrack);
@@ -217,7 +217,7 @@ void GameState::createRoadRow(float y) {
 }
 
 // ============================================================
-// Tạo hàng sông với lá sen
+// Tạo hàng sông với khúc gỗ
 // ============================================================
 void GameState::createRiverRow(float y) {
     TerrainRow row;
@@ -228,27 +228,27 @@ void GameState::createRiverRow(float y) {
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(30, 100, 200)); // Xanh nước
 
-    // Tạo 3-5 lá sen trên sông
-    int numPads = 3 + std::rand() % 3;
+    // Tạo 3-5 khúc gỗ trên sông
+    int numLogs = 3 + std::rand() % 3;
     bool movingRight = (std::rand() % 2 == 0);
-    float padSpeed = 50.f + static_cast<float>(m_level * 10 + std::rand() % 30);
+    float logSpeed = 50.f + static_cast<float>(m_level * 10 + std::rand() % 30);
 
-    for (int p = 0; p < numPads; p++) {
-        LilyPad pad;
-        float padWidth = 55.f + static_cast<float>(std::rand() % 25);
-        float padHeight = m_cellSize - 8.f;
+    for (int p = 0; p < numLogs; p++) {
+        Log log;
+        float logWidth = 55.f + static_cast<float>(std::rand() % 25);
+        float logHeight = m_cellSize - 8.f;
 
-        pad.shape.setSize(sf::Vector2f(padWidth, padHeight));
+        log.shape.setSize(sf::Vector2f(logWidth, logHeight));
         float startX = static_cast<float>(p * 170 + std::rand() % 60);
-        pad.shape.setPosition(startX, y + 4.f);
-        pad.shape.setFillColor(sf::Color(0, 160, 0)); // Xanh lá sen
-        pad.shape.setOutlineColor(sf::Color(0, 100, 0));
-        pad.shape.setOutlineThickness(1.f);
+        log.shape.setPosition(startX, y + 4.f);
+        log.shape.setFillColor(sf::Color(139, 90, 43)); // Nâu gỗ (fallback khi không có texture)
+        log.shape.setOutlineColor(sf::Color(80, 50, 20));
+        log.shape.setOutlineThickness(1.f);
 
-        pad.speed = padSpeed;
-        pad.movingRight = movingRight;
+        log.speed = logSpeed;
+        log.movingRight = movingRight;
 
-        row.lilyPads.push_back(pad);
+        row.logs.push_back(log);
     }
 
     m_terrains.push_back(std::move(row));
@@ -404,15 +404,15 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
         }
         
 
-        for (auto& pad : row.lilyPads) {
+        for (auto& log : row.logs) {
             SavedLilyPad sPad;
-            sPad.x = pad.shape.getPosition().x;
-            sPad.y = pad.shape.getPosition().y;
-            sPad.width = pad.shape.getSize().x;
-            sPad.height = pad.shape.getSize().y;
-            sPad.speed = pad.speed;
-            sPad.movingRight = pad.movingRight;
-            sf::Color c = pad.shape.getFillColor();
+            sPad.x = log.shape.getPosition().x;
+            sPad.y = log.shape.getPosition().y;
+            sPad.width = log.shape.getSize().x;
+            sPad.height = log.shape.getSize().y;
+            sPad.speed = log.speed;
+            sPad.movingRight = log.movingRight;
+            sf::Color c = log.shape.getFillColor();
             sPad.r = c.r; sPad.g = c.g; sPad.b = c.b;
             sRow.lilyPads.push_back(sPad);
         }
@@ -676,23 +676,23 @@ void GameState::updateObstacles(float dt) {
 }
 
 // ============================================================
-// Cập nhật vị trí lá sen trên sông
+// Cập nhật vị trí khúc gỗ trôi trên sông
 // ============================================================
 void GameState::updateLilyPads(float dt) {
     for (auto& row : m_terrains) {
         if (row.type != TerrainType::River) continue;
 
-        for (auto& pad : row.lilyPads) {
-            float moveX = pad.speed * dt * (pad.movingRight ? 1.f : -1.f);
-            pad.shape.move(moveX, 0.f);
+        for (auto& log : row.logs) {
+            float moveX = log.speed * dt * (log.movingRight ? 1.f : -1.f);
+            log.shape.move(moveX, 0.f);
 
             // Quay vòng khi ra khỏi màn hình
-            sf::Vector2f pos = pad.shape.getPosition();
-            float w = pad.shape.getSize().x;
-            if (pad.movingRight && pos.x > 820.f) {
-                pad.shape.setPosition(-w, pos.y);
-            } else if (!pad.movingRight && pos.x + w < -20.f) {
-                pad.shape.setPosition(820.f, pos.y);
+            sf::Vector2f pos = log.shape.getPosition();
+            float w = log.shape.getSize().x;
+            if (log.movingRight && pos.x > 820.f) {
+                log.shape.setPosition(-w, pos.y);
+            } else if (!log.movingRight && pos.x + w < -20.f) {
+                log.shape.setPosition(820.f, pos.y);
             }
         }
     }
@@ -819,7 +819,7 @@ void GameState::checkCollisions(float dt) {
             }
         }
 
-        // Kiểm tra sông: phải đứng trên lá sen
+        // Kiểm tra sông: phải đứng trên khúc gỗ
         if (row.type == TerrainType::River) {
             sf::FloatRect rowBounds = row.background.getGlobalBounds();
             if (playerHitbox.intersects(rowBounds)) {
@@ -829,19 +829,19 @@ void GameState::checkCollisions(float dt) {
                     continue; // Đang nhảy lên bờ -> bỏ qua
                 }
 
-                bool onPad = false;
-                for (auto& pad : row.lilyPads) {
-                    if (playerHitbox.intersects(pad.shape.getGlobalBounds())) {
-                        onPad = true;
-                        // Di chuyển theo lá sen đồng bộ với dt
-                        float padMove = pad.speed * dt * (pad.movingRight ? 1.f : -1.f);
-                        m_player->setPosition(m_player->getPosition().x + padMove, m_player->getPosition().y);
+                bool onLog = false;
+                for (auto& log : row.logs) {
+                    if (playerHitbox.intersects(log.shape.getGlobalBounds())) {
+                        onLog = true;
+                        // Di chuyển theo khúc gỗ đồng bộ với dt
+                        float logMove = log.speed * dt * (log.movingRight ? 1.f : -1.f);
+                        m_player->setPosition(m_player->getPosition().x + logMove, m_player->getPosition().y);
 
                         // Nếu bị đẩy ra ngoài màn hình thì chết
                         if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
                             if (!m_playerDead) {
                                 m_playerDead = true;
-                                m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
+                                m_player->die(DeathType::Drowned);
                                 m_deathTimer = 0.f;
                                 m_goState = GameOverUIState::Delay;
                                 if (!m_currentSaveSession.empty()) {
@@ -854,8 +854,8 @@ void GameState::checkCollisions(float dt) {
                         break;
                     }
                 }
-                if (!onPad) {
-                    // Rơi xuống sông -> chết
+                if (!onLog) {
+                    // Rơi xuống sông -> chết đuối
                     if (!m_playerDead) {
                         m_playerDead = true;
                         m_player->die(DeathType::Drowned);
@@ -1024,24 +1024,16 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
-        // Vẽ lá sen
-        for (auto& pad : row.lilyPads) {
+        // Vẽ khúc gỗ
+        for (auto& log : row.logs) {
             if (m_texturesLoaded && m_logSprite.getTexture()) {
                 auto texSize = m_logSprite.getTexture()->getSize();
                 // Ép hình ảnh khúc gỗ co giãn đúng bằng kích thước hitbox vật lý
-                m_logSprite.setScale(pad.shape.getSize().x / texSize.x, pad.shape.getSize().y / texSize.y);
-                m_logSprite.setPosition(pad.shape.getPosition());
+                m_logSprite.setScale(log.shape.getSize().x / texSize.x, log.shape.getSize().y / texSize.y);
+                m_logSprite.setPosition(log.shape.getPosition());
                 window.draw(m_logSprite);
             } else {
-                window.draw(pad.shape);
-                // Vẽ chi tiết trên lá sen
-                sf::CircleShape padDetail(5.f);
-                padDetail.setFillColor(sf::Color(0, 200, 0, 120));
-                padDetail.setPosition(
-                    pad.shape.getPosition().x + pad.shape.getSize().x / 2.f - 5.f,
-                    pad.shape.getPosition().y + pad.shape.getSize().y / 2.f - 5.f
-                );
-                window.draw(padDetail);
+                window.draw(log.shape);
             }
         }
 
@@ -1229,7 +1221,6 @@ void GameState::loadGame(const std::string& sessionName, const SaveData& data) {
     m_maxPlayerY = data.maxPlayerY;
     
     m_isLoadedGame = true;
-    m_currentSaveSession = sessionName;
     
     initHUD();
 }
@@ -1271,17 +1262,17 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     }
     
 
-    // Khôi phục lilypads
+    // Khôi phục khúc gỗ
     for (const auto& sPad : savedRow.lilyPads) {
-        LilyPad pad;
-        pad.shape.setSize(sf::Vector2f(sPad.width, sPad.height));
-        pad.shape.setPosition(sPad.x, sPad.y);
-        pad.shape.setFillColor(sf::Color(sPad.r, sPad.g, sPad.b));
-        pad.shape.setOutlineColor(sf::Color(0, 100, 0));
-        pad.shape.setOutlineThickness(1.f);
-        pad.speed = sPad.speed;
-        pad.movingRight = sPad.movingRight;
-        row.lilyPads.push_back(pad);
+        Log log;
+        log.shape.setSize(sf::Vector2f(sPad.width, sPad.height));
+        log.shape.setPosition(sPad.x, sPad.y);
+        log.shape.setFillColor(sf::Color(sPad.r, sPad.g, sPad.b));
+        log.shape.setOutlineColor(sf::Color(80, 50, 20));
+        log.shape.setOutlineThickness(1.f);
+        log.speed = sPad.speed;
+        log.movingRight = sPad.movingRight;
+        row.logs.push_back(log);
     }
 
     m_terrains.push_back(std::move(row));
