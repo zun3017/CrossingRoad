@@ -63,8 +63,8 @@ void MainMenuState::init()
     // 1 = LOAD
     // 2 = RANK
     // 3 = HELP
-    // 4 = SETTINGS
-    // 5 = CREDIT
+    // 4 = CREDIT
+    // 5 = SETTINGS
     // 6 = EXIT
     // ========================================================
 

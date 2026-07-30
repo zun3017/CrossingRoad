@@ -121,6 +121,41 @@ private:
     // Game over overlay
     sf::RectangleShape m_gameOverOverlay;
     sf::Text m_gameOverText;
+    sf::Sprite m_gameOverSprite;
+    sf::Texture m_texGameOver;
+    sf::Texture m_texConfirm;
+    sf::Texture m_texYes;
+    sf::Texture m_texNo;
+    sf::Texture m_texPlayAgain;
+    sf::Texture m_texHome;
+    sf::Texture m_texLabel;
+    sf::Sprite m_labelSprite;
+    sf::Texture m_texEnterNameText;
+    sf::Sprite m_enterNameTextSprite;
+    sf::Texture m_texNameExistsText;
+    sf::Sprite m_nameExistsTextSprite;
+    sf::Texture m_texNameScoreRankText;
+    sf::Sprite m_nameScoreRankTextSprite;
+    sf::Texture m_goldMedalTex;
+    sf::Texture m_silverMedalTex;
+    sf::Texture m_bronzeMedalTex;
+    sf::Sprite m_medalSprite;
+    bool m_texGameOverLoaded = false;
+    bool m_texConfirmLoaded = false;
+    bool m_texYesLoaded = false;
+    bool m_texNoLoaded = false;
+    bool m_texPlayAgainLoaded = false;
+    bool m_texHomeLoaded = false;
+    bool m_texLabelLoaded = false;
+    bool m_texEnterNameTextLoaded = false;
+    bool m_texNameExistsTextLoaded = false;
+    bool m_texNameScoreRankTextLoaded = false;
+    bool m_medalsLoaded = false;
+    
+    sf::Text m_confirmBestScoreText;
+    sf::Text m_showNameText;
+    sf::Text m_showScoreText;
+    sf::Text m_showRankText;
     
     // UI Game Over
     enum class GameOverUIState { None, Delay, EnterName, ConfirmIdentity, ShowScore };

@@ -3,11 +3,15 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 #include "../Core/State.h"
+#include "../UI/Button.h"
 
 // Mỗi hàng bảng xếp hạng
 struct RankEntry {
     sf::Text rankText;
+    sf::Sprite medalSprite;
+    bool isMedal = false;
     sf::Text nameText;
     sf::Text scoreText;
 };
@@ -31,8 +35,16 @@ private:
     // Title
     sf::Text m_titleText;
 
-    // Trophy placeholder
-    sf::RectangleShape m_trophy;
+    // Cup sprite
+    sf::Texture m_cupTexture;
+    sf::Sprite m_cupSprite;
+    bool m_cupLoaded = false;
+
+    // Medal textures (Gold, Silver, Bronze for Top 3)
+    sf::Texture m_goldMedalTex;
+    sf::Texture m_silverMedalTex;
+    sf::Texture m_bronzeMedalTex;
+    bool m_medalsLoaded = false;
 
     // Table header
     sf::Text m_headerRank;
@@ -44,7 +56,6 @@ private:
     sf::Text m_noDataText;
 
     // Back button
-    sf::RectangleShape m_backBtnBg;
-    sf::Text m_backBtnText;
-    bool m_backHovered = false;
+    sf::Texture m_backTexture;
+    std::unique_ptr<Button> m_backBtn;
 };
