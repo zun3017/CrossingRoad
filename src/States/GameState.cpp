@@ -201,9 +201,10 @@ void GameState::createRoadRow(float y) {
             startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 150 - 50);
         }
 
-        // Tất cả các xe trên CÙNG MỘT HÀNG phải có cùng tốc độ (baseSpeed).
-        // Nếu để tốc độ khác nhau, xe đi nhanh sẽ đuổi kịp và đè lên xe đi chậm (như trong hình bị 3 xe đè lên nhau).
-        float speed = baseSpeed;
+        // Tốc độ thay đổi ngẫu nhiên từng xe (thêm bớt 30) để có hiện tượng vượt nhau.
+        // Người chơi chấp nhận việc xe đi xuyên qua nhau, nên ta cứ để tốc độ khác biệt!
+        float speed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
+        if (speed < 40.f) speed = 40.f;
 
         int direction = movingRight ? 1 : -1;
         
@@ -648,12 +649,21 @@ void GameState::updateObstacles(float dt) {
             for (auto& v : row.vehicles) {
                 v->update(dt);
                 
-                // Wrap around logic cho xe cộ (Logic Game)
-                // Wrap khi xe vừa thoát hết khỏi màn hình
+                // Wrap quanh khi xe vừa thoát hết khỏi màn hình
                 if (v->getDirection() > 0 && v->getPosition().x > 860.f) {
                     v->setPosition(-180.f, v->getPosition().y);
+                    // Random lại tốc độ khi quay vòng để các xe bị đè (dính vào nhau) sẽ tách ra
+                    float baseSpeed = 80.f + static_cast<float>(m_level * 15);
+                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 100 - 30);
+                    if (newSpeed < 40.f) newSpeed = 40.f;
+                    v->setSpeed(newSpeed);
                 } else if (v->getDirection() < 0 && v->getPosition().x < -90.f) {
                     v->setPosition(860.f, v->getPosition().y);
+                    // Random lại tốc độ khi quay vòng
+                    float baseSpeed = 80.f + static_cast<float>(m_level * 15);
+                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 100 - 30);
+                    if (newSpeed < 40.f) newSpeed = 40.f;
+                    v->setSpeed(newSpeed);
                 }
             }
         }
