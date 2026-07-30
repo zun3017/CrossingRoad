@@ -34,8 +34,8 @@ void CCAR::setupFallback() {
         sf::Color(255, 165, 0),
         sf::Color(240, 240, 240)
     };
-    std::uniform_int_distribution<int> colorDist(0, 3);
-    sf::Color chosenColor = colors[colorDist(getCarRNG())];
+    int c = std::rand() % 4;
+    sf::Color chosenColor = colors[c];
     setFallbackColor(chosenColor);
     m_fallbackShape.setOutlineThickness(2.f);
     m_fallbackShape.setOutlineColor(sf::Color(40, 40, 40));
