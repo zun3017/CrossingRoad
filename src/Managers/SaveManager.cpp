@@ -37,14 +37,10 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
     // Ghi từng trường trên mỗi dòng
     // Dòng 1: Tên người chơi
     file << data.playerName << "\n";
-    // Dòng 2: Loại nhân vật
-    file << data.characterType << "\n";
-    // Dòng 3: Điểm số
+    // Dòng 2: Điểm số
     file << data.score << "\n";
-    // Dòng 4: Cấp độ
+    // Dòng 3: Cấp độ
     file << data.level << "\n";
-    // Dòng 5: Chế độ chơi
-    file << data.gameMode << "\n";
     // Dòng 6: playerX playerY maxPlayerY
     file << data.playerX << " " << data.playerY << " " << data.maxPlayerY << "\n";
     // Dòng 7: Số lượng terrain
@@ -109,25 +105,15 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
     // Các dòng số nguyên
     std::string line;
 
-    // Dòng 2: characterType
-    if (!std::getline(file, line)) return false;
-    try { data.characterType = std::stoi(line); }
-    catch (...) { data.characterType = 0; }
-
-    // Dòng 3: score
+    // Dòng 2: score
     if (!std::getline(file, line)) return false;
     try { data.score = std::stoi(line); }
     catch (...) { data.score = 0; }
 
-    // Dòng 4: level
+    // Dòng 3: level
     if (!std::getline(file, line)) return false;
     try { data.level = std::stoi(line); }
     catch (...) { data.level = 1; }
-
-    // Dòng 5: gameMode
-    if (!std::getline(file, line)) return false;
-    try { data.gameMode = std::stoi(line); }
-    catch (...) { data.gameMode = 0; }
 
     // Dòng 6: playerX playerY maxPlayerY
     if (!std::getline(file, line)) return false;
