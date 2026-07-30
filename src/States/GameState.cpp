@@ -811,10 +811,10 @@ void GameState::checkCollisions(float dt) {
             rowBounds.left = -10000.f;
             rowBounds.width = 20000.f;
             if (playerHitbox.intersects(rowBounds)) {
-                // Nếu đang animation LERP nhảy RA KHỎI hàng sông (lên bờ trước hoặc lùi về bờ sau),
-                // bỏ qua kiểm tra chết đuối và không bị khúc gỗ đẩy đi nữa
-                if (m_player->m_isAnimating && (m_player->m_targetPos.y < rowBounds.top || m_player->m_targetPos.y > rowBounds.top + rowBounds.height)) {
-                    continue; // Đang nhảy lên bờ -> bỏ qua
+                // Nếu đang nhảy (animating), nhân vật lơ lửng trên không, 
+                // bỏ qua kiểm tra chết đuối và không bị khúc gỗ đẩy đi để tránh chết oan khi đang nhảy vào khúc gỗ.
+                if (m_player->m_isAnimating) {
+                    continue; // Đang bay trên không -> bỏ qua
                 }
 
                 bool onLog = false;
