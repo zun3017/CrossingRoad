@@ -1,5 +1,5 @@
 #include "CPEOPLE.h"
-#include "../Core/CGAME.h"  // Cho WINDOW_WIDTH, WINDOW_HEIGHT
+// (Game.h đã được include qua CPEOPLE.h)
 
 CPEOPLE::CPEOPLE()
     : m_score(0)
@@ -117,7 +117,7 @@ void CPEOPLE::moveDown() {
     float newY = pos.y + static_cast<float>(GRID_SIZE);
     // Giới hạn: không đi xuống dưới màn hình
     if (newY + PLAYER_SIZE <= static_cast<float>(WINDOW_HEIGHT)) {
-        setPosition(pos.x, newY);
+        startMove(0.f, static_cast<float>(GRID_SIZE)); // Dùng LERP animation nhất quán
     }
 }
 
@@ -127,7 +127,7 @@ void CPEOPLE::moveLeft() {
     float newX = pos.x - static_cast<float>(GRID_SIZE);
     // Giới hạn: không đi ra ngoài bên trái
     if (newX >= 0.f) {
-        setPosition(newX, pos.y);
+        startMove(-static_cast<float>(GRID_SIZE), 0.f); // Dùng LERP animation nhất quán
     }
 }
 
@@ -137,7 +137,7 @@ void CPEOPLE::moveRight() {
     float newX = pos.x + static_cast<float>(GRID_SIZE);
     // Giới hạn: không đi ra ngoài bên phải
     if (newX + PLAYER_SIZE <= static_cast<float>(WINDOW_WIDTH)) {
-        setPosition(newX, pos.y);
+        startMove(static_cast<float>(GRID_SIZE), 0.f); // Dùng LERP animation nhất quán
     }
 }
 
@@ -147,15 +147,22 @@ void CPEOPLE::reset(float x, float y) {
     m_isDrowned = false;
     m_animTimer = 0.f;
     m_frameIndex = 0;
-    // Khôi phục lại kích thước và màu sắc mặc định
-    if (m_texturesLoaded && m_texture.getSize().x > 0) {
-        m_sprite.setTexture(m_texture, true);
-        auto texSize = m_texture.getSize();
-        int frameW = static_cast<int>(texSize.x) / 4;
-        int frameH = static_cast<int>(texSize.y) / 4;
-        m_sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
-        m_sprite.setScale(PLAYER_SIZE / static_cast<float>(frameW), PLAYER_SIZE / static_cast<float>(frameH));
-        m_sprite.setOrigin(0.f, 0.f);
+
+    // Khôi phục texture player từ ResourceManager (không dùng m_texture vì nó luôn rỗng)
+    if (m_texturesLoaded && !m_texturePath.empty()) {
+        loadTexture(m_texturePath);  // Reload lại đúng texture player
+        if (!m_usesFallback && m_sprite.getTexture() != nullptr) {
+            auto texSize = m_sprite.getTexture()->getSize();
+            int frameW = static_cast<int>(texSize.x) / 4;
+            int frameH = static_cast<int>(texSize.y) / 4;
+            m_sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
+            m_sprite.setScale(PLAYER_SIZE / static_cast<float>(frameW),
+                              PLAYER_SIZE / static_cast<float>(frameH));
+            m_sprite.setOrigin(0.f, 0.f);
+        }
+    } else {
+        // Không có texture → dùng fallback và reset màu
+        setupFallback();
     }
     m_sprite.setColor(sf::Color::White);
 }

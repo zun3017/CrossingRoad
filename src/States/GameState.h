@@ -35,7 +35,7 @@ struct LilyPad {
     bool movingRight;
 };
 
-struct Item {
+struct ItemData {
     sf::CircleShape shape;
     bool collected = false;
     int points = 10;
@@ -47,7 +47,7 @@ struct TerrainRow {
     sf::RectangleShape background;
     std::vector<std::unique_ptr<CVEHICLE>> vehicles;
     std::vector<LilyPad> lilyPads;     // Lá sen trên sông
-    std::vector<Item> items;           // Vật phẩm thu thập
+    std::vector<ItemData> items;           // Vật phẩm thu thập
     CTRAFFICLIGHT trafficLight;     // Đèn giao thông (cho đường ray)
     TrainData train;                   // Tàu hoả (cho đường ray)
 
@@ -56,7 +56,7 @@ struct TerrainRow {
     TerrainRow& operator=(TerrainRow&&) noexcept = default;
 };
 
-struct SaveData;
+// (SaveData được định nghĩa đầy đủ trong SaveManager.h đã include ở trên)
 
 class GameState : public State {
 public:
@@ -79,7 +79,7 @@ public:
     // Flag for drowning
     bool m_playerDrowned = false;
 
-    sf::Sprite m_playerSprite;
+    // (m_playerSprite đã xóa - player được vẽ qua window.draw(*m_player) trong CPEOPLE::draw())
     sf::Sprite m_grassSprite;
     sf::Sprite m_roadSprite;
     sf::Sprite m_riverSprite;
@@ -170,8 +170,7 @@ public:
     bool m_isLoadedGame = false;
     void saveCurrentGameState(const std::string& sessionName);
     
-    // Nút tạm
-    std::unique_ptr<Button> m_testBtn;
+    // (m_testBtn đã được xóa - không dùng đến)
 
     // Phương thức nội bộ
     void initPlayer();

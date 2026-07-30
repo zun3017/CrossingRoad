@@ -45,12 +45,8 @@ void GameState::init() {
         auto& tLightBlink = ResourceManager<sf::Texture>::getInstance().get("assets/textures/light_blink.png");
         
         if (tPlayer.getSize().x > 0) {
-            m_playerSprite.setTexture(tPlayer);
-            int frameW = tPlayer.getSize().x / 4;
-            int frameH = tPlayer.getSize().y / 4;
-            m_playerSprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
-            m_playerSprite.setScale(m_playerSize / frameW, m_playerSize / frameH);
-            
+            // (m_playerSprite đã xóa - player load texture trực tiếp trong CPEOPLE constructor)
+
             m_grassSprite.setTexture(tGrass);
             m_grassSprite.setScale(800.f / tGrass.getSize().x, m_cellSize / tGrass.getSize().y);
             
@@ -156,9 +152,9 @@ void GameState::createGrassRow(float y, bool safeZone) {
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(34, 139, 34)); // Xanh lá đậm
 
-    // Thêm item ngẫu nhiên trên cỏ (không phải vùng an toàn)
+    // Thêm vật phẩm (ItemData) ngẫu nhiên trên cỏ (không phải vùng an toàn)
     if (!safeZone && std::rand() % 100 < 30) {
-        Item item;
+        ItemData item;
         float itemX = static_cast<float>(50 + std::rand() % 700);
         item.shape.setRadius(14.f); // To hơn để dễ nhìn (bán kính 14 -> đường kính 28)
         item.shape.setFillColor(sf::Color(255, 215, 0)); // Vàng gold
@@ -1256,7 +1252,7 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
 
     // Khôi phục items
     for (const auto& sItem : savedRow.items) {
-        Item item;
+        ItemData item;
         item.shape.setRadius(8.f);
         item.shape.setFillColor(sf::Color::Yellow);
         item.shape.setPosition(sItem.x, sItem.y);

@@ -3,7 +3,6 @@
 // =============================================================================
 
 #include "StateMachine.h"
-#include <iostream>
 #include <algorithm>
 
 void StateMachine::pushState(std::unique_ptr<State> state) {
@@ -80,21 +79,18 @@ void StateMachine::processStateChanges() {
     for (auto& change : m_pendingChanges) {
         switch (change.action) {
         case Action::Push:
-            std::cout << "[StateMachine] Push state moi" << std::endl;
             m_states.push_back(std::move(change.state));
             m_states.back()->init();
             break;
 
         case Action::Pop:
             if (!m_states.empty()) {
-                std::cout << "[StateMachine] Pop state" << std::endl;
                 m_states.pop_back();
             }
             break;
 
         case Action::Change:
             if (!m_states.empty()) {
-                std::cout << "[StateMachine] Change state" << std::endl;
                 m_states.pop_back();
             }
             m_states.push_back(std::move(change.state));

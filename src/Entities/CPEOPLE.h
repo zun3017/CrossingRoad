@@ -1,9 +1,10 @@
 #pragma once
 #include "Entity.h"
+#include "../Core/Game.h"  // Cho WINDOW_WIDTH, WINDOW_HEIGHT, CELL_SIZE
 
-// Hằng số riêng cho CPEOPLE (WINDOW_WIDTH, WINDOW_HEIGHT đã khai báo trong CGAME.h)
-constexpr int GRID_SIZE = 48;
-constexpr float PLAYER_SIZE = 40.f;
+// GRID_SIZE = kích thước 1 ô lưới, thống nhất với CELL_SIZE trong Game.h
+constexpr int   GRID_SIZE   = static_cast<int>(CELL_SIZE);  // 48
+constexpr float PLAYER_SIZE = 40.f;  // Nhỏ hơn 1 ô lưới để có viền
 
 enum class DeathType {
     HitByCar,
@@ -43,34 +44,33 @@ public:
     void setLives(int lives) { m_lives = lives; }
     bool isDead() const { return m_isDead; }
 
-private:
-    void setupFallback();
-
-protected:
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
-private:
-    int m_score = 0;
-    int m_lives = 3;
-    bool m_isDead = false;
-    bool m_isDrowned = false;
-
-    // Animation
-    sf::IntRect m_currentFrame;
-    
-public:
-    // LERP & Animation
+    // LERP & Animation — public vì GameState cần truy cập trực tiếp
     sf::Vector2f m_startPos;
     sf::Vector2f m_targetPos;
     bool m_isAnimating = false;
     float m_animTimer = 0.f;
     int m_animRow = 0;
     bool m_texturesLoaded = false;
-    
+    int m_frameIndex = 0;
+
+    static constexpr float ANIM_FRAME_TIME = 0.15f;
+    static constexpr int   ANIM_FRAME_COUNT = 4;
+
     void startMove(float dx, float dy);
     void setTextureLoaded(bool loaded) { m_texturesLoaded = loaded; }
     void forcePosition(float x, float y);
-    int m_frameIndex = 0;
-    static constexpr float ANIM_FRAME_TIME = 0.15f;
-    static constexpr int ANIM_FRAME_COUNT = 4;
+
+protected:
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
+private:
+    void setupFallback();
+
+    int  m_score    = 0;
+    int  m_lives    = 3;
+    bool m_isDead   = false;
+    bool m_isDrowned = false;
+
+    // Animation frame rect
+    sf::IntRect m_currentFrame;
 };

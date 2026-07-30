@@ -14,15 +14,14 @@ Entity::Entity()
 bool Entity::loadTexture(const std::string& path) {
     try {
         auto& tex = ResourceManager<sf::Texture>::getInstance().get(path);
-        // Kiểm tra xem texture có tồn tại không (size > 0)
         if (tex.getSize().x > 0) {
             m_sprite.setTexture(tex);
+            m_texturePath = path;   // Lưu lại đường dẫn để có thể reload sau
             m_usesFallback = false;
             return true;
         }
     } catch (...) {}
     
-    // Không tìm thấy texture -> dùng hình dạng dự phòng
     std::cerr << "[Entity] Khong the tai texture hoac loi: " << path
               << " -> su dung hinh du phong.\n";
     m_usesFallback = true;

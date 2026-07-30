@@ -10,6 +10,7 @@
 Game* Game::s_instance = nullptr;
 
 Game::Game()
+    // Tạo cửa sổ 1024×768 (vật lý) - nội dung game được vẽ trong viewport 800×600 và scale tự động
     : m_window(sf::VideoMode(1024, 768), "Crossing Road",
                sf::Style::Default)
 {
