@@ -192,24 +192,23 @@ void GameState::createRoadRow(float y) {
     float baseSpeed = 80.f + static_cast<float>(m_level * 15 + std::rand() % 40);
 
     for (int v = 0; v < numVehicles; v++) {
-        // Spawn vehicles spread across the full route so they enter naturally:
-        // - Right-moving: spread from -200 to 600 (some off-screen left, some on-screen)
-        // - Left-moving:  spread from 200 to 1000 (some on-screen, some off-screen right)
         float startX;
         if (movingRight) {
-            // First vehicle guaranteed off-screen, rest spread across route
             float spacing = 900.f / numVehicles;
-            startX = -150.f + static_cast<float>(v) * spacing + static_cast<float>(std::rand() % 60);
+            startX = -150.f + static_cast<float>(v) * spacing + static_cast<float>(std::rand() % 150 - 50);
         } else {
-            // Vehicles enter from the right side naturally
             float spacing = 900.f / numVehicles;
-            startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 60);
+            startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 150 - 50);
         }
 
-        float speed = baseSpeed;
+        // Tốc độ thay đổi ngẫu nhiên từng xe (thêm bớt 30) để có hiện tượng vượt nhau
+        float speed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
+        if (speed < 40.f) speed = 40.f; // Giới hạn tốc độ tối thiểu
+
         int direction = movingRight ? 1 : -1;
         
-        if (std::rand() % 2 == 0) {
+        // Tỉ lệ: 75% ra CCAR (các xe con nhiều màu), 25% ra CTRUCK (xe tải đỏ)
+        if (std::rand() % 100 < 75) {
             row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, speed, direction));
         } else {
             row.vehicles.push_back(std::make_unique<CTRUCK>(startX, y + 2.f, speed, direction));
