@@ -74,8 +74,8 @@ void MainMenuState::init()
             "assets/textures/load.png",
             "assets/textures/rank.png",
             "assets/textures/help.png",
-            "assets/textures/settings.png",
             "assets/textures/credit.png",
+            "assets/textures/settings.png",
             "assets/textures/exit.png"};
 
     for (int i = 0; i < BUTTON_COUNT; ++i)
