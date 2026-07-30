@@ -89,7 +89,9 @@ void GameState::init() {
 // ============================================================
 void GameState::initPlayer() {
     m_player = std::make_unique<CPEOPLE>();
-    m_player->forcePosition(400.f - 20.f, 600.f - m_cellSize - 4.f);
+    float offsetX = (m_cellSize - m_playerSize) / 2.f;
+    int col = static_cast<int>(800.f / m_cellSize) / 2; // Cột ở giữa (cột 8)
+    m_player->forcePosition(col * m_cellSize + offsetX, 600.f - m_cellSize - offsetX);
     m_playerDead = false;
     m_maxPlayerY = m_player->getPosition().y;
     m_scoreSaved = false;
@@ -160,7 +162,7 @@ void GameState::createGrassRow(float y, bool safeZone) {
         item.shape.setFillColor(sf::Color(255, 215, 0)); // Vàng gold
         item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
         item.collected = false;
-        item.points = 10 + (m_level - 1) * 5;
+        item.points = 10; // Vật phẩm luôn luôn được 10 điểm
         row.items.push_back(item);
     }
     
@@ -571,6 +573,7 @@ void GameState::movePlayer(float dx, float dy) {
     // Nếu di chuyển lên/xuống sang vùng không phải sông, căn x về cột lưới gần nhất
     if (dy != 0.f) {
         float targetY = newPos.y + m_playerSize / 2.f;
+        
         bool isTargetRiver = false;
         for (auto& row : m_terrains) {
             if (row.type == TerrainType::River) {
@@ -585,6 +588,10 @@ void GameState::movePlayer(float dx, float dy) {
             float offsetX = (m_cellSize - m_playerSize) / 2.f;
             int col = static_cast<int>(std::round((newPos.x - offsetX) / m_cellSize));
             newPos.x = col * m_cellSize + offsetX;
+            
+            // Snap toạ độ X hiện tại về đúng lưới TRƯỚC KHI nhảy 
+            // để animation nhảy lên/xuống là đường thẳng, không bị xéo
+            m_player->setPosition(newPos.x, m_player->getPosition().y);
         }
     }
 
@@ -822,6 +829,9 @@ void GameState::checkCollisions(float dt) {
         // Kiểm tra sông: phải đứng trên khúc gỗ
         if (row.type == TerrainType::River) {
             sf::FloatRect rowBounds = row.background.getGlobalBounds();
+            // Mở rộng X của sông ra vô tận để bắt va chạm ngay cả khi player ra khỏi màn hình
+            rowBounds.left = -10000.f;
+            rowBounds.width = 20000.f;
             if (playerHitbox.intersects(rowBounds)) {
                 // Nếu đang animation LERP nhảy LÊN khỏi hàng sông (về phía bờ),
                 // bỏ qua kiểm tra chết đuối để tránh chết nhầm khi nhảy lên bờ
@@ -888,7 +898,7 @@ void GameState::checkCollisions(float dt) {
 void GameState::checkWinCondition() {
     if (m_player->getPosition().y <= 0.f) {
         m_level++;
-        m_score += 50 * m_level; // Thưởng qua level
+        m_score += 5; // Thưởng qua màn cố định là 5 điểm
         resetForNextLevel();
     }
 }
