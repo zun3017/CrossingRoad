@@ -747,10 +747,10 @@ void GameState::updateRailway(float dt) {
 // ============================================================
 void GameState::checkCollisions(float dt) {
     sf::FloatRect playerBounds = m_player->getBounds();
-    // Thu nhỏ hitbox để gameplay fair hơn
+    // Thu nhỏ hitbox để gameplay fair hơn và khớp với hình ảnh nhân vật (bỏ viền trong suốt)
     sf::FloatRect playerHitbox(
-        playerBounds.left + 4.f, playerBounds.top + 10.f, // Cắt viền trên nhiều hơn để tránh chạm nhầm hàng địa hình phía trên
-        playerBounds.width - 8.f, playerBounds.height - 16.f // Cắt viền dưới để hitbox nằm lọt thỏm trong 1 ô
+        playerBounds.left + 12.f, playerBounds.top + 10.f, // Cắt viền trái 12px
+        playerBounds.width - 24.f, playerBounds.height - 16.f // Cắt viền phải 12px (tổng 24)
     );
 
     for (auto& row : m_terrains) {
@@ -819,7 +819,12 @@ void GameState::checkCollisions(float dt) {
 
                 bool onLog = false;
                 for (auto& log : row.logs) {
-                    if (playerHitbox.intersects(log.shape.getGlobalBounds())) {
+                    sf::FloatRect logHitbox = log.shape.getGlobalBounds();
+                    // Thu nhỏ hitbox khúc gỗ để sát với hình ảnh gỗ thật (bỏ viền nước trong suốt)
+                    logHitbox.left += 10.f;
+                    logHitbox.width -= 20.f;
+
+                    if (playerHitbox.intersects(logHitbox)) {
                         onLog = true;
                         // Di chuyển theo khúc gỗ đồng bộ với dt
                         float logMove = log.speed * dt * (log.movingRight ? 1.f : -1.f);
