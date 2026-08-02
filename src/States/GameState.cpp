@@ -25,6 +25,8 @@ GameState::GameState(int level, int score)
 }
 
 void GameState::init() {
+    Game::instance().playBackgroundMusic("assets/audio/bgm_gameplay.ogg");
+
     std::srand(static_cast<unsigned>(std::time(nullptr)));
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
 
@@ -345,7 +347,9 @@ void GameState::initOverlays() {
         sf::Vector2u size = m_texEnterNameText.getSize();
         if (size.x > 0 && size.y > 0) {
             m_enterNameTextSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+            m_enterNameTextSprite.setScale(270.f / static_cast<float>(size.x), 40.f / static_cast<float>(size.y));
         }
+        m_enterNameTextSprite.setPosition(400.f, 222.f);
     }
 
     if (m_texNameExistsTextLoaded) {
@@ -411,6 +415,33 @@ void GameState::initOverlays() {
                                   piBounds.top + piBounds.height / 2.f);
     m_pauseInstruction.setPosition(400.f, 330.f);
 
+    // HUD Button textures
+    bool b1 = m_texHudBack.loadFromFile("assets/textures/back_button.png");
+    bool b2 = m_texHudPause.loadFromFile("assets/textures/pause_button.png");
+    bool b3 = m_texHudContinue.loadFromFile("assets/textures/continue_button.png");
+    bool b4 = m_texHudSave.loadFromFile("assets/textures/save_button.png");
+    m_texHudButtonsLoaded = b1 && b2 && b3 && b4;
+
+    if (m_texHudButtonsLoaded) {
+        auto onBackClick = [this]() {
+            m_deferredAction = DeferredAction::Quit;
+        };
+        m_hudBtnBack = std::make_unique<Button>(20.f, 530.f, 50.f, 50.f, m_texHudBack, onBackClick);
+
+        auto onSaveClick = [this]() {
+            m_paused = true;
+            m_pauseUIState = PauseUIState::EnterSaveName;
+            if (m_saveNameInput) {
+                m_saveNameInput->clear();
+                m_saveNameInput->setActive(true);
+            }
+            updatePauseButtonTexture();
+        };
+        m_hudBtnSave = std::make_unique<Button>(140.f, 530.f, 50.f, 50.f, m_texHudSave, onSaveClick);
+
+        updatePauseButtonTexture();
+    }
+
     // Save Game UI in Pause
     m_saveNameBoard.setSize(sf::Vector2f(350.f, 150.f));
     m_saveNameBoard.setFillColor(sf::Color(50, 50, 50, 240));
@@ -425,9 +456,9 @@ void GameState::initOverlays() {
     m_saveNamePrompt.setFillColor(sf::Color::White);
     sf::FloatRect prBounds = m_saveNamePrompt.getLocalBounds();
     m_saveNamePrompt.setOrigin(prBounds.left + prBounds.width / 2.f, prBounds.top + prBounds.height / 2.f);
-    m_saveNamePrompt.setPosition(400.f, 250.f);
+    m_saveNamePrompt.setPosition(400.f, 222.f);
 
-    m_saveNameInput = std::make_unique<TextBox>(300.f, 280.f, 200.f, 30.f, m_font);
+    m_saveNameInput = std::make_unique<TextBox>(270.f, 260.f, 260.f, 40.f, m_font);
 
     auto onSaveOk = [this]() {
         if (!m_saveNameInput->getString().empty()) {
@@ -439,9 +470,25 @@ void GameState::initOverlays() {
     };
 
     if (m_texConfirmLoaded) {
-        m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 30.f, m_texConfirm, onSaveOk);
+        m_btnSaveOk = std::make_unique<Button>(340.f, 320.f, 120.f, 36.f, m_texConfirm, onSaveOk);
     } else {
-        m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 30.f, "OK", m_font, onSaveOk);
+        m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 35.f, "OK", m_font, onSaveOk);
+    }
+}
+
+void GameState::updatePauseButtonTexture() {
+    if (!m_texHudButtonsLoaded) return;
+    auto onPauseClick = [this]() {
+        m_paused = !m_paused;
+        if (m_paused) m_pauseUIState = PauseUIState::Main;
+        updatePauseButtonTexture();
+    };
+    // Tỷ lệ ảnh pause/continue_button.png có viền lớn hơn back/save_button.png 14%, 
+    // điều chỉnh kích thước 43x43 tại (83.5, 533.5) để 3 nút đồng kích thước khung viền 100%
+    if (m_paused) {
+        m_hudBtnPause = std::make_unique<Button>(83.5f, 533.5f, 43.f, 43.f, m_texHudContinue, onPauseClick);
+    } else {
+        m_hudBtnPause = std::make_unique<Button>(83.5f, 533.5f, 43.f, 43.f, m_texHudPause, onPauseClick);
     }
 }
 
@@ -512,6 +559,13 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
 // Xử lý input từ người chơi
 // ============================================================
 void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
+    // Xử lý sự kiện cho 3 nút HUD (Back, Pause/Continue, Save)
+    if (!m_playerDead && m_texHudButtonsLoaded) {
+        if (m_hudBtnBack) m_hudBtnBack->handleEvent(event, window);
+        if (m_hudBtnPause) m_hudBtnPause->handleEvent(event, window);
+        if (m_hudBtnSave) m_hudBtnSave->handleEvent(event, window);
+    }
+
     // Nếu đã chết
     if (m_playerDead) {
         if (m_goState == GameOverUIState::EnterName) {
@@ -555,6 +609,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
                 if (event.key.code == sf::Keyboard::P ||
                     event.key.code == sf::Keyboard::Escape) {
                     m_paused = false;
+                    updatePauseButtonTexture();
                 } else if (event.key.code == sf::Keyboard::S) {
                     if (!m_currentSaveSession.empty()) {
                         saveCurrentGameState(m_currentSaveSession);
@@ -600,6 +655,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
         case sf::Keyboard::P:
         case sf::Keyboard::Escape:
             m_paused = true;
+            updatePauseButtonTexture();
             break;
         default:
             break;
@@ -661,6 +717,9 @@ void GameState::update(float dt) {
         m_deferredAction = DeferredAction::None;
         m_level = 1; m_score = 0;
         initPlayer(); generateMap(); initHUD();
+        m_playerDead = false;
+        m_goState = GameOverUIState::None;
+        Game::instance().playBackgroundMusic("assets/audio/bgm_gameplay.ogg");
         return;
     } else if (m_deferredAction == DeferredAction::Quit) {
         m_deferredAction = DeferredAction::None;
@@ -767,6 +826,7 @@ void GameState::updateRailway(float dt) {
             if (row.trafficLight.timer <= 0.f) {
                 row.trafficLight.state = LightState::Blinking;
                 row.trafficLight.timer = 2.f; // 2 giây nhấp nháy
+                Game::instance().playSound("assets/audio/sfx_train_horn.wav");
             }
         } else if (row.trafficLight.state == LightState::Blinking) {
             if (row.trafficLight.timer <= 0.f) {
@@ -830,6 +890,7 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(carHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_car_hit.wav");
                         m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -855,6 +916,7 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(trainHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_train_hit.wav");
                         m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -893,6 +955,7 @@ void GameState::checkCollisions(float dt) {
                         if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
                             if (!m_playerDead) {
                                 m_playerDead = true;
+                                Game::instance().playSound("assets/audio/sfx_water_splash.wav");
                                 m_player->die(DeathType::Drowned);
                                 m_deathTimer = 0.f;
                                 m_goState = GameOverUIState::Delay;
@@ -910,6 +973,7 @@ void GameState::checkCollisions(float dt) {
                     // Rơi xuống sông -> chết đuối
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_water_splash.wav");
                         m_player->die(DeathType::Drowned);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -929,6 +993,7 @@ void GameState::checkCollisions(float dt) {
             if (!item.collected && playerHitbox.intersects(item.shape.getGlobalBounds())) {
                 item.collected = true;
                 m_score += item.points;
+                Game::instance().playSound("assets/audio/sfx_pick_up.wav");
             }
         }
     }
@@ -939,6 +1004,7 @@ void GameState::checkCollisions(float dt) {
 // ============================================================
 void GameState::checkWinCondition() {
     if (m_player->getPosition().y <= 0.f) {
+        Game::instance().playSound("assets/audio/sfx_next_level.wav");
         m_level++;
         m_score += 5; // Thưởng qua màn cố định là 5 điểm
         resetForNextLevel();
@@ -1117,6 +1183,13 @@ void GameState::draw(sf::RenderWindow& window) {
         window.draw(m_scoreText);
     }
 
+    // Vẽ HUD buttons (Back, Pause/Continue, Save) ở góc dưới bên trái
+    if (m_texHudButtonsLoaded) {
+        if (m_hudBtnBack) window.draw(*m_hudBtnBack);
+        if (m_hudBtnPause) window.draw(*m_hudBtnPause);
+        if (m_hudBtnSave) window.draw(*m_hudBtnSave);
+    }
+
     // Vẽ overlay Game Over
     if (m_playerDead) {
         window.draw(m_gameOverOverlay);
@@ -1208,8 +1281,22 @@ void GameState::draw(sf::RenderWindow& window) {
                 window.draw(m_pauseText);
                 window.draw(m_pauseInstruction);
             } else if (m_pauseUIState == PauseUIState::EnterSaveName) {
-                window.draw(m_saveNameBoard);
-                window.draw(m_saveNamePrompt);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 270.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 300.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_saveNameBoard);
+                }
+
+                if (m_texEnterNameTextLoaded) {
+                    window.draw(m_enterNameTextSprite);
+                } else {
+                    window.draw(m_saveNamePrompt);
+                }
                 if (m_saveNameInput) window.draw(*m_saveNameInput);
                 if (m_btnSaveOk) window.draw(*m_btnSaveOk);
             }
@@ -1220,6 +1307,7 @@ void GameState::draw(sf::RenderWindow& window) {
 // Thiết lập giao diện Game Over
 // ============================================================
 void GameState::setupGameOverUI() {
+    Game::instance().playSound("assets/audio/bgm_gameover.wav");
     m_goState = GameOverUIState::EnterName;
 
     if (m_texEnterNameTextLoaded) {

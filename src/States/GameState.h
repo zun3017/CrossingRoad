@@ -202,7 +202,17 @@ private:
     bool m_isLoadedGame = false;
     void saveCurrentGameState(const std::string& sessionName);
     
-    // (m_testBtn đã được xóa - không dùng đến)
+    // HUD Buttons (Back, Pause/Continue, Save)
+    sf::Texture m_texHudBack;
+    sf::Texture m_texHudPause;
+    sf::Texture m_texHudContinue;
+    sf::Texture m_texHudSave;
+    bool m_texHudButtonsLoaded = false;
+
+    std::unique_ptr<Button> m_hudBtnBack;
+    std::unique_ptr<Button> m_hudBtnPause;
+    std::unique_ptr<Button> m_hudBtnSave;
+    void updatePauseButtonTexture();
 
     // Phương thức nội bộ
     void initPlayer();
