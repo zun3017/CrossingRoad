@@ -171,15 +171,13 @@ bool Game::isMusicEnabled() const {
 void Game::setMusicEnabled(bool enabled) {
     m_musicEnabled = enabled;
     if (enabled) {
-        // Nếu bật lại nhạc và đang có nhạc tải sẵn
-        if (m_backgroundMusic.getStatus() == sf::Music::Paused) {
-            m_backgroundMusic.play();
+        if (!m_currentMusicFile.empty()) {
+            std::string fileToPlay = m_currentMusicFile;
+            m_currentMusicFile.clear(); // Force reload
+            playBackgroundMusic(fileToPlay);
         }
     } else {
-        // Tạm dừng nhạc nền
-        if (m_backgroundMusic.getStatus() == sf::Music::Playing) {
-            m_backgroundMusic.pause();
-        }
+        m_backgroundMusic.stop();
     }
     std::cout << "[Game] Nhac nen: " << (enabled ? "BAT" : "TAT") << std::endl;
 }
@@ -199,12 +197,23 @@ sf::Music& Game::getBackgroundMusic() {
 }
 
 void Game::playBackgroundMusic(const std::string& filename) {
-    // Dừng nhạc cũ
+    if (m_currentMusicFile == filename) {
+        if (!m_musicEnabled) {
+            if (m_backgroundMusic.getStatus() == sf::Music::Playing) {
+                m_backgroundMusic.stop();
+            }
+            return;
+        }
+        if (m_backgroundMusic.getStatus() == sf::Music::Playing) {
+            return; // Đã đang phát cùng bài nhạc -> giữ nguyên không ngắt đoạn
+        }
+    }
+
     m_backgroundMusic.stop();
+    m_currentMusicFile = filename;
 
     if (!m_musicEnabled) {
-        std::cout << "[Game] Nhac da tat, khong phat: " << filename << std::endl;
-        return;
+        return; // Tắt nhạc -> không in log lặp lại
     }
 
     if (!m_backgroundMusic.openFromFile(filename)) {
@@ -220,6 +229,42 @@ void Game::playBackgroundMusic(const std::string& filename) {
 
 void Game::stopBackgroundMusic() {
     m_backgroundMusic.stop();
+    m_currentMusicFile.clear();
+}
+
+// === Hiệu ứng âm thanh SFX ===
+void Game::playSound(const std::string& filename) {
+    if (!m_soundEnabled) return;
+
+    // Nạp SoundBuffer nếu chưa có trong cache
+    auto it = m_soundBuffers.find(filename);
+    if (it == m_soundBuffers.end()) {
+        sf::SoundBuffer buffer;
+        if (!buffer.loadFromFile(filename)) {
+            std::cerr << "[Game] Khong the mo file am thanh SFX: " << filename << std::endl;
+            return;
+        }
+        m_soundBuffers[filename] = std::move(buffer);
+        it = m_soundBuffers.find(filename);
+    }
+
+    // Tìm kênh sf::Sound đang rảnh trong pool
+    for (auto& sound : m_sounds) {
+        if (sound.getStatus() != sf::Sound::Playing) {
+            sound.setBuffer(it->second);
+            sound.setVolume(70.0f);
+            sound.play();
+            return;
+        }
+    }
+
+    // Nếu các kênh đều bận và chưa vượt giới hạn 16 kênh, tạo thêm kênh mới
+    if (m_sounds.size() < 16) {
+        m_sounds.emplace_back();
+        m_sounds.back().setBuffer(it->second);
+        m_sounds.back().setVolume(70.0f);
+        m_sounds.back().play();
+    }
 }
 
 // === StateMachine ===

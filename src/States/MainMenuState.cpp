@@ -16,6 +16,9 @@
 
 void MainMenuState::init()
 {
+    // Phát nhạc nền Menu
+    Game::instance().playBackgroundMusic("assets/audio/bgm_menu.ogg");
+
     // ========================================================
     // LOAD FONT
     // ========================================================
@@ -689,6 +692,7 @@ void MainMenuState::handleInput(
 
                     if (inside)
                     {
+                        Game::instance().playSound("assets/audio/sfx_click.wav");
                         onButtonClick(i);
                     }
                 }
@@ -703,6 +707,9 @@ void MainMenuState::handleInput(
 
 void MainMenuState::update(float dt)
 {
+    // Đảm bảo nhạc nền Menu luôn được phát khi trở về MainMenuState
+    Game::instance().playBackgroundMusic("assets/audio/bgm_menu.ogg");
+
     // ========================================================
     // Subtitle blinking
     // ========================================================
@@ -810,7 +817,13 @@ void MainMenuState::updateButtonHover()
                 .getGlobalBounds()
                 .contains(mousePos);
 
+        bool wasHovered = button.hovered;
         button.hovered = mouseOver;
+
+        if (button.hovered && !wasHovered)
+        {
+            Game::instance().playSound("assets/audio/sfx_hovering.wav");
+        }
 
         // ====================================================
         // Nếu đang nhấn chuột

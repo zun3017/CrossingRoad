@@ -8,6 +8,8 @@
 #include <SFML/Audio.hpp>
 #include <memory>
 #include <string>
+#include <map>
+#include <vector>
 #include "StateMachine.h"
 
 // Hằng số cửa sổ game
@@ -51,10 +53,12 @@ public:
     bool isMotionEnabled() const;
     void setMotionEnabled(bool enabled);
 
-    // === Nhạc nền ===
+    // === Nhạc nền & Hiệu ứng âm thanh ===
     sf::Music& getBackgroundMusic();
     void playBackgroundMusic(const std::string& filename);
     void stopBackgroundMusic();
+
+    void playSound(const std::string& filename);
 
     // === Lấy StateMachine (cho trường hợp đặc biệt) ===
     StateMachine& getStateMachine();
@@ -72,8 +76,11 @@ private:
     // Đồng hồ đo delta time
     sf::Clock m_clock;
 
-    // Nhạc nền
+    // Nhạc nền & Âm thanh
     sf::Music m_backgroundMusic;
+    std::string m_currentMusicFile;
+    std::map<std::string, sf::SoundBuffer> m_soundBuffers;
+    std::vector<sf::Sound> m_sounds;
 
     // Cài đặt
     bool m_soundEnabled  = true;
