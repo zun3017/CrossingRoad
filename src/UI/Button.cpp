@@ -1,6 +1,7 @@
 // Button.cpp - Triển khai nút bấm UI với hiệu ứng hover/click
 
 #include "Button.h"
+#include "../Core/Game.h"
 #include <cmath>
 
 Button::Button(float x, float y, float width, float height,
@@ -65,10 +66,13 @@ void Button::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
     bool mouseOver = bounds.contains(mousePos);
 
     if (event.type == sf::Event::MouseMoved) {
-        // Cập nhật trạng thái hover
+        bool wasHovered = m_isHovered;
         m_isHovered = mouseOver;
 
         if (m_isHovered) {
+            if (!wasHovered) {
+                Game::instance().playSound("assets/audio/sfx_hovering.wav");
+            }
             sf::Color c = m_isPressed ? m_clickColor : m_hoverColor;
             if (m_hasTexture) m_sprite.setColor(c);
             else m_shape.setFillColor(c);
@@ -92,6 +96,7 @@ void Button::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
     if (event.type == sf::Event::MouseButtonReleased) {
         if (event.mouseButton.button == sf::Mouse::Left) {
             if (m_isPressed && mouseOver) {
+                Game::instance().playSound("assets/audio/sfx_click.wav");
                 // Gọi callback khi nhả chuột trên nút
                 if (m_onClick) {
                     m_onClick();
