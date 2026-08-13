@@ -56,7 +56,12 @@ void MainMenuState::init()
         m_menuBgSprite.setTexture(m_menuVideoTextures[0]);
         sf::Vector2u size = m_menuVideoTextures[0].getSize();
         if (size.x > 0 && size.y > 0) {
-            m_menuBgSprite.setScale(800.f / static_cast<float>(size.x), 600.f / static_cast<float>(size.y));
+            float scaleX = 800.f / static_cast<float>(size.x);
+            float scaleY = 600.f / static_cast<float>(size.y);
+            float scale = std::max(scaleX, scaleY); // Giữ đúng tỷ lệ khung hình
+            m_menuBgSprite.setScale(scale, scale);
+            m_menuBgSprite.setOrigin(size.x / 2.0f, size.y / 2.0f);
+            m_menuBgSprite.setPosition(400.f, 300.f);
         }
     } else {
         // Fallback to static menu.png
@@ -68,7 +73,12 @@ void MainMenuState::init()
             m_menuBgSprite.setTexture(m_menuBgTexture);
             sf::Vector2u size = m_menuBgTexture.getSize();
             if (size.x > 0 && size.y > 0) {
-                m_menuBgSprite.setScale(800.f / static_cast<float>(size.x), 600.f / static_cast<float>(size.y));
+                float scaleX = 800.f / static_cast<float>(size.x);
+                float scaleY = 600.f / static_cast<float>(size.y);
+                float scale = std::max(scaleX, scaleY);
+                m_menuBgSprite.setScale(scale, scale);
+                m_menuBgSprite.setOrigin(size.x / 2.0f, size.y / 2.0f);
+                m_menuBgSprite.setPosition(400.f, 300.f);
             }
         }
     }
@@ -737,8 +747,8 @@ void MainMenuState::update(float dt)
     if (!m_menuVideoTextures.empty()) {
         if (Game::instance().isMotionEnabled()) {
             m_videoAnimTimer += dt;
-            // Phát video ở tốc độ ~24 fps
-            if (m_videoAnimTimer >= 1.0f / 24.0f) {
+            // Phát video ở tốc độ ~12 fps (chậm lại)
+            if (m_videoAnimTimer >= 1.0f / 12.0f) {
                 m_videoAnimTimer = 0.f;
                 m_currentVideoFrame = (m_currentVideoFrame + 1) % m_menuVideoTextures.size();
                 m_menuBgSprite.setTexture(m_menuVideoTextures[m_currentVideoFrame]);
