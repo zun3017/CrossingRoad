@@ -67,7 +67,7 @@ void AboutState::init() {
     centerText(m_line2, "Built with C++ & SFML 2.5",
                20, sf::Color(180, 200, 255), 280.f);
 
-    centerText(m_line3, "Developed by: Group 10",
+    centerText(m_line3, "Developed by: Group 8",
                22, sf::Color::White, 330.f);
 
     centerText(m_line5, "HCMUS",

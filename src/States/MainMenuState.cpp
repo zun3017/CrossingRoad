@@ -153,7 +153,7 @@ void MainMenuState::init()
 
         m_subtitleText.setFont(m_font);
         m_subtitleText.setString(
-            "Press any button to start");
+            "Welcome to our project!!!");
 
         m_subtitleText.setCharacterSize(18);
 

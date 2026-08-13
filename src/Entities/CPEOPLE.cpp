@@ -11,7 +11,7 @@ CPEOPLE::CPEOPLE()
     setupFallback();
     
     // Load hình ảnh
-    if (loadTexture("assets/textures/player.png")) {
+    if (loadTexture("assets/textures/player_backup.png")) {
         m_texturesLoaded = true;
         // CPEOPLE scale
         auto texSize = m_sprite.getTexture()->getSize();

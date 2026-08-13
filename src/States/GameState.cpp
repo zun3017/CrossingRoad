@@ -348,9 +348,9 @@ void GameState::initOverlays() {
         sf::Vector2u size = m_texEnterNameText.getSize();
         if (size.x > 0 && size.y > 0) {
             m_enterNameTextSprite.setOrigin(size.x / 2.f, size.y / 2.f);
-            m_enterNameTextSprite.setScale(270.f / static_cast<float>(size.x), 40.f / static_cast<float>(size.y));
+            m_enterNameTextSprite.setScale(220.f / static_cast<float>(size.x), 32.f / static_cast<float>(size.y));
         }
-        m_enterNameTextSprite.setPosition(400.f, 222.f);
+        m_enterNameTextSprite.setPosition(400.f, 230.f);
     }
 
     if (m_texNameExistsTextLoaded) {
@@ -457,9 +457,9 @@ void GameState::initOverlays() {
     m_saveNamePrompt.setFillColor(sf::Color::White);
     sf::FloatRect prBounds = m_saveNamePrompt.getLocalBounds();
     m_saveNamePrompt.setOrigin(prBounds.left + prBounds.width / 2.f, prBounds.top + prBounds.height / 2.f);
-    m_saveNamePrompt.setPosition(400.f, 222.f);
+    m_saveNamePrompt.setPosition(400.f, 230.f);
 
-    m_saveNameInput = std::make_unique<TextBox>(270.f, 260.f, 260.f, 40.f, m_font);
+    m_saveNameInput = std::make_unique<TextBox>(290.f, 270.f, 220.f, 40.f, m_font);
 
     auto onSaveOk = [this]() {
         if (!m_saveNameInput->getString().empty()) {
@@ -1220,9 +1220,9 @@ void GameState::draw(sf::RenderWindow& window) {
                 if (m_texLabelLoaded) {
                     sf::Vector2u texSize = m_texLabel.getSize();
                     if (texSize.x > 0 && texSize.y > 0) {
-                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 270.f / static_cast<float>(texSize.y));
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 290.f / static_cast<float>(texSize.y));
                     }
-                    m_labelSprite.setPosition(400.f, 300.f);
+                    m_labelSprite.setPosition(400.f, 290.f);
                     window.draw(m_labelSprite);
                 } else {
                     window.draw(m_enterNameBoard);
@@ -1240,9 +1240,9 @@ void GameState::draw(sf::RenderWindow& window) {
                 if (m_texLabelLoaded) {
                     sf::Vector2u texSize = m_texLabel.getSize();
                     if (texSize.x > 0 && texSize.y > 0) {
-                        m_labelSprite.setScale(460.f / static_cast<float>(texSize.x), 280.f / static_cast<float>(texSize.y));
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 290.f / static_cast<float>(texSize.y));
                     }
-                    m_labelSprite.setPosition(400.f, 300.f);
+                    m_labelSprite.setPosition(400.f, 290.f);
                     window.draw(m_labelSprite);
                 } else {
                     window.draw(m_enterNameBoard);
@@ -1261,7 +1261,7 @@ void GameState::draw(sf::RenderWindow& window) {
                 if (m_texLabelLoaded) {
                     sf::Vector2u texSize = m_texLabel.getSize();
                     if (texSize.x > 0 && texSize.y > 0) {
-                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 340.f / static_cast<float>(texSize.y));
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 360.f / static_cast<float>(texSize.y));
                     }
                     m_labelSprite.setPosition(400.f, 290.f);
                     window.draw(m_labelSprite);
@@ -1299,9 +1299,9 @@ void GameState::draw(sf::RenderWindow& window) {
                 if (m_texLabelLoaded) {
                     sf::Vector2u texSize = m_texLabel.getSize();
                     if (texSize.x > 0 && texSize.y > 0) {
-                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 270.f / static_cast<float>(texSize.y));
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 290.f / static_cast<float>(texSize.y));
                     }
-                    m_labelSprite.setPosition(400.f, 300.f);
+                    m_labelSprite.setPosition(400.f, 290.f);
                     window.draw(m_labelSprite);
                 } else {
                     window.draw(m_saveNameBoard);
@@ -1328,9 +1328,9 @@ void GameState::setupGameOverUI() {
     if (m_texEnterNameTextLoaded) {
         sf::Vector2u size = m_texEnterNameText.getSize();
         if (size.x > 0 && size.y > 0) {
-            m_enterNameTextSprite.setScale(270.f / static_cast<float>(size.x), 40.f / static_cast<float>(size.y));
+            m_enterNameTextSprite.setScale(220.f / static_cast<float>(size.x), 32.f / static_cast<float>(size.y));
         }
-        m_enterNameTextSprite.setPosition(400.f, 222.f);
+        m_enterNameTextSprite.setPosition(400.f, 230.f);
     }
 
     m_enterNameText.setFont(m_font);
@@ -1339,9 +1339,9 @@ void GameState::setupGameOverUI() {
     m_enterNameText.setFillColor(sf::Color::Black);
     sf::FloatRect eBounds = m_enterNameText.getLocalBounds();
     m_enterNameText.setOrigin(eBounds.left + eBounds.width / 2.f, eBounds.top + eBounds.height / 2.f);
-    m_enterNameText.setPosition(400.f, 222.f);
+    m_enterNameText.setPosition(400.f, 230.f);
 
-    m_nameInput = std::make_unique<TextBox>(270.f, 260.f, 260.f, 40.f, m_font);
+    m_nameInput = std::make_unique<TextBox>(290.f, 270.f, 220.f, 40.f, m_font);
     m_nameInput->setActive(true);
 
     auto showScoreBoard = [this](const std::string& name) {
@@ -1366,20 +1366,20 @@ void GameState::setupGameOverUI() {
             if (size.x > 0 && size.y > 0) {
                 m_nameScoreRankTextSprite.setScale(150.f / static_cast<float>(size.x), 95.f / static_cast<float>(size.y));
             }
-            m_nameScoreRankTextSprite.setPosition(240.f, 178.f);
+            m_nameScoreRankTextSprite.setPosition(240.f, 198.f);
         }
 
         m_showNameText.setFont(m_font);
         m_showNameText.setString(name);
         m_showNameText.setCharacterSize(22);
         m_showNameText.setFillColor(sf::Color::White);
-        m_showNameText.setPosition(405.f, 180.f);
+        m_showNameText.setPosition(405.f, 200.f);
 
         m_showScoreText.setFont(m_font);
         m_showScoreText.setString(std::to_string(m_score));
         m_showScoreText.setCharacterSize(22);
         m_showScoreText.setFillColor(sf::Color(100, 255, 100));
-        m_showScoreText.setPosition(405.f, 212.f);
+        m_showScoreText.setPosition(405.f, 232.f);
 
         if (m_finalRank <= 3 && m_medalsLoaded) {
             if (m_finalRank == 1) m_medalSprite.setTexture(m_goldMedalTex);
@@ -1390,13 +1390,13 @@ void GameState::setupGameOverUI() {
             if (mSize.x > 0 && mSize.y > 0) {
                 m_medalSprite.setScale(28.f / static_cast<float>(mSize.x), 28.f / static_cast<float>(mSize.y));
             }
-            m_medalSprite.setPosition(405.f, 244.f);
+            m_medalSprite.setPosition(405.f, 264.f);
         } else {
             m_showRankText.setFont(m_font);
             m_showRankText.setString("#" + std::to_string(m_finalRank));
             m_showRankText.setCharacterSize(22);
             m_showRankText.setFillColor(sf::Color(255, 215, 0));
-            m_showRankText.setPosition(405.f, 244.f);
+            m_showRankText.setPosition(405.f, 264.f);
         }
 
         m_rankText.setFont(m_font);
@@ -1405,25 +1405,25 @@ void GameState::setupGameOverUI() {
         m_rankText.setFillColor(sf::Color(255, 215, 0));
         sf::FloatRect rBounds = m_rankText.getLocalBounds();
         m_rankText.setOrigin(rBounds.left + rBounds.width / 2.f, rBounds.top + rBounds.height / 2.f);
-        m_rankText.setPosition(400.f, 210.f);
+        m_rankText.setPosition(400.f, 230.f);
 
         // Nút PLAY AGAIN (180x44) & MAIN MENU (160x44) giúp tỷ lệ chữ đồng nhất
         if (m_texPlayAgainLoaded) {
-            m_playAgainBtn = std::make_unique<Button>(310.f, 298.f, 180.f, 44.f, m_texPlayAgain, [this]() {
+            m_playAgainBtn = std::make_unique<Button>(310.f, 318.f, 180.f, 44.f, m_texPlayAgain, [this]() {
                 m_deferredAction = DeferredAction::Restart;
             });
         } else {
-            m_playAgainBtn = std::make_unique<Button>(310.f, 298.f, 180.f, 44.f, "Play Again", m_font, [this]() {
+            m_playAgainBtn = std::make_unique<Button>(310.f, 318.f, 180.f, 44.f, "Play Again", m_font, [this]() {
                 m_deferredAction = DeferredAction::Restart;
             });
         }
 
         if (m_texHomeLoaded) {
-            m_menuBtn = std::make_unique<Button>(320.f, 354.f, 160.f, 44.f, m_texHome, [this]() {
+            m_menuBtn = std::make_unique<Button>(310.f, 374.f, 180.f, 44.f, m_texHome, [this]() {
                 m_deferredAction = DeferredAction::Quit;
             });
         } else {
-            m_menuBtn = std::make_unique<Button>(320.f, 354.f, 160.f, 44.f, "Main Menu", m_font, [this]() {
+            m_menuBtn = std::make_unique<Button>(310.f, 374.f, 180.f, 44.f, "Main Menu", m_font, [this]() {
                 m_deferredAction = DeferredAction::Quit;
             });
         }
@@ -1442,7 +1442,7 @@ void GameState::setupGameOverUI() {
                 if (size.x > 0 && size.y > 0) {
                     m_nameExistsTextSprite.setScale(340.f / static_cast<float>(size.x), 55.f / static_cast<float>(size.y));
                 }
-                m_nameExistsTextSprite.setPosition(400.f, 230.f);
+                m_nameExistsTextSprite.setPosition(400.f, 245.f);
             }
 
             m_confirmBestScoreText.setFont(m_font);
@@ -1452,7 +1452,7 @@ void GameState::setupGameOverUI() {
             m_confirmBestScoreText.setStyle(sf::Text::Bold);
             sf::FloatRect bScoreBounds = m_confirmBestScoreText.getLocalBounds();
             m_confirmBestScoreText.setOrigin(bScoreBounds.width / 2.f, bScoreBounds.top + bScoreBounds.height / 2.f);
-            m_confirmBestScoreText.setPosition(485.f, 244.f);
+            m_confirmBestScoreText.setPosition(485.f, 259.f);
 
             m_confirmText.setFont(m_font);
             m_confirmText.setString("Name exists! Is this you?\n(Current best: " + std::to_string(existingScore) + ")");
@@ -1460,7 +1460,7 @@ void GameState::setupGameOverUI() {
             m_confirmText.setFillColor(sf::Color::Yellow);
             sf::FloatRect cBounds = m_confirmText.getLocalBounds();
             m_confirmText.setOrigin(cBounds.left + cBounds.width / 2.f, cBounds.top + cBounds.height / 2.f);
-            m_confirmText.setPosition(400.f, 230.f);
+            m_confirmText.setPosition(400.f, 245.f);
             
             auto onYes = [this, name, showScoreBoard]() {
                 SaveManager::updateHighscore(name, m_score);
@@ -1471,17 +1471,17 @@ void GameState::setupGameOverUI() {
                 m_goState = GameOverUIState::EnterName;
             };
 
-            // Nút YES (130x45) và NO (115x45) cho tỷ lệ chữ hoàn toàn tương xứng
+            // Nút YES và NO cùng kích thước và căn giữa
             if (m_texYesLoaded) {
-                m_btnYes = std::make_unique<Button>(255.f, 320.f, 130.f, 45.f, m_texYes, onYes);
+                m_btnYes = std::make_unique<Button>(270.f, 330.f, 120.f, 45.f, m_texYes, onYes);
             } else {
-                m_btnYes = std::make_unique<Button>(255.f, 320.f, 130.f, 45.f, "Yes", m_font, onYes);
+                m_btnYes = std::make_unique<Button>(270.f, 330.f, 120.f, 45.f, "Yes", m_font, onYes);
             }
 
             if (m_texNoLoaded) {
-                m_btnNo = std::make_unique<Button>(420.f, 320.f, 100.f, 45.f, m_texNo, onNo);
+                m_btnNo = std::make_unique<Button>(410.f, 330.f, 120.f, 45.f, m_texNo, onNo);
             } else {
-                m_btnNo = std::make_unique<Button>(420.f, 320.f, 100.f, 45.f, "No", m_font, onNo);
+                m_btnNo = std::make_unique<Button>(410.f, 330.f, 120.f, 45.f, "No", m_font, onNo);
             }
         } else {
             SaveManager::addHighscore(name, m_score);
@@ -1495,9 +1495,9 @@ void GameState::setupGameOverUI() {
     };
 
     if (m_texConfirmLoaded) {
-        m_btnOk = std::make_unique<Button>(350.f, 320.f, 100.f, 40.f, m_texConfirm, onSubmit);
+        m_btnOk = std::make_unique<Button>(340.f, 340.f, 120.f, 40.f, m_texConfirm, onSubmit);
     } else {
-        m_btnOk = std::make_unique<Button>(350.f, 320.f, 100.f, 40.f, "OK", m_font, onSubmit);
+        m_btnOk = std::make_unique<Button>(340.f, 340.f, 120.f, 40.f, "OK", m_font, onSubmit);
     }
 }
 
