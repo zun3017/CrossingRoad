@@ -62,19 +62,7 @@ void CPEOPLE::forcePosition(float x, float y) {
 }
 
 void CPEOPLE::update(float dt) {
-    if (m_isDead) {
-        // Cập nhật animation khi chết (như chìm sông player_drown.png)
-        if (m_sprite.getTexture() != nullptr && !m_isDrowned) {
-            m_animTimer += dt;
-            int currentFrame = static_cast<int>(m_animTimer / 0.12f) % 4;
-            auto tex = m_sprite.getTexture();
-            int frameW = static_cast<int>(tex->getSize().x) / 4;
-            int frameH = static_cast<int>(tex->getSize().y) / 4;
-            int rowToDraw = (m_animRow == 0) ? 1 : m_animRow;
-            m_sprite.setTextureRect(sf::IntRect(currentFrame * frameW, rowToDraw * frameH, frameW, frameH));
-        }
-        return;
-    }
+    if (m_isDead) return;
 
     if (m_isAnimating) {
         m_animTimer += dt;
@@ -219,11 +207,8 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
             if (tex != nullptr) {
                 m_sprite.setTexture(*tex, true);
                 auto texSize = tex->getSize();
-                int frameW = static_cast<int>(texSize.x) / 4;
-                int frameH = static_cast<int>(texSize.y) / 4;
-                int rowToDraw = (m_animRow == 0) ? 1 : m_animRow;
-                m_sprite.setTextureRect(sf::IntRect(0, rowToDraw * frameH, frameW, frameH));
-                m_sprite.setScale(PLAYER_SIZE / static_cast<float>(frameW), PLAYER_SIZE / static_cast<float>(frameH));
+                m_sprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+                m_sprite.setScale(PLAYER_SIZE * 1.2f / static_cast<float>(texSize.x), PLAYER_SIZE * 1.2f / static_cast<float>(texSize.y));
                 m_sprite.setOrigin(0.f, 0.f);
                 m_isDrowned = false;
             } else {
