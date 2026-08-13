@@ -73,7 +73,10 @@ void GameState::init() {
             if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
             
             m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+            if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
+            
             m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
+            if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/assets/textures/player_drown.png");
             
             m_texturesLoaded = true;
         }

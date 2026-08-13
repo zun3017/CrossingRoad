@@ -182,16 +182,42 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
         m_isDead = true;
         m_lives--;
         
-        if (type == DeathType::HitByCar && deathTexture != nullptr) {
-            m_sprite.setTexture(*deathTexture, true);
-            auto texSize = deathTexture->getSize();
-            m_sprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
-            m_sprite.setScale(PLAYER_SIZE * 1.5f / texSize.x, PLAYER_SIZE * 1.5f / texSize.y);
-            m_sprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
+        if (type == DeathType::HitByCar) {
+            const sf::Texture* tex = deathTexture;
+            static sf::Texture localHitTex;
+            static bool localHitLoaded = false;
+            if (!tex && !localHitLoaded) {
+                if (localHitTex.loadFromFile("assets/textures/hitbycar.png") ||
+                    localHitTex.loadFromFile("CrossingRoad/assets/textures/hitbycar.png")) {
+                    localHitLoaded = true;
+                }
+            }
+            if (!tex && localHitLoaded) tex = &localHitTex;
+
+            if (tex != nullptr) {
+                m_sprite.setTexture(*tex, true);
+                auto texSize = tex->getSize();
+                m_sprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+                m_sprite.setScale(PLAYER_SIZE * 1.5f / texSize.x, PLAYER_SIZE * 1.5f / texSize.y);
+                m_sprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
+            } else {
+                m_fallbackShape.setFillColor(sf::Color::Red);
+            }
         } else if (type == DeathType::Drowned) {
-            if (deathTexture != nullptr) {
-                m_sprite.setTexture(*deathTexture, true);
-                auto texSize = deathTexture->getSize();
+            const sf::Texture* tex = deathTexture;
+            static sf::Texture localDrownTex;
+            static bool localDrownLoaded = false;
+            if (!tex && !localDrownLoaded) {
+                if (localDrownTex.loadFromFile("assets/textures/player_drown.png") ||
+                    localDrownTex.loadFromFile("CrossingRoad/assets/textures/player_drown.png")) {
+                    localDrownLoaded = true;
+                }
+            }
+            if (!tex && localDrownLoaded) tex = &localDrownTex;
+
+            if (tex != nullptr) {
+                m_sprite.setTexture(*tex, true);
+                auto texSize = tex->getSize();
                 int frameW = static_cast<int>(texSize.x) / 4;
                 int frameH = static_cast<int>(texSize.y) / 4;
                 m_sprite.setTextureRect(sf::IntRect(0, m_animRow * frameH, frameW, frameH));
