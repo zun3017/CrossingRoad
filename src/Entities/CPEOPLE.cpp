@@ -62,7 +62,18 @@ void CPEOPLE::forcePosition(float x, float y) {
 }
 
 void CPEOPLE::update(float dt) {
-    if (m_isDead) return;
+    if (m_isDead) {
+        // Cập nhật animation khi chết (như chìm sông player_drown.png)
+        if (m_sprite.getTexture() != nullptr && !m_isDrowned) {
+            m_animTimer += dt;
+            int currentFrame = static_cast<int>(m_animTimer / 0.12f) % 4;
+            auto tex = m_sprite.getTexture();
+            int frameW = static_cast<int>(tex->getSize().x) / 4;
+            int frameH = static_cast<int>(tex->getSize().y) / 4;
+            m_sprite.setTextureRect(sf::IntRect(currentFrame * frameW, m_animRow * frameH, frameW, frameH));
+        }
+        return;
+    }
 
     if (m_isAnimating) {
         m_animTimer += dt;

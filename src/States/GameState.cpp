@@ -734,7 +734,8 @@ void GameState::update(float dt) {
     if (m_playerDead) {
         if (m_goState == GameOverUIState::Delay) {
             m_deathTimer += dt;
-            if (m_deathTimer >= 1.0f) {
+            if (m_player) m_player->update(dt);
+            if (m_deathTimer >= 1.2f) {
                 setupGameOverUI();
             }
         } else if (m_goState == GameOverUIState::EnterName) {
@@ -1210,13 +1211,11 @@ void GameState::draw(sf::RenderWindow& window) {
 
     // Vẽ overlay Game Over
     if (m_playerDead) {
-        window.draw(m_gameOverOverlay);
+        if (m_goState != GameOverUIState::Delay) {
+            window.draw(m_gameOverOverlay);
+        }
         if (m_goState == GameOverUIState::Delay) {
-            if (m_texGameOverLoaded) {
-                window.draw(m_gameOverSprite);
-            } else if (m_fontLoaded) {
-                window.draw(m_gameOverText);
-            }
+            // Delay 1.2s: Giữ nguyên màn hình chơi để nhìn rõ animation nhân vật chìm sông
         } else if (m_fontLoaded) {
             if (m_goState == GameOverUIState::EnterName) {
                 if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
