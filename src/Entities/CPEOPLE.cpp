@@ -178,7 +178,18 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
             m_sprite.setScale(PLAYER_SIZE * 1.5f / texSize.x, PLAYER_SIZE * 1.5f / texSize.y);
             m_sprite.setOrigin(texSize.x * 0.166f, texSize.y * 0.166f);
         } else if (type == DeathType::Drowned) {
-            m_isDrowned = true;
+            if (deathTexture != nullptr) {
+                m_sprite.setTexture(*deathTexture, true);
+                auto texSize = deathTexture->getSize();
+                int frameW = static_cast<int>(texSize.x) / 4;
+                int frameH = static_cast<int>(texSize.y) / 4;
+                m_sprite.setTextureRect(sf::IntRect(0, m_animRow * frameH, frameW, frameH));
+                m_sprite.setScale(PLAYER_SIZE / static_cast<float>(frameW), PLAYER_SIZE / static_cast<float>(frameH));
+                m_sprite.setOrigin(0.f, 0.f);
+                m_isDrowned = false;
+            } else {
+                m_isDrowned = true;
+            }
         } else {
             m_fallbackShape.setFillColor(sf::Color::Red);
         }

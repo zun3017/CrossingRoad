@@ -95,6 +95,9 @@ private:
     sf::Texture m_hitByCarTexture;
     bool m_hitByCarLoaded = false;
     
+    sf::Texture m_playerDrownTexture;
+    bool m_playerDrownLoaded = false;
+    
 
     // Player
     std::unique_ptr<CPEOPLE> m_player;
