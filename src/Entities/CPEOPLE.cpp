@@ -211,7 +211,7 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
                 float scale = (PLAYER_SIZE * 1.8f) / static_cast<float>(texSize.x);
                 m_sprite.setScale(scale, scale);
                 float originX = 236.8f - (PLAYER_SIZE / 2.f) / scale;
-                float originY = 304.9f - (PLAYER_SIZE / 2.f) / scale;
+                float originY = 264.9f - (PLAYER_SIZE / 2.f) / scale;
                 m_sprite.setOrigin(originX, originY);
                 m_isDrowned = false;
             } else {
