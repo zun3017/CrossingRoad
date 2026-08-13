@@ -37,14 +37,10 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
     // Ghi từng trường trên mỗi dòng
     // Dòng 1: Tên người chơi
     file << data.playerName << "\n";
-    // Dòng 2: Loại nhân vật
-    file << data.characterType << "\n";
-    // Dòng 3: Điểm số
+    // Dòng 2: Điểm số
     file << data.score << "\n";
-    // Dòng 4: Cấp độ
+    // Dòng 3: Cấp độ
     file << data.level << "\n";
-    // Dòng 5: Chế độ chơi
-    file << data.gameMode << "\n";
     // Dòng 6: playerX playerY maxPlayerY
     file << data.playerX << " " << data.playerY << " " << data.maxPlayerY << "\n";
     // Dòng 7: Số lượng terrain
@@ -91,6 +87,33 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
 }
 
 // ============================================================
+// LẤY TÊN FILE SAVE DUY NHẤT (TỰ ĐỘNG THÊM (1), (2)... NẾU TRÙNG)
+// ============================================================
+std::string SaveManager::getUniqueSaveFileName(const std::string& baseName) {
+    ensureDataDirectory();
+    std::string candidate = baseName;
+    std::string filepath = DATA_DIR + candidate + ".sav";
+
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        return candidate;
+    }
+    file.close();
+
+    int index = 1;
+    while (true) {
+        candidate = baseName + "(" + std::to_string(index) + ")";
+        std::string testPath = DATA_DIR + candidate + ".sav";
+        std::ifstream testFile(testPath);
+        if (!testFile.is_open()) {
+            return candidate;
+        }
+        testFile.close();
+        index++;
+    }
+}
+
+// ============================================================
 // ĐỌC GAME
 // ============================================================
 bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
@@ -109,25 +132,15 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
     // Các dòng số nguyên
     std::string line;
 
-    // Dòng 2: characterType
-    if (!std::getline(file, line)) return false;
-    try { data.characterType = std::stoi(line); }
-    catch (...) { data.characterType = 0; }
-
-    // Dòng 3: score
+    // Dòng 2: score
     if (!std::getline(file, line)) return false;
     try { data.score = std::stoi(line); }
     catch (...) { data.score = 0; }
 
-    // Dòng 4: level
+    // Dòng 3: level
     if (!std::getline(file, line)) return false;
     try { data.level = std::stoi(line); }
     catch (...) { data.level = 1; }
-
-    // Dòng 5: gameMode
-    if (!std::getline(file, line)) return false;
-    try { data.gameMode = std::stoi(line); }
-    catch (...) { data.gameMode = 0; }
 
     // Dòng 6: playerX playerY maxPlayerY
     if (!std::getline(file, line)) return false;
@@ -151,7 +164,8 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
 
         // vehicles
         if (!std::getline(file, line)) break;
-        int numVeh = std::stoi(line);
+        int numVeh = 0;
+        try { numVeh = std::stoi(line); } catch (...) { numVeh = 0; }
         for (int j = 0; j < numVeh; j++) {
             if (!std::getline(file, line)) break;
             std::stringstream ssVeh(line);
@@ -162,7 +176,8 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
 
         // lilyPads
         if (!std::getline(file, line)) break;
-        int numPads = std::stoi(line);
+        int numPads = 0;
+        try { numPads = std::stoi(line); } catch (...) { numPads = 0; }
         for (int j = 0; j < numPads; j++) {
             if (!std::getline(file, line)) break;
             std::stringstream ssPad(line);
@@ -173,7 +188,8 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
 
         // items
         if (!std::getline(file, line)) break;
-        int numItems = std::stoi(line);
+        int numItems = 0;
+        try { numItems = std::stoi(line); } catch (...) { numItems = 0; }
         for (int j = 0; j < numItems; j++) {
             if (!std::getline(file, line)) break;
             std::stringstream ssItem(line);

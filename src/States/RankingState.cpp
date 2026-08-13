@@ -4,135 +4,204 @@
 #include <memory>
 #include <algorithm>
 
-// ============================================================
-// RankingState - Bảng xếp hạng điểm cao
-// ============================================================
-
 void RankingState::init() {
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
+    m_cupLoaded = m_cupTexture.loadFromFile("assets/textures/cup.png");
+    bool gL = m_goldMedalTex.loadFromFile("assets/textures/gold_medal.png");
+    bool sL = m_silverMedalTex.loadFromFile("assets/textures/silver_medal.png");
+    bool bL = m_bronzeMedalTex.loadFromFile("assets/textures/bronze_medal.png");
+    m_medalsLoaded = gL && sL && bL;
 
-    // Nền tối
-    m_background.setSize(sf::Vector2f(800.f, 600.f));
-    m_background.setFillColor(sf::Color(20, 20, 35));
+    // Load menu.png background
+    m_bgLoaded = m_bgTexture.loadFromFile("assets/textures/menu.png");
+    if (m_bgLoaded) {
+        m_bgSprite.setTexture(m_bgTexture);
+        sf::Vector2u size = m_bgTexture.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_bgSprite.setScale(
+                800.f / static_cast<float>(size.x),
+                600.f / static_cast<float>(size.y));
+        }
+    } else {
+        m_background.setSize(sf::Vector2f(800.f, 600.f));
+        m_background.setFillColor(sf::Color(124, 179, 66));
+    }
 
-    // Tiêu đề vàng gold
-    m_titleText.setFont(m_font);
-    m_titleText.setString("LEADERBOARD");
-    m_titleText.setCharacterSize(42);
-    m_titleText.setFillColor(sf::Color(255, 215, 0));
-    m_titleText.setStyle(sf::Text::Bold);
-    sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-    m_titleText.setOrigin(titleBounds.left + titleBounds.width / 2.f,
-                          titleBounds.top + titleBounds.height / 2.f);
-    m_titleText.setPosition(400.f, 45.f);
+    // Main window container (Sky blue)
+    m_mainContainer.setSize(sf::Vector2f(720.f, 540.f));
+    m_mainContainer.setOrigin(360.f, 270.f);
+    m_mainContainer.setPosition(400.f, 300.f);
+    m_mainContainer.setFillColor(sf::Color(74, 144, 226, 242)); // #4a90e2 with 95% opacity
 
-    // Trophy placeholder - hình chữ nhật vàng ở góc trên
-    m_trophy.setSize(sf::Vector2f(40.f, 50.f));
-    m_trophy.setFillColor(sf::Color(255, 215, 0));
-    m_trophy.setOutlineColor(sf::Color(200, 170, 0));
-    m_trophy.setOutlineThickness(2.f);
-    m_trophy.setPosition(380.f, 80.f);
+    m_containerBorder.setSize(sf::Vector2f(720.f, 540.f));
+    m_containerBorder.setOrigin(360.f, 270.f);
+    m_containerBorder.setPosition(400.f, 300.f);
+    m_containerBorder.setFillColor(sf::Color::Transparent);
+    m_containerBorder.setOutlineColor(sf::Color::Black);
+    m_containerBorder.setOutlineThickness(4.f);
 
-    // Header bảng
-    float tableTop = 150.f;
-    m_headerRank.setFont(m_font);
-    m_headerRank.setString("Rank");
-    m_headerRank.setCharacterSize(20);
-    m_headerRank.setFillColor(sf::Color(255, 215, 0));
-    m_headerRank.setStyle(sf::Text::Bold);
-    m_headerRank.setPosition(150.f, tableTop);
+    // Top ribbon
+    m_topRibbon.setSize(sf::Vector2f(720.f, 8.f));
+    m_topRibbon.setPosition(40.f, 30.f);
+    m_topRibbon.setFillColor(sf::Color(255, 255, 255, 60));
 
-    m_headerName.setFont(m_font);
-    m_headerName.setString("Name");
-    m_headerName.setCharacterSize(20);
-    m_headerName.setFillColor(sf::Color(255, 215, 0));
-    m_headerName.setStyle(sf::Text::Bold);
-    m_headerName.setPosition(300.f, tableTop);
+    if (m_fontLoaded) {
+        // Title: LEADERBOARD
+        m_titleShadow.setFont(m_font);
+        m_titleShadow.setString("LEADERBOARD");
+        m_titleShadow.setCharacterSize(36);
+        m_titleShadow.setFillColor(sf::Color::Black);
+        m_titleShadow.setStyle(sf::Text::Bold);
+        sf::FloatRect tb = m_titleShadow.getLocalBounds();
+        m_titleShadow.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_titleShadow.setPosition(403.f, 61.f);
 
-    m_headerScore.setFont(m_font);
-    m_headerScore.setString("Score");
-    m_headerScore.setCharacterSize(20);
-    m_headerScore.setFillColor(sf::Color(255, 215, 0));
-    m_headerScore.setStyle(sf::Text::Bold);
-    m_headerScore.setPosition(550.f, tableTop);
+        m_titleText.setFont(m_font);
+        m_titleText.setString("LEADERBOARD");
+        m_titleText.setCharacterSize(36);
+        m_titleText.setFillColor(sf::Color(253, 216, 53)); // #fdd835 yellow
+        m_titleText.setStyle(sf::Text::Bold);
+        m_titleText.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_titleText.setPosition(400.f, 58.f);
 
-    // Không có dữ liệu
-    m_noDataText.setFont(m_font);
-    m_noDataText.setString("No high scores yet");
-    m_noDataText.setCharacterSize(22);
-    m_noDataText.setFillColor(sf::Color(150, 150, 150));
-    sf::FloatRect noBounds = m_noDataText.getLocalBounds();
-    m_noDataText.setOrigin(noBounds.left + noBounds.width / 2.f,
-                            noBounds.top + noBounds.height / 2.f);
-    m_noDataText.setPosition(400.f, 320.f);
+        // Accent Bar
+        m_accentBar.setSize(sf::Vector2f(440.f, 6.f));
+        m_accentBar.setOrigin(220.f, 0.f);
+        m_accentBar.setPosition(400.f, 88.f);
+        m_accentBar.setFillColor(sf::Color(253, 216, 53));
 
-    // Load dữ liệu highscore
+        m_accentBarBorder.setSize(sf::Vector2f(440.f, 3.f));
+        m_accentBarBorder.setOrigin(220.f, 0.f);
+        m_accentBarBorder.setPosition(400.f, 94.f);
+        m_accentBarBorder.setFillColor(sf::Color::Black);
+
+        // Table Box Container
+        m_tableBox.setSize(sf::Vector2f(660.f, 365.f));
+        m_tableBox.setPosition(70.f, 110.f);
+        m_tableBox.setFillColor(sf::Color(0, 0, 0, 180));
+        m_tableBox.setOutlineColor(sf::Color::Black);
+        m_tableBox.setOutlineThickness(3.f);
+
+        // Table Column Headers
+        m_headerRank.setFont(m_font);
+        m_headerRank.setString("RANK");
+        m_headerRank.setCharacterSize(15);
+        m_headerRank.setFillColor(sf::Color(253, 216, 53));
+        m_headerRank.setStyle(sf::Text::Bold);
+        m_headerRank.setPosition(110.f, 122.f);
+
+        m_headerName.setFont(m_font);
+        m_headerName.setString("PLAYER");
+        m_headerName.setCharacterSize(15);
+        m_headerName.setFillColor(sf::Color(253, 216, 53));
+        m_headerName.setStyle(sf::Text::Bold);
+        m_headerName.setPosition(240.f, 122.f);
+
+        m_headerScore.setFont(m_font);
+        m_headerScore.setString("SCORE");
+        m_headerScore.setCharacterSize(15);
+        m_headerScore.setFillColor(sf::Color(253, 216, 53));
+        m_headerScore.setStyle(sf::Text::Bold);
+        m_headerScore.setPosition(610.f, 122.f);
+
+        m_headerDivider.setSize(sf::Vector2f(640.f, 3.f));
+        m_headerDivider.setPosition(80.f, 148.f);
+        m_headerDivider.setFillColor(sf::Color::Black);
+
+        // No Data text
+        m_noDataText.setFont(m_font);
+        m_noDataText.setString("NO HIGH SCORES YET");
+        m_noDataText.setCharacterSize(20);
+        m_noDataText.setFillColor(sf::Color(253, 216, 53));
+        m_noDataText.setStyle(sf::Text::Bold);
+        sf::FloatRect nb = m_noDataText.getLocalBounds();
+        m_noDataText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
+        m_noDataText.setPosition(400.f, 280.f);
+    }
+
+    // Cup sprite position
+    if (m_cupLoaded) {
+        m_cupSprite.setTexture(m_cupTexture);
+        sf::Vector2u size = m_cupTexture.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_cupSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+            m_cupSprite.setScale(36.f / static_cast<float>(size.x), 36.f / static_cast<float>(size.y));
+        }
+        m_cupSprite.setPosition(150.f, 58.f);
+    }
+
+    // Load Highscores
     auto highscores = SaveManager::loadHighscores();
 
-    float entryY = tableTop + 40.f;
-    float entrySpacing = 35.f;
-
-    for (size_t i = 0; i < highscores.size() && i < 10; i++) {
+    for (size_t i = 0; i < highscores.size() && i < 8; i++) {
         RankEntry entry;
-        float y = entryY + static_cast<float>(i) * entrySpacing;
+        entry.rank = static_cast<int>(i + 1);
+        entry.name = highscores[i].name;
+        entry.score = highscores[i].score;
 
-        // Màu theo thứ hạng
-        sf::Color rankColor = sf::Color::White;
-        if (i == 0) rankColor = sf::Color(255, 215, 0);   // Vàng cho hạng 1
-        else if (i == 1) rankColor = sf::Color(192, 192, 192); // Bạc cho hạng 2
-        else if (i == 2) rankColor = sf::Color(205, 127, 50);  // Đồng cho hạng 3
+        sf::Color textColor = sf::Color::White;
+        if (i == 0) textColor = sf::Color(255, 215, 0);       // Gold
+        else if (i == 1) textColor = sf::Color(192, 192, 192); // Silver
+        else if (i == 2) textColor = sf::Color(205, 127, 50);  // Bronze
 
-        entry.rankText.setFont(m_font);
-        entry.rankText.setString("#" + std::to_string(i + 1));
-        entry.rankText.setCharacterSize(18);
-        entry.rankText.setFillColor(rankColor);
-        entry.rankText.setPosition(160.f, y);
+        if (m_medalsLoaded && i < 3) {
+            entry.isMedal = true;
+            if (i == 0) entry.medalSprite.setTexture(m_goldMedalTex);
+            else if (i == 1) entry.medalSprite.setTexture(m_silverMedalTex);
+            else if (i == 2) entry.medalSprite.setTexture(m_bronzeMedalTex);
+
+            sf::Vector2u size = entry.medalSprite.getTexture()->getSize();
+            if (size.x > 0 && size.y > 0) {
+                entry.medalSprite.setScale(24.f / static_cast<float>(size.x), 24.f / static_cast<float>(size.y));
+            }
+        } else {
+            entry.isMedal = false;
+            entry.rankText.setFont(m_font);
+            entry.rankText.setString("#" + std::to_string(i + 1));
+            entry.rankText.setCharacterSize(14);
+            entry.rankText.setFillColor(textColor);
+            entry.rankText.setStyle(sf::Text::Bold);
+        }
 
         entry.nameText.setFont(m_font);
-        entry.nameText.setString(highscores[i].name);
-        entry.nameText.setCharacterSize(18);
-        entry.nameText.setFillColor(sf::Color::White);
-        entry.nameText.setPosition(300.f, y);
+        entry.nameText.setString(entry.name);
+        entry.nameText.setCharacterSize(14);
+        entry.nameText.setFillColor(textColor);
+        entry.nameText.setStyle(sf::Text::Bold);
 
         entry.scoreText.setFont(m_font);
-        entry.scoreText.setString(std::to_string(highscores[i].score));
-        entry.scoreText.setCharacterSize(18);
-        entry.scoreText.setFillColor(sf::Color(100, 255, 100));
-        entry.scoreText.setPosition(560.f, y);
+        entry.scoreText.setString(std::to_string(entry.score));
+        entry.scoreText.setCharacterSize(14);
+        entry.scoreText.setFillColor((i < 3) ? textColor : sf::Color(67, 160, 71)); // Green for 4+
+        entry.scoreText.setStyle(sf::Text::Bold);
+
+        entry.ptsText.setFont(m_font);
+        entry.ptsText.setString("PTS");
+        entry.ptsText.setCharacterSize(10);
+        entry.ptsText.setFillColor(sf::Color(180, 180, 180));
 
         m_entries.push_back(entry);
     }
 
-    // Nút BACK
-    float backW = 160.f, backH = 45.f;
-    m_backBtnBg.setSize(sf::Vector2f(backW, backH));
-    m_backBtnBg.setOrigin(backW / 2.f, backH / 2.f);
-    m_backBtnBg.setPosition(400.f, 550.f);
-    m_backBtnBg.setFillColor(sf::Color(80, 80, 100));
-    m_backBtnBg.setOutlineColor(sf::Color(120, 120, 160));
-    m_backBtnBg.setOutlineThickness(2.f);
-
-    m_backBtnText.setFont(m_font);
-    m_backBtnText.setString("BACK");
-    m_backBtnText.setCharacterSize(22);
-    m_backBtnText.setFillColor(sf::Color::White);
-    sf::FloatRect backBounds = m_backBtnText.getLocalBounds();
-    m_backBtnText.setOrigin(backBounds.left + backBounds.width / 2.f,
-                             backBounds.top + backBounds.height / 2.f);
-    m_backBtnText.setPosition(400.f, 550.f);
+    // Back Button (Wooden pixel style)
+    bool backLoaded = m_backTexture.loadFromFile("assets/textures/back_text.png");
+    if (backLoaded) {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, m_backTexture, []() {
+            Game::instance().getStateMachine().popState();
+        });
+    } else {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, "< BACK", m_font, []() {
+            Game::instance().getStateMachine().popState();
+        });
+        m_backBtn->setNormalColor(sf::Color(141, 110, 99)); // #8d6e63
+        m_backBtn->setHoverColor(sf::Color(161, 136, 127));  // #a1887f
+        m_backBtn->setClickColor(sf::Color(93, 64, 55));     // #5d4037
+        m_backBtn->setTextColor(sf::Color(253, 216, 53));
+    }
 }
 
 void RankingState::handleInput(sf::RenderWindow& window, sf::Event& event) {
-    if (event.type == sf::Event::MouseButtonPressed &&
-        event.mouseButton.button == sf::Mouse::Left)
-    {
-        sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x),
-                              static_cast<float>(event.mouseButton.y));
-
-        if (m_backBtnBg.getGlobalBounds().contains(mousePos)) {
-            Game::instance().getStateMachine().popState();
-        }
-    }
+    if (m_backBtn) m_backBtn->handleEvent(event, window);
 
     if (event.type == sf::Event::KeyPressed &&
         event.key.code == sf::Keyboard::Escape)
@@ -142,72 +211,106 @@ void RankingState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void RankingState::update(float dt) {
-    sf::Vector2i mousePixel = sf::Mouse::getPosition(Game::instance().getWindow());
-    sf::Vector2f mousePos(static_cast<float>(mousePixel.x),
-                          static_cast<float>(mousePixel.y));
-
-    m_backHovered = m_backBtnBg.getGlobalBounds().contains(mousePos);
-    m_backBtnBg.setFillColor(m_backHovered
-        ? sf::Color(120, 120, 180)
-        : sf::Color(80, 80, 100));
+    if (m_backBtn) m_backBtn->update(dt);
 }
 
 void RankingState::draw(sf::RenderWindow& window) {
-    window.draw(m_background);
+    if (m_bgLoaded) {
+        window.draw(m_bgSprite);
+    } else {
+        window.draw(m_background);
+    }
+
+    // Main window container
+    window.draw(m_mainContainer);
+    window.draw(m_topRibbon);
+    window.draw(m_containerBorder);
 
     if (!m_fontLoaded) return;
 
+    // Header
+    window.draw(m_titleShadow);
     window.draw(m_titleText);
+    window.draw(m_accentBar);
+    window.draw(m_accentBarBorder);
 
-    // Vẽ trophy placeholder
-    window.draw(m_trophy);
-    // Vẽ chân trophy
-    sf::RectangleShape trophyBase(sf::Vector2f(50.f, 8.f));
-    trophyBase.setPosition(375.f, 130.f);
-    trophyBase.setFillColor(sf::Color(200, 170, 0));
-    window.draw(trophyBase);
-    // Vẽ thân trophy nhỏ
-    sf::RectangleShape trophyStem(sf::Vector2f(12.f, 15.f));
-    trophyStem.setPosition(394.f, 115.f);
-    trophyStem.setFillColor(sf::Color(200, 170, 0));
-    window.draw(trophyStem);
+    if (m_cupLoaded) {
+        window.draw(m_cupSprite);
+    }
 
-    // Đường kẻ dưới tiêu đề
-    sf::RectangleShape divider(sf::Vector2f(500.f, 2.f));
-    divider.setPosition(150.f, 145.f);
-    divider.setFillColor(sf::Color(255, 215, 0, 100));
-    window.draw(divider);
-
-    // Header bảng
+    // Table Box & Header
+    window.draw(m_tableBox);
     window.draw(m_headerRank);
     window.draw(m_headerName);
     window.draw(m_headerScore);
 
-    // Đường kẻ dưới header
-    sf::RectangleShape headerLine(sf::Vector2f(500.f, 1.f));
-    headerLine.setPosition(150.f, 178.f);
-    headerLine.setFillColor(sf::Color(100, 100, 140));
-    window.draw(headerLine);
+    sf::RectangleShape hDivider(sf::Vector2f(640.f, 2.f));
+    hDivider.setPosition(80.f, 148.f);
+    hDivider.setFillColor(sf::Color::Black);
+    window.draw(hDivider);
 
     if (m_entries.empty()) {
         window.draw(m_noDataText);
     } else {
+        float startY = 156.f;
+        float rowHeight = 38.f;
+
         for (size_t i = 0; i < m_entries.size(); i++) {
-            // Nền xen kẽ cho hàng
-            if (i % 2 == 0) {
-                float y = m_entries[i].rankText.getPosition().y - 3.f;
-                sf::RectangleShape rowBg(sf::Vector2f(500.f, 30.f));
-                rowBg.setPosition(150.f, y);
-                rowBg.setFillColor(sf::Color(40, 40, 60, 100));
-                window.draw(rowBg);
+            float y = startY + static_cast<float>(i) * rowHeight;
+
+            // Row Container
+            sf::RectangleShape rowBg(sf::Vector2f(640.f, 34.f));
+            rowBg.setPosition(80.f, y);
+
+            sf::RectangleShape leftBorder(sf::Vector2f(6.f, 34.f));
+            leftBorder.setPosition(80.f, y);
+
+            if (i == 0) {
+                rowBg.setFillColor(sf::Color(255, 215, 0, 35));
+                leftBorder.setFillColor(sf::Color(255, 215, 0));
+            } else if (i == 1) {
+                rowBg.setFillColor(sf::Color(192, 192, 192, 35));
+                leftBorder.setFillColor(sf::Color(192, 192, 192));
+            } else if (i == 2) {
+                rowBg.setFillColor(sf::Color(205, 127, 50, 35));
+                leftBorder.setFillColor(sf::Color(205, 127, 50));
+            } else {
+                rowBg.setFillColor(sf::Color(0, 0, 0, 80));
+                leftBorder.setFillColor(sf::Color(80, 80, 80));
+                leftBorder.setSize(sf::Vector2f(3.f, 34.f));
             }
 
-            window.draw(m_entries[i].rankText);
+            rowBg.setOutlineColor(sf::Color::Black);
+            rowBg.setOutlineThickness(2.f);
+
+            window.draw(rowBg);
+            window.draw(leftBorder);
+
+            // Rank Badge / Text
+            if (m_entries[i].isMedal) {
+                m_entries[i].medalSprite.setPosition(115.f, y + 5.f);
+                window.draw(m_entries[i].medalSprite);
+            } else {
+                m_entries[i].rankText.setPosition(115.f, y + 8.f);
+                window.draw(m_entries[i].rankText);
+            }
+
+            // Name
+            m_entries[i].nameText.setPosition(240.f, y + 8.f);
             window.draw(m_entries[i].nameText);
+
+            // Score & PTS
+            sf::FloatRect sb = m_entries[i].scoreText.getLocalBounds();
+            float scoreX = 665.f - sb.width;
+            m_entries[i].scoreText.setPosition(scoreX, y + 8.f);
             window.draw(m_entries[i].scoreText);
+
+            m_entries[i].ptsText.setPosition(672.f, y + 12.f);
+            window.draw(m_entries[i].ptsText);
         }
     }
 
-    window.draw(m_backBtnBg);
-    window.draw(m_backBtnText);
+    // Back Button
+    if (m_backBtn) window.draw(*m_backBtn);
 }
+

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Crossing Road</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Pixel Art Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'pixel': ['"Press Start 2P"', 'cursive'],
+                    },
+                    colors: {
+                        'game-sky': '#4a90e2',
+                        'game-grass': '#7cb342',
+                        'game-road': '#757575',
+                        'game-wood': '#8d6e63',
+                        'game-wood-dark': '#5d4037',
+                        'game-yellow': '#fdd835',
+                        'game-red': '#e53935',
+                        'game-green': '#43a047',
+                        'game-blue': '#29b6f6'
+                    },
+                    boxShadow: {
+                        'pixel': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-sm': '2px 2px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-inset': 'inset 4px 4px 0px 0px rgba(0, 0, 0, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            /* Pixelated green field pattern matching the game environment */
+            background-color: #7cb342;
+            background-image: 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a), 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a);
+            background-size: 64px 64px;
+            background-position: 0 0, 32px 32px;
+            -webkit-font-smoothing: none;
+        }
+
+        /* Utility classes for pixel borders */
+        .pixel-border {
+            border: 4px solid #000;
+        }
+        
+        .pixel-border-sm {
+            border: 2px solid #000;
+        }
+
+        /* Custom scrollbar matching game palette */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #5d4037; 
+            border-left: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8d6e63;
+            border: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1887f;
+        }
+
+        /* Button micro-interactions */
+        .btn-hover:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+        }
+        .btn-active:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        /* Custom Retro Pixel Checkbox Switch */
+        .pixel-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 32px;
+            height: 32px;
+            background-color: #1a1a1a;
+            border: 3px solid #000;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 2px 2px 0px #000;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: background-color 0.1s ease;
+        }
+
+        .pixel-checkbox:checked {
+            background-color: #43a047;
+        }
+
+        .pixel-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        /* Pixelated Range Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #1a1a1a;
+            height: 16px;
+            border: 3px solid #000;
+            outline: none;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 28px;
+            background: #fdd835;
+            border: 3px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #fff59d;
+            transform: scale(1.08);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 28px;
+            background: #fdd835;
+            border: 3px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="font-pixel text-white h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-game-yellow selection:text-black p-4">
+
+    <!-- Main Window Container -->
+    <div class="relative w-full max-w-3xl max-h-[92vh] bg-game-sky/95 backdrop-blur-md pixel-border shadow-pixel flex flex-col p-6 rounded-sm">
+        
+        <!-- Top decorative ribbon -->
+        <div class="absolute top-0 left-0 w-full h-4 bg-white/20"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-6 relative z-10 pt-3 flex-shrink-0">
+            <h1 class="text-3xl md:text-5xl text-game-yellow drop-shadow-[4px_4px_0_rgba(0,0,0,1)] tracking-widest uppercase">
+                SETTINGS
+            </h1>
+            <div class="w-3/4 mx-auto h-2 bg-game-yellow border-b-4 border-black mt-3"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-grow overflow-y-auto pr-2 mb-4 space-y-5">
+            
+            <!-- Settings Card Container -->
+            <div class="bg-black/60 pixel-border p-6 space-y-6">
+                
+                <!-- Option 1: Sound Effects -->
+                <div class="bg-black/40 p-4 pixel-border-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xl text-game-yellow drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">🔊</span>
+                            <label for="sfx-toggle" class="text-sm md:text-base text-white font-bold cursor-pointer drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                                Sound Effects
+                            </label>
+                        </div>
+                        <input type="checkbox" id="sfx-toggle" class="pixel-checkbox" checked onchange="toggleSFX(this)">
+                    </div>
+
+                    <!-- SFX Volume Slider -->
+                    <div id="sfx-volume-box" class="pt-2 flex items-center space-x-4 border-t border-gray-700">
+                        <span class="text-xs text-gray-300 w-20">Volume</span>
+                        <input type="range" id="sfx-volume" min="0" max="100" value="80" class="w-full" oninput="updateVolume('sfx', this.value)">
+                        <span id="sfx-val" class="text-xs text-game-yellow w-12 text-right">80%</span>
+                    </div>
+                </div>
+
+                <!-- Option 2: Music -->
+                <div class="bg-black/40 p-4 pixel-border-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xl text-game-yellow drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">🎵</span>
+                            <label for="music-toggle" class="text-sm md:text-base text-white font-bold cursor-pointer drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                                Music
+                            </label>
+                        </div>
+                        <input type="checkbox" id="music-toggle" class="pixel-checkbox" checked onchange="toggleMusic(this)">
+                    </div>
+
+                    <!-- Music Volume Slider -->
+                    <div id="music-volume-box" class="pt-2 flex items-center space-x-4 border-t border-gray-700">
+                        <span class="text-xs text-gray-300 w-20">Volume</span>
+                        <input type="range" id="music-volume" min="0" max="100" value="65" class="w-full" oninput="updateVolume('music', this.value)">
+                        <span id="music-val" class="text-xs text-game-yellow w-12 text-right">65%</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quick Action Preset Info -->
+            <div class="bg-black/40 pixel-border-sm p-3 text-center text-xs text-game-blue flex items-center justify-between">
+                <span>Auto-saves changes to local config</span>
+                <button onclick="resetDefaults()" class="text-game-yellow underline hover:text-white transition-colors">
+                    Reset Defaults
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Bottom Action Area -->
+        <div class="pt-2 flex justify-center z-10 flex-shrink-0">
+            <button onclick="goBack()" class="bg-game-wood text-white px-8 py-4 text-xl pixel-border shadow-pixel btn-hover btn-active transition-all duration-100 flex items-center space-x-3">
+                <span class="text-game-yellow text-2xl drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">&lt;</span>
+                <span class="drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">BACK</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Interactive Behavior Script -->
+    <script>
+        function updateVolume(type, val) {
+            const valDisplay = document.getElementById(`${type}-val`);
+            if (valDisplay) {
+                valDisplay.innerText = `${val}%`;
+            }
+            console.log(`Updated ${type} volume to ${val}%`);
+        }
+
+        function toggleSFX(el) {
+            const volBox = document.getElementById('sfx-volume-box');
+            if (volBox) {
+                volBox.style.opacity = el.checked ? '1' : '0.4';
+                volBox.querySelectorAll('input').forEach(i => i.disabled = !el.checked);
+            }
+            console.log(`SFX enabled: ${el.checked}`);
+        }
+
+        function toggleMusic(el) {
+            const volBox = document.getElementById('music-volume-box');
+            if (volBox) {
+                volBox.style.opacity = el.checked ? '1' : '0.4';
+                volBox.querySelectorAll('input').forEach(i => i.disabled = !el.checked);
+            }
+            console.log(`Music enabled: ${el.checked}`);
+        }
+
+        function resetDefaults() {
+            document.getElementById('sfx-toggle').checked = true;
+            document.getElementById('music-toggle').checked = true;
+
+            document.getElementById('sfx-volume').value = 80;
+            document.getElementById('music-volume').value = 65;
+
+            updateVolume('sfx', 80);
+            updateVolume('music', 65);
+
+            toggleSFX({ checked: true });
+            toggleMusic({ checked: true });
+
+            // Visual flash feedback
+            const container = document.querySelector('.bg-black\\/60');
+            if (container) {
+                container.style.outline = '3px solid #fdd835';
+                setTimeout(() => container.style.outline = 'none', 300);
+            }
+        }
+
+        function goBack() {
+            console.log("Going back to main menu");
+            const btn = document.querySelector('button');
+            if (btn) {
+                const originalBg = btn.style.backgroundColor;
+                btn.style.backgroundColor = '#5d4037';
+                setTimeout(() => {
+                    btn.style.backgroundColor = originalBg;
+                }, 150);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Crossing Road</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Pixel Art Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'pixel': ['"Press Start 2P"', 'cursive'],
+                    },
+                    colors: {
+                        'game-sky': '#4a90e2',
+                        'game-grass': '#7cb342',
+                        'game-road': '#757575',
+                        'game-wood': '#8d6e63',
+                        'game-wood-dark': '#5d4037',
+                        'game-yellow': '#fdd835',
+                        'game-red': '#e53935',
+                        'game-green': '#43a047',
+                        'game-blue': '#29b6f6'
+                    },
+                    boxShadow: {
+                        'pixel': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-sm': '2px 2px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-inset': 'inset 4px 4px 0px 0px rgba(0, 0, 0, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            /* Pixelated pattern background to mimic the game's grass landscape */
+            background-color: #7cb342;
+            background-image: 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a), 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a);
+            background-size: 64px 64px;
+            background-position: 0 0, 32px 32px;
+            -webkit-font-smoothing: none;
+        }
+
+        /* Utility classes for pixel borders */
+        .pixel-border {
+            border: 4px solid #000;
+        }
+        
+        .pixel-border-sm {
+            border: 2px solid #000;
+        }
+
+        /* Custom scrollbar matching game palette */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #5d4037; 
+            border-left: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8d6e63;
+            border: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1887f;
+        }
+
+        /* Button micro-interactions */
+        .btn-hover:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+        }
+        .btn-active:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+        }
+    </style>
+</head>
+
+<body class="font-pixel text-white h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-game-yellow selection:text-black p-4">
+
+    <!-- Main Window Container -->
+    <div class="relative w-full max-w-4xl max-h-[92vh] bg-game-sky/95 backdrop-blur-md pixel-border shadow-pixel flex flex-col p-6 rounded-sm">
+        
+        <!-- Top decorative ribbon -->
+        <div class="absolute top-0 left-0 w-full h-4 bg-white/20"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-4 relative z-10 pt-3 flex-shrink-0">
+            <h1 class="text-3xl md:text-5xl text-game-yellow drop-shadow-[4px_4px_0_rgba(0,0,0,1)] tracking-widest uppercase">
+                ABOUT
+            </h1>
+            <div class="w-3/4 mx-auto h-2 bg-game-yellow border-b-4 border-black mt-3"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-grow overflow-y-auto pr-2 mb-4 space-y-6">
+            
+            <!-- Game Badge & Title Box -->
+            <div class="bg-black/60 pixel-border p-6 flex flex-col items-center text-center relative overflow-hidden">
+                
+                <!-- CR Logo Badge -->
+                <div class="w-20 h-20 bg-game-sky pixel-border shadow-pixel flex items-center justify-center mb-4 transform hover:scale-105 transition-transform duration-200">
+                    <span class="text-game-yellow text-3xl font-bold drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">CR</span>
+                </div>
+
+                <!-- Title & Tech Info -->
+                <h2 class="text-xl md:text-2xl text-game-yellow drop-shadow-[2px_2px_0_rgba(0,0,0,1)] mb-2 uppercase">
+                    Crossing Road - OOP Project
+                </h2>
+                
+                <p class="text-xs md:text-sm text-game-blue mb-2 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                    Built with C++ &amp; SFML 2.5
+                </p>
+
+                <div class="inline-block bg-game-wood-dark/80 px-4 py-2 pixel-border-sm text-xs text-amber-200 mt-1">
+                    HCMUS - University of Science
+                </div>
+            </div>
+
+            <!-- Team Members Section -->
+            <div class="bg-black/60 pixel-border p-6">
+                <div class="flex items-center justify-between mb-4 border-b-2 border-gray-600 pb-2">
+                    <h3 class="text-lg md:text-xl text-game-yellow drop-shadow-[2px_2px_0_rgba(0,0,0,1)] uppercase">
+                        DEVELOPED BY: GROUP 08
+                    </h3>
+                    <span class="text-xs text-game-green hidden sm:inline-block">5 MEMBERS</span>
+                </div>
+
+                <!-- Member Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Member 1 -->
+                    <div class="bg-black/40 p-3 pixel-border-sm flex items-center gap-3 hover:bg-black/60 transition-colors">
+                        <div class="w-10 h-10 bg-game-green text-black font-bold flex items-center justify-center pixel-border-sm flex-shrink-0 text-xs">
+                            01
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-sm text-white truncate font-bold">Truong Tan Phuc</p>
+                            <p class="text-xs text-game-yellow mt-1">ID: 25127111</p>
+                        </div>
+                    </div>
+
+                    <!-- Member 2 -->
+                    <div class="bg-black/40 p-3 pixel-border-sm flex items-center gap-3 hover:bg-black/60 transition-colors">
+                        <div class="w-10 h-10 bg-game-blue text-black font-bold flex items-center justify-center pixel-border-sm flex-shrink-0 text-xs">
+                            02
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-sm text-white truncate font-bold">Nguyen Hoang Danh</p>
+                            <p class="text-xs text-game-yellow mt-1">ID: 25127031</p>
+                        </div>
+                    </div>
+
+                    <!-- Member 3 -->
+                    <div class="bg-black/40 p-3 pixel-border-sm flex items-center gap-3 hover:bg-black/60 transition-colors">
+                        <div class="w-10 h-10 bg-game-yellow text-black font-bold flex items-center justify-center pixel-border-sm flex-shrink-0 text-xs">
+                            03
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-sm text-white truncate font-bold">Pham Thanh Lam</p>
+                            <p class="text-xs text-game-yellow mt-1">ID: 20127086</p>
+                        </div>
+                    </div>
+
+                    <!-- Member 4 -->
+                    <div class="bg-black/40 p-3 pixel-border-sm flex items-center gap-3 hover:bg-black/60 transition-colors">
+                        <div class="w-10 h-10 bg-game-red text-white font-bold flex items-center justify-center pixel-border-sm flex-shrink-0 text-xs">
+                            04
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-sm text-white truncate font-bold">Ho Hoang Tien Dung</p>
+                            <p class="text-xs text-game-yellow mt-1">ID: 25127304</p>
+                        </div>
+                    </div>
+
+                    <!-- Member 5 (Spans 2 columns on desktop for balanced look) -->
+                    <div class="bg-black/40 p-3 pixel-border-sm flex items-center gap-3 hover:bg-black/60 transition-colors md:col-span-2">
+                        <div class="w-10 h-10 bg-purple-500 text-white font-bold flex items-center justify-center pixel-border-sm flex-shrink-0 text-xs">
+                            05
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-sm text-white truncate font-bold">Nguyen Bach Thanh Nhan</p>
+                            <p class="text-xs text-game-yellow mt-1">ID: 25127467</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Action Area -->
+        <div class="pt-2 flex justify-center z-10 flex-shrink-0">
+            <button onclick="goBack()" class="bg-game-wood text-white px-8 py-4 text-xl pixel-border shadow-pixel btn-hover btn-active transition-all duration-100 flex items-center space-x-3">
+                <span class="text-game-yellow text-2xl drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">&lt;</span>
+                <span class="drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">BACK</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+             console.log("Going back to main menu");
+             // Add logic or event dispatcher to navigate back in your C++/SFML web view or menu stack
+             
+             // Visual feedback animation
+             const btn = document.querySelector('button');
+             if (btn) {
+                 const originalBg = btn.style.backgroundColor;
+                 btn.style.backgroundColor = '#5d4037'; // Darker wood feedback
+                 setTimeout(() => {
+                     btn.style.backgroundColor = originalBg;
+                 }, 150);
+             }
+        }
+    </script>
+</body>
+</html>

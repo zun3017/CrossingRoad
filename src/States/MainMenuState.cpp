@@ -16,6 +16,9 @@
 
 void MainMenuState::init()
 {
+    // Phát nhạc nền Menu
+    Game::instance().playBackgroundMusic("assets/audio/bgm_menu.ogg");
+
     // ========================================================
     // LOAD FONT
     // ========================================================
@@ -63,8 +66,8 @@ void MainMenuState::init()
     // 1 = LOAD
     // 2 = RANK
     // 3 = HELP
-    // 4 = SETTINGS
-    // 5 = CREDIT
+    // 4 = CREDIT
+    // 5 = SETTINGS
     // 6 = EXIT
     // ========================================================
 
@@ -78,10 +81,22 @@ void MainMenuState::init()
             "assets/textures/settings.png",
             "assets/textures/exit.png"};
 
+    const char *textFiles[BUTTON_COUNT] =
+        {
+            "assets/textures/play_text.png",
+            "assets/textures/load_text.png",
+            "assets/textures/rank_text.png",
+            "assets/textures/help_text.png",
+            "assets/textures/credit_text.png",
+            "assets/textures/settings_text.png",
+            "assets/textures/exit_text.png"};
+
     for (int i = 0; i < BUTTON_COUNT; ++i)
     {
         m_buttonLoaded[i] =
             m_buttonTextures[i].loadFromFile(buttonFiles[i]);
+
+        m_hoverTextLoaded[i] = m_hoverTextTextures[i].loadFromFile(textFiles[i]);
 
         if (!m_buttonLoaded[i])
         {
@@ -138,7 +153,7 @@ void MainMenuState::init()
 
         m_subtitleText.setFont(m_font);
         m_subtitleText.setString(
-            "Press any button to start");
+            "Welcome to our project!!!");
 
         m_subtitleText.setCharacterSize(18);
 
@@ -442,6 +457,30 @@ void MainMenuState::initButtons()
             }
         }
 
+        // Setup Hover Text Sprite
+        if (m_hoverTextLoaded[i])
+        {
+            m_hoverTextSprites[i].setTexture(m_hoverTextTextures[i]);
+            sf::Vector2u textTexSize = m_hoverTextTextures[i].getSize();
+            if (textTexSize.x > 0 && textTexSize.y > 0)
+            {
+                // Scale sao cho chữ có kích thước cố định mà không méo
+                float textScale = 25.f / static_cast<float>(textTexSize.y);
+                m_hoverTextSprites[i].setScale(textScale, textScale);
+                
+                m_hoverTextSprites[i].setOrigin(
+                    static_cast<float>(textTexSize.x) / 2.f,
+                    static_cast<float>(textTexSize.y) / 2.f
+                );
+                
+                // Đặt text ở phía trên nút
+                m_hoverTextSprites[i].setPosition(
+                    xPos,
+                    startY - BUTTON_SIZE / 2.f - 20.f
+                );
+            }
+        }
+
         m_buttons.push_back(button);
     }
 }
@@ -653,6 +692,7 @@ void MainMenuState::handleInput(
 
                     if (inside)
                     {
+                        Game::instance().playSound("assets/audio/sfx_click.wav");
                         onButtonClick(i);
                     }
                 }
@@ -667,6 +707,9 @@ void MainMenuState::handleInput(
 
 void MainMenuState::update(float dt)
 {
+    // Đảm bảo nhạc nền Menu luôn được phát khi trở về MainMenuState
+    Game::instance().playBackgroundMusic("assets/audio/bgm_menu.ogg");
+
     // ========================================================
     // Subtitle blinking
     // ========================================================
@@ -774,7 +817,13 @@ void MainMenuState::updateButtonHover()
                 .getGlobalBounds()
                 .contains(mousePos);
 
+        bool wasHovered = button.hovered;
         button.hovered = mouseOver;
+
+        if (button.hovered && !wasHovered)
+        {
+            Game::instance().playSound("assets/audio/sfx_hovering.wav");
+        }
 
         // ====================================================
         // Nếu đang nhấn chuột
@@ -896,6 +945,12 @@ void MainMenuState::draw(
         {
             window.draw(
                 m_buttons[i].sprite);
+                
+            // Draw hover text if hovered
+            if (m_buttons[i].hovered && m_hoverTextLoaded[i])
+            {
+                window.draw(m_hoverTextSprites[i]);
+            }
         }
     }
 }

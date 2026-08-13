@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How To Play - Crossing Road</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load a Pixel Art Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'pixel': ['"Press Start 2P"', 'cursive'],
+                    },
+                    colors: {
+                        'game-sky': '#4a90e2',
+                        'game-grass': '#7cb342',
+                        'game-road': '#757575',
+                        'game-wood': '#8d6e63',
+                        'game-wood-dark': '#5d4037',
+                        'game-yellow': '#fdd835',
+                        'game-red': '#e53935',
+                        'game-green': '#43a047'
+                    },
+                    boxShadow: {
+                        'pixel': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-sm': '2px 2px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-inset': 'inset 4px 4px 0px 0px rgba(0, 0, 0, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            /* Pixelated pattern background to mimic the game's grass */
+            background-color: #7cb342;
+            background-image: 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a), 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a);
+            background-size: 64px 64px;
+            background-position: 0 0, 32px 32px;
+            /* Ensure font rendering is crisp for pixel art */
+            -webkit-font-smoothing: none;
+        }
+
+        /* Utility classes for pixel borders */
+        .pixel-border {
+            border: 4px solid #000;
+        }
+        
+        .pixel-border-sm {
+            border: 2px solid #000;
+        }
+
+        /* Custom scrollbar to match the theme */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #5d4037; 
+            border-left: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8d6e63;
+            border: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1887f;
+        }
+
+        /* Hover effects for buttons and keys */
+        .btn-hover:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+        }
+        .btn-active:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+        }
+        
+        .key-btn {
+            background-color: #e0e0e0;
+            color: #000;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            font-size: 0.7rem;
+            margin: 2px;
+        }
+    </style>
+</head>
+
+<body class="font-pixel text-white h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-game-yellow selection:text-black p-4">
+
+    <!-- Main Container -->
+    <div class="relative w-full max-w-4xl max-h-[90vh] bg-game-sky/95 backdrop-blur-md pixel-border shadow-pixel flex flex-col p-6 rounded-sm">
+        
+        <!-- Top decorative border -->
+        <div class="absolute top-0 left-0 w-full h-4 bg-white/20"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-6 relative z-10 pt-4 flex-shrink-0">
+            <h1 class="text-3xl md:text-5xl text-game-yellow drop-shadow-[4px_4px_0_rgba(0,0,0,1)] tracking-widest uppercase">
+                HOW TO PLAY
+            </h1>
+            <div class="w-3/4 mx-auto h-2 bg-game-yellow border-b-4 border-black mt-4"></div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="flex-grow overflow-y-auto pr-4 mb-4" id="instructions-container">
+            <div class="bg-black/60 pixel-border p-6 text-sm leading-relaxed space-y-6">
+                
+                <!-- Controls Section -->
+                <section>
+                    <h2 class="text-game-yellow text-xl mb-4 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">CONTROLS</h2>
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div class="space-y-4 text-gray-200">
+                            <p class="flex items-center gap-4">
+                                <span class="text-white w-28">Moveset 1:</span>
+                                <span>W / A / S / D to move</span>
+                            </p>
+                            <p class="flex items-center gap-4">
+                                <span class="text-white w-28">Moveset 2:</span>
+                                <span>Arrow Keys to move</span>
+                            </p>
+                        </div>
+                        
+                        <!-- Visual WASD Keys -->
+                        <div class="flex flex-col items-center gap-1 bg-black/40 p-3 rounded pixel-border-sm">
+                            <div>
+                                <span class="key-btn">W</span>
+                            </div>
+                            <div class="flex gap-1">
+                                <span class="key-btn">A</span>
+                                <span class="key-btn">S</span>
+                                <span class="key-btn">D</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-b-2 border-gray-600 border-dashed w-full my-4"></div>
+
+                <!-- Gameplay Section -->
+                <section>
+                    <h2 class="text-game-yellow text-xl mb-4 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">GAMEPLAY</h2>
+                    <ul class="space-y-3 text-gray-200 pl-4 list-disc marker:text-game-yellow">
+                        <li>
+                            Avoid vehicles on the roads! 
+                            <span class="block text-game-red mt-1 ml-2 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Getting hit means GAME OVER.</span>
+                        </li>
+                        <li>
+                            Use wood logs to cross rivers.
+                            <span class="block text-game-red mt-1 ml-2 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Falling into water means GAME OVER.</span>
+                        </li>
+                        <li>
+                            Collect 'Superhero-figured' items for <span class="text-game-green">bonus points</span>.
+                        </li>
+                        <li>
+                            Reach the top of the screen to advance to the next level.
+                        </li>
+                    </ul>
+                </section>
+
+                <div class="border-b-2 border-gray-600 border-dashed w-full my-4"></div>
+
+                <!-- Other Keys Section -->
+                <section>
+                    <h2 class="text-game-yellow text-xl mb-4 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">OTHER KEYS</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 text-gray-200">
+                        <p class="flex items-center gap-3">
+                            <span class="text-game-yellow w-24">P / Esc</span> 
+                            <span>- Pause the game</span>
+                        </p>
+                        <p class="flex items-center gap-3">
+                            <span class="text-game-yellow w-24">S</span> 
+                            <span>- Save your progress</span>
+                        </p>
+                        <p class="flex items-center gap-3">
+                            <span class="text-game-yellow w-24">R</span> 
+                            <span>- Restart (when game over)</span>
+                        </p>
+                        <p class="flex items-center gap-3">
+                            <span class="text-game-yellow w-24">Q</span> 
+                            <span>- Quit to menu</span>
+                        </p>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- Bottom Action Area -->
+        <div class="pt-4 flex justify-center z-10 flex-shrink-0">
+            <button onclick="goBack()" class="bg-game-wood text-white px-8 py-4 text-xl pixel-border shadow-pixel btn-hover btn-active transition-all duration-100 flex items-center space-x-3">
+                <span class="text-game-yellow text-2xl drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">&lt;</span>
+                <span class="drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">BACK</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+             console.log("Going back to main menu");
+             // Add logic to navigate back in your actual game
+             
+             // Visual feedback for the demo
+             const btn = document.querySelector('button');
+             if(btn) {
+                 const originalBg = btn.style.backgroundColor;
+                 btn.style.backgroundColor = '#5d4037'; // Darker wood
+                 setTimeout(() => {
+                     btn.style.backgroundColor = originalBg;
+                 }, 150);
+             }
+        }
+    </script>
+</body>
+</html>

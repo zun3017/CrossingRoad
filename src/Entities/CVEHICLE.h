@@ -11,9 +11,8 @@ public:
     void update(float dt) override;
     sf::FloatRect getBounds() const override;
     
-    // Đa hình 
+    // Di chuyển đa hình 
     virtual void Move(float dt);
-    virtual void updateAnimation(float dt);
 
     // Kiểm tra xe đã đi ra ngoài màn hình chưa (x < -200 hoặc x > 1000)
     bool isOffScreen() const;
@@ -33,8 +32,4 @@ protected:
     int m_direction;     // +1 = sang phải, -1 = sang trái
     bool m_stopped = false;  // Đang dừng vì đèn đỏ
     
-    // Các biến cho hoạt ảnh bánh xe xoay
-    int m_frameIndex = 0;
-    float m_animTimer = 0.f;
-    int m_totalFrames = 4; // Mặc định 4 khung hình cho xe cộ
 };

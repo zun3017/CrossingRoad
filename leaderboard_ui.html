@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Crossing Road</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Pixel Art Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'pixel': ['"Press Start 2P"', 'cursive'],
+                    },
+                    colors: {
+                        'game-sky': '#4a90e2',
+                        'game-grass': '#7cb342',
+                        'game-road': '#757575',
+                        'game-wood': '#8d6e63',
+                        'game-wood-dark': '#5d4037',
+                        'game-yellow': '#fdd835',
+                        'game-red': '#e53935',
+                        'game-green': '#43a047',
+                        'game-blue': '#29b6f6',
+                        'gold': '#ffd700',
+                        'silver': '#c0c0c0',
+                        'bronze': '#cd7f32'
+                    },
+                    boxShadow: {
+                        'pixel': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-sm': '2px 2px 0px 0px rgba(0, 0, 0, 1)',
+                        'pixel-inset': 'inset 4px 4px 0px 0px rgba(0, 0, 0, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            /* Pixelated green field pattern matching the game environment */
+            background-color: #7cb342;
+            background-image: 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a), 
+                linear-gradient(45deg, #8bc34a 25%, transparent 25%, transparent 75%, #8bc34a 75%, #8bc34a);
+            background-size: 64px 64px;
+            background-position: 0 0, 32px 32px;
+            -webkit-font-smoothing: none;
+        }
+
+        /* Utility classes for pixel borders */
+        .pixel-border {
+            border: 4px solid #000;
+        }
+        
+        .pixel-border-sm {
+            border: 2px solid #000;
+        }
+
+        /* Custom scrollbar matching game palette */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #5d4037; 
+            border-left: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8d6e63;
+            border: 4px solid #000;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1887f;
+        }
+
+        /* Button micro-interactions */
+        .btn-hover:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+        }
+        .btn-active:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        /* Rank podium glow effects */
+        .rank-1 {
+            background: linear-gradient(90deg, rgba(255,215,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+            border-left: 6px solid #ffd700;
+        }
+        .rank-2 {
+            background: linear-gradient(90deg, rgba(192,192,192,0.2) 0%, rgba(0,0,0,0.6) 100%);
+            border-left: 6px solid #c0c0c0;
+        }
+        .rank-3 {
+            background: linear-gradient(90deg, rgba(205,127,50,0.2) 0%, rgba(0,0,0,0.6) 100%);
+            border-left: 6px solid #cd7f32;
+        }
+    </style>
+</head>
+
+<body class="font-pixel text-white h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-game-yellow selection:text-black p-4">
+
+    <!-- Main Window Container -->
+    <div class="relative w-full max-w-4xl max-h-[92vh] bg-game-sky/95 backdrop-blur-md pixel-border shadow-pixel flex flex-col p-6 rounded-sm">
+        
+        <!-- Top decorative ribbon -->
+        <div class="absolute top-0 left-0 w-full h-4 bg-white/20"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-4 relative z-10 pt-2 flex-shrink-0">
+            <h1 class="text-3xl md:text-5xl text-game-yellow drop-shadow-[4px_4px_0_rgba(0,0,0,1)] tracking-widest uppercase flex items-center justify-center gap-3">
+                <span class="text-3xl md:text-4xl animate-bounce">🏆</span>
+                LEADERBOARD
+                <span class="text-3xl md:text-4xl animate-bounce">🏆</span>
+            </h1>
+            <div class="w-3/4 mx-auto h-2 bg-game-yellow border-b-4 border-black mt-3"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-grow overflow-y-auto pr-2 mb-4">
+            
+            <div class="bg-black/70 pixel-border p-4 md:p-6 space-y-3">
+                
+                <!-- Table Header -->
+                <div class="grid grid-cols-12 gap-2 text-xs md:text-sm text-game-yellow border-b-4 border-black pb-3 px-3 uppercase tracking-wider font-bold">
+                    <div class="col-span-3 text-center">Rank</div>
+                    <div class="col-span-6 text-left">Player</div>
+                    <div class="col-span-3 text-right">Score</div>
+                </div>
+
+                <!-- Leaderboard Entries List -->
+                <div id="leaderboard-list" class="space-y-2">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Bottom Action Area -->
+        <div class="pt-2 flex justify-center z-10 flex-shrink-0">
+            <button onclick="goBack()" class="bg-game-wood text-white px-8 py-4 text-xl pixel-border shadow-pixel btn-hover btn-active transition-all duration-100 flex items-center space-x-3">
+                <span class="text-game-yellow text-2xl drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">&lt;</span>
+                <span class="drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">BACK</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Sample data loaded directly from your game screenshot
+        const leaderboardData = [
+            { rank: 1, name: 'd', score: 345, medal: '🥇' },
+            { rank: 2, name: 'ko', score: 160, medal: '🥈' },
+            { rank: 3, name: 'kjkjjk', score: 100, medal: '🥉' },
+            { rank: 4, name: 's', score: 35 },
+            { rank: 5, name: 'cho phuc', score: 15 },
+            { rank: 6, name: 'da', score: 15 },
+            { rank: 7, name: 'dsds', score: 10 },
+            { rank: 8, name: 'dshfkjdsahf', score: 10 }
+        ];
+
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-list');
+            container.innerHTML = '';
+
+            leaderboardData.forEach((item) => {
+                const isTop3 = item.rank <= 3;
+                let rankClass = 'bg-black/40 border-l-4 border-gray-700';
+                let rankBadge = `#${item.rank}`;
+                let nameColor = 'text-white';
+                let scoreColor = 'text-game-green';
+
+                if (item.rank === 1) {
+                    rankClass = 'rank-1';
+                    rankBadge = '🥇 1st';
+                    nameColor = 'text-gold font-bold';
+                    scoreColor = 'text-gold font-bold';
+                } else if (item.rank === 2) {
+                    rankClass = 'rank-2';
+                    rankBadge = '🥈 2nd';
+                    nameColor = 'text-silver font-bold';
+                    scoreColor = 'text-silver font-bold';
+                } else if (item.rank === 3) {
+                    rankClass = 'rank-3';
+                    rankBadge = '🥉 3rd';
+                    nameColor = 'text-amber-500 font-bold';
+                    scoreColor = 'text-amber-500 font-bold';
+                }
+
+                const rowHTML = `
+                    <div class="grid grid-cols-12 gap-2 items-center p-3 pixel-border-sm hover:bg-black/80 transition-colors duration-150 ${rankClass}">
+                        <!-- Rank -->
+                        <div class="col-span-3 text-center text-xs md:text-sm drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                            ${rankBadge}
+                        </div>
+
+                        <!-- Name -->
+                        <div class="col-span-6 text-left text-xs md:text-sm ${nameColor} truncate drop-shadow-[1px_1px_0_rgba(0,0,0,1)]" title="${item.name}">
+                            ${item.name}
+                        </div>
+
+                        <!-- Score -->
+                        <div class="col-span-3 text-right text-xs md:text-sm ${scoreColor} drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                            ${item.score.toLocaleString()} <span class="text-[10px] text-gray-400">PTS</span>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += rowHTML;
+            });
+        }
+
+        function goBack() {
+            console.log("Going back to main menu");
+            const btn = document.querySelector('button');
+            if (btn) {
+                const originalBg = btn.style.backgroundColor;
+                btn.style.backgroundColor = '#5d4037';
+                setTimeout(() => {
+                    btn.style.backgroundColor = originalBg;
+                }, 150);
+            }
+        }
+
+        // Initialize table
+        window.onload = renderLeaderboard;
+    </script>
+</body>
+</html>

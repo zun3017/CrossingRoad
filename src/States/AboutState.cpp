@@ -2,107 +2,167 @@
 #include "../Core/Game.h"
 #include <memory>
 
-// ============================================================
-// AboutState - Màn hình giới thiệu về game và nhóm phát triển
-// ============================================================
-
 void AboutState::init() {
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
 
-    // Nền tối gradient
-    m_background.setSize(sf::Vector2f(800.f, 600.f));
-    m_background.setFillColor(sf::Color(20, 20, 40));
+    // Load menu.png background
+    m_bgLoaded = m_bgTexture.loadFromFile("assets/textures/menu.png");
+    if (m_bgLoaded) {
+        m_bgSprite.setTexture(m_bgTexture);
+        sf::Vector2u size = m_bgTexture.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_bgSprite.setScale(
+                800.f / static_cast<float>(size.x),
+                600.f / static_cast<float>(size.y));
+        }
+    } else {
+        m_background.setSize(sf::Vector2f(800.f, 600.f));
+        m_background.setFillColor(sf::Color(124, 179, 66));
+    }
 
-    // Thanh trang trí phía trên
-    m_topBar.setSize(sf::Vector2f(800.f, 5.f));
-    m_topBar.setPosition(0.f, 0.f);
-    m_topBar.setFillColor(sf::Color(100, 150, 255));
+    // Main window container (Sky Blue)
+    m_mainContainer.setSize(sf::Vector2f(720.f, 540.f));
+    m_mainContainer.setOrigin(360.f, 270.f);
+    m_mainContainer.setPosition(400.f, 300.f);
+    m_mainContainer.setFillColor(sf::Color(74, 144, 226, 242)); // #4a90e2 with 95% opacity
 
-    // Tiêu đề
-    m_titleText.setFont(m_font);
-    m_titleText.setString("ABOUT");
-    m_titleText.setCharacterSize(42);
-    m_titleText.setFillColor(sf::Color::White);
-    m_titleText.setStyle(sf::Text::Bold);
-    sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-    m_titleText.setOrigin(titleBounds.left + titleBounds.width / 2.f,
-                          titleBounds.top + titleBounds.height / 2.f);
-    m_titleText.setPosition(400.f, 50.f);
+    m_containerBorder.setSize(sf::Vector2f(720.f, 540.f));
+    m_containerBorder.setOrigin(360.f, 270.f);
+    m_containerBorder.setPosition(400.f, 300.f);
+    m_containerBorder.setFillColor(sf::Color::Transparent);
+    m_containerBorder.setOutlineColor(sf::Color::Black);
+    m_containerBorder.setOutlineThickness(4.f);
 
-    // Logo placeholder
-    m_logoBg.setSize(sf::Vector2f(80.f, 80.f));
-    m_logoBg.setOrigin(40.f, 40.f);
-    m_logoBg.setPosition(400.f, 140.f);
-    m_logoBg.setFillColor(sf::Color(60, 80, 140));
-    m_logoBg.setOutlineColor(sf::Color(100, 150, 255));
-    m_logoBg.setOutlineThickness(2.f);
+    // Top ribbon
+    m_topRibbon.setSize(sf::Vector2f(720.f, 8.f));
+    m_topRibbon.setPosition(40.f, 30.f);
+    m_topRibbon.setFillColor(sf::Color(255, 255, 255, 60));
 
-    m_logoText.setFont(m_font);
-    m_logoText.setString("CR");
-    m_logoText.setCharacterSize(32);
-    m_logoText.setFillColor(sf::Color(255, 215, 0));
-    m_logoText.setStyle(sf::Text::Bold);
-    sf::FloatRect logoBounds = m_logoText.getLocalBounds();
-    m_logoText.setOrigin(logoBounds.left + logoBounds.width / 2.f,
-                          logoBounds.top + logoBounds.height / 2.f);
-    m_logoText.setPosition(400.f, 140.f);
+    if (m_fontLoaded) {
+        // Title: ABOUT
+        m_titleShadow.setFont(m_font);
+        m_titleShadow.setString("ABOUT");
+        m_titleShadow.setCharacterSize(38);
+        m_titleShadow.setFillColor(sf::Color::Black);
+        m_titleShadow.setStyle(sf::Text::Bold);
+        sf::FloatRect tb = m_titleShadow.getLocalBounds();
+        m_titleShadow.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_titleShadow.setPosition(403.f, 63.f);
 
-    // Nội dung giới thiệu - căn giữa từng dòng
-    auto centerText = [this](sf::Text& text, const std::string& str,
-                             unsigned int size, sf::Color color, float y)
-    {
-        text.setFont(m_font);
-        text.setString(str);
-        text.setCharacterSize(size);
-        text.setFillColor(color);
-        sf::FloatRect bounds = text.getLocalBounds();
-        text.setOrigin(bounds.left + bounds.width / 2.f,
-                       bounds.top + bounds.height / 2.f);
-        text.setPosition(400.f, y);
+        m_titleText.setFont(m_font);
+        m_titleText.setString("ABOUT");
+        m_titleText.setCharacterSize(38);
+        m_titleText.setFillColor(sf::Color(253, 216, 53)); // #fdd835 yellow
+        m_titleText.setStyle(sf::Text::Bold);
+        m_titleText.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_titleText.setPosition(400.f, 60.f);
+
+        // Accent Bar
+        m_accentBar.setSize(sf::Vector2f(400.f, 6.f));
+        m_accentBar.setOrigin(200.f, 0.f);
+        m_accentBar.setPosition(400.f, 92.f);
+        m_accentBar.setFillColor(sf::Color(253, 216, 53));
+
+        m_accentBarBorder.setSize(sf::Vector2f(400.f, 3.f));
+        m_accentBarBorder.setOrigin(200.f, 0.f);
+        m_accentBarBorder.setPosition(400.f, 98.f);
+        m_accentBarBorder.setFillColor(sf::Color::Black);
+
+        // Game Info Box
+        m_infoBox.setSize(sf::Vector2f(660.f, 120.f));
+        m_infoBox.setPosition(70.f, 115.f);
+        m_infoBox.setFillColor(sf::Color(0, 0, 0, 160));
+        m_infoBox.setOutlineColor(sf::Color::Black);
+        m_infoBox.setOutlineThickness(3.f);
+
+        // "CR" Badge
+        m_crBadge.setSize(sf::Vector2f(54.f, 54.f));
+        m_crBadge.setPosition(88.f, 130.f);
+        m_crBadge.setFillColor(sf::Color(74, 144, 226));
+        m_crBadge.setOutlineColor(sf::Color::Black);
+        m_crBadge.setOutlineThickness(3.f);
+
+        m_crBadgeText.setFont(m_font);
+        m_crBadgeText.setString("CR");
+        m_crBadgeText.setCharacterSize(26);
+        m_crBadgeText.setFillColor(sf::Color(253, 216, 53));
+        m_crBadgeText.setStyle(sf::Text::Bold);
+        sf::FloatRect crb = m_crBadgeText.getLocalBounds();
+        m_crBadgeText.setOrigin(crb.left + crb.width / 2.f, crb.top + crb.height / 2.f);
+        m_crBadgeText.setPosition(115.f, 157.f);
+
+        // Game Title
+        m_gameTitle.setFont(m_font);
+        m_gameTitle.setString("Crossing Road - OOP Project");
+        m_gameTitle.setCharacterSize(20);
+        m_gameTitle.setFillColor(sf::Color(253, 216, 53));
+        m_gameTitle.setStyle(sf::Text::Bold);
+        m_gameTitle.setPosition(158.f, 128.f);
+
+        // Subtitle
+        m_gameSubtitle.setFont(m_font);
+        m_gameSubtitle.setString("Built with C++ & SFML 2.5");
+        m_gameSubtitle.setCharacterSize(14);
+        m_gameSubtitle.setFillColor(sf::Color(41, 182, 246)); // #29b6f6
+        m_gameSubtitle.setPosition(158.f, 156.f);
+
+        // School Tag
+        m_schoolTagBg.setSize(sf::Vector2f(270.f, 24.f));
+        m_schoolTagBg.setPosition(158.f, 182.f);
+        m_schoolTagBg.setFillColor(sf::Color(93, 64, 55, 200)); // #5d4037
+        m_schoolTagBg.setOutlineColor(sf::Color::Black);
+        m_schoolTagBg.setOutlineThickness(2.f);
+
+        m_schoolTagText.setFont(m_font);
+        m_schoolTagText.setString("HCMUS - University of Science");
+        m_schoolTagText.setCharacterSize(12);
+        m_schoolTagText.setFillColor(sf::Color(254, 240, 138));
+        m_schoolTagText.setPosition(166.f, 185.f);
+
+        // Developed By Header & Badge
+        m_devHeader.setFont(m_font);
+        m_devHeader.setString("DEVELOPED BY: GROUP 08");
+        m_devHeader.setCharacterSize(17);
+        m_devHeader.setFillColor(sf::Color(253, 216, 53));
+        m_devHeader.setStyle(sf::Text::Bold);
+        m_devHeader.setPosition(70.f, 252.f);
+
+        m_memberCountBadge.setFont(m_font);
+        m_memberCountBadge.setString("5 MEMBERS");
+        m_memberCountBadge.setCharacterSize(13);
+        m_memberCountBadge.setFillColor(sf::Color(67, 160, 71)); // #43a047
+        m_memberCountBadge.setStyle(sf::Text::Bold);
+        m_memberCountBadge.setPosition(610.f, 254.f);
+    }
+
+    // Initialize 5 team members data
+    m_members = {
+        {"01", "Truong Tan Phuc", "ID: 25127111", sf::Color(67, 160, 71)},     // Green
+        {"02", "Nguyen Hoang Danh", "ID: 25127031", sf::Color(41, 182, 246)},   // Blue
+        {"03", "Pham Thanh Lam", "ID: 20127086", sf::Color(253, 216, 53)},    // Yellow
+        {"04", "Ho Hoang Tien Dung", "ID: 25127304", sf::Color(229, 57, 53)},   // Red
+        {"05", "Nguyen Bach Thanh Nhan", "ID: 25127467", sf::Color(168, 85, 247)} // Purple
     };
 
-    centerText(m_line1, "Crossing Road - OOP Project",
-               26, sf::Color(255, 215, 0), 230.f);
-
-    centerText(m_line2, "Built with C++ & SFML 2.5",
-               20, sf::Color(180, 200, 255), 280.f);
-
-    centerText(m_line3, "Developed by: Group 10",
-               22, sf::Color::White, 330.f);
-
-    centerText(m_line5, "HCMUS",
-               24, sf::Color(100, 200, 255), 380.f);
-
-    // Nút BACK
-    float backW = 160.f, backH = 45.f;
-    m_backBtnBg.setSize(sf::Vector2f(backW, backH));
-    m_backBtnBg.setOrigin(backW / 2.f, backH / 2.f);
-    m_backBtnBg.setPosition(400.f, 510.f);
-    m_backBtnBg.setFillColor(sf::Color(80, 80, 100));
-    m_backBtnBg.setOutlineColor(sf::Color(120, 120, 160));
-    m_backBtnBg.setOutlineThickness(2.f);
-
-    m_backBtnText.setFont(m_font);
-    m_backBtnText.setString("BACK");
-    m_backBtnText.setCharacterSize(22);
-    m_backBtnText.setFillColor(sf::Color::White);
-    sf::FloatRect backBounds = m_backBtnText.getLocalBounds();
-    m_backBtnText.setOrigin(backBounds.left + backBounds.width / 2.f,
-                             backBounds.top + backBounds.height / 2.f);
-    m_backBtnText.setPosition(400.f, 510.f);
+    // Back Button (Wooden pixel style)
+    bool backLoaded = m_backTexture.loadFromFile("assets/textures/back_text.png");
+    if (backLoaded) {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, m_backTexture, []() {
+            Game::instance().getStateMachine().popState();
+        });
+    } else {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, "< BACK", m_font, []() {
+            Game::instance().getStateMachine().popState();
+        });
+        m_backBtn->setNormalColor(sf::Color(141, 110, 99)); // #8d6e63
+        m_backBtn->setHoverColor(sf::Color(161, 136, 127));  // #a1887f
+        m_backBtn->setClickColor(sf::Color(93, 64, 55));     // #5d4037
+        m_backBtn->setTextColor(sf::Color(253, 216, 53));
+    }
 }
 
 void AboutState::handleInput(sf::RenderWindow& window, sf::Event& event) {
-    if (event.type == sf::Event::MouseButtonPressed &&
-        event.mouseButton.button == sf::Mouse::Left)
-    {
-        sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x),
-                              static_cast<float>(event.mouseButton.y));
-
-        if (m_backBtnBg.getGlobalBounds().contains(mousePos)) {
-            Game::instance().getStateMachine().popState();
-        }
-    }
+    if (m_backBtn) m_backBtn->handleEvent(event, window);
 
     if (event.type == sf::Event::KeyPressed &&
         event.key.code == sf::Keyboard::Escape)
@@ -112,56 +172,113 @@ void AboutState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void AboutState::update(float dt) {
-    sf::Vector2i mousePixel = sf::Mouse::getPosition(Game::instance().getWindow());
-    sf::Vector2f mousePos(static_cast<float>(mousePixel.x),
-                          static_cast<float>(mousePixel.y));
-
-    m_backHovered = m_backBtnBg.getGlobalBounds().contains(mousePos);
-    m_backBtnBg.setFillColor(m_backHovered
-        ? sf::Color(120, 120, 180)
-        : sf::Color(80, 80, 100));
+    if (m_backBtn) m_backBtn->update(dt);
 }
 
 void AboutState::draw(sf::RenderWindow& window) {
-    window.draw(m_background);
-    window.draw(m_topBar);
+    if (m_bgLoaded) {
+        window.draw(m_bgSprite);
+    } else {
+        window.draw(m_background);
+    }
+
+    // Main window container
+    window.draw(m_mainContainer);
+    window.draw(m_topRibbon);
+    window.draw(m_containerBorder);
 
     if (!m_fontLoaded) return;
 
+    // Header
+    window.draw(m_titleShadow);
     window.draw(m_titleText);
+    window.draw(m_accentBar);
+    window.draw(m_accentBarBorder);
 
-    // Logo placeholder
-    window.draw(m_logoBg);
-    window.draw(m_logoText);
+    // Game Info Box
+    window.draw(m_infoBox);
+    window.draw(m_crBadge);
+    window.draw(m_crBadgeText);
+    window.draw(m_gameTitle);
+    window.draw(m_gameSubtitle);
+    window.draw(m_schoolTagBg);
+    window.draw(m_schoolTagText);
 
-    // Đường kẻ trang trí
-    sf::RectangleShape divider(sf::Vector2f(300.f, 1.f));
-    divider.setPosition(250.f, 195.f);
-    divider.setFillColor(sf::Color(100, 150, 255, 80));
-    window.draw(divider);
+    // Section Header
+    window.draw(m_devHeader);
+    window.draw(m_memberCountBadge);
 
-    // Nền nội dung
-    sf::RectangleShape contentBg(sf::Vector2f(500.f, 220.f));
-    contentBg.setOrigin(250.f, 0.f);
-    contentBg.setPosition(400.f, 200.f);
-    contentBg.setFillColor(sf::Color(30, 30, 55, 180));
-    contentBg.setOutlineColor(sf::Color(60, 70, 100));
-    contentBg.setOutlineThickness(1.f);
-    window.draw(contentBg);
+    sf::RectangleShape sectionDivider(sf::Vector2f(660.f, 2.f));
+    sectionDivider.setPosition(70.f, 278.f);
+    sectionDivider.setFillColor(sf::Color(100, 100, 100));
+    window.draw(sectionDivider);
 
-    // Nội dung
-    window.draw(m_line1);
-    window.draw(m_line2);
-    window.draw(m_line3);
-    window.draw(m_line5);
+    // Render Member Cards Grid (2x2 + 1 bottom centered)
+    float cardW = 320.f;
+    float cardH = 48.f;
+    float startY = 290.f;
 
-    // Đường kẻ dưới nội dung
-    sf::RectangleShape bottomDivider(sf::Vector2f(300.f, 1.f));
-    bottomDivider.setPosition(250.f, 435.f);
-    bottomDivider.setFillColor(sf::Color(100, 150, 255, 80));
-    window.draw(bottomDivider);
+    for (size_t i = 0; i < m_members.size(); ++i) {
+        float x, y, width;
+        if (i < 4) {
+            x = (i % 2 == 0) ? 70.f : 410.f;
+            y = startY + static_cast<float>(i / 2) * 56.f;
+            width = cardW;
+        } else {
+            x = 70.f;
+            y = startY + 2.f * 56.f;
+            width = 660.f;
+        }
 
-    // Nút BACK
-    window.draw(m_backBtnBg);
-    window.draw(m_backBtnText);
+        // Card Container
+        sf::RectangleShape card(sf::Vector2f(width, cardH));
+        card.setPosition(x, y);
+        card.setFillColor(sf::Color(0, 0, 0, 140));
+        card.setOutlineColor(sf::Color::Black);
+        card.setOutlineThickness(2.f);
+        window.draw(card);
+
+        // Number Badge
+        sf::RectangleShape numBadge(sf::Vector2f(32.f, 32.f));
+        numBadge.setPosition(x + 8.f, y + 8.f);
+        numBadge.setFillColor(m_members[i].badgeColor);
+        numBadge.setOutlineColor(sf::Color::Black);
+        numBadge.setOutlineThickness(2.f);
+        window.draw(numBadge);
+
+        // Number Text
+        sf::Text numText;
+        numText.setFont(m_font);
+        numText.setString(m_members[i].num);
+        numText.setCharacterSize(13);
+        numText.setFillColor((m_members[i].badgeColor == sf::Color(253, 216, 53) || m_members[i].badgeColor == sf::Color(41, 182, 246)) ? sf::Color::Black : sf::Color::White);
+        numText.setStyle(sf::Text::Bold);
+        sf::FloatRect nb = numText.getLocalBounds();
+        numText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
+        numText.setPosition(x + 24.f, y + 24.f);
+        window.draw(numText);
+
+        // Member Name
+        sf::Text nameText;
+        nameText.setFont(m_font);
+        nameText.setString(m_members[i].name);
+        nameText.setCharacterSize(14);
+        nameText.setFillColor(sf::Color::White);
+        nameText.setStyle(sf::Text::Bold);
+        nameText.setPosition(x + 48.f, y + 6.f);
+        window.draw(nameText);
+
+        // Member ID
+        sf::Text idText;
+        idText.setFont(m_font);
+        idText.setString(m_members[i].id);
+        idText.setCharacterSize(12);
+        idText.setFillColor(sf::Color(253, 216, 53)); // #fdd835
+        idText.setPosition(x + 48.f, y + 26.f);
+        window.draw(idText);
+    }
+
+    // Back Button
+    if (m_backBtn) window.draw(*m_backBtn);
 }
+
