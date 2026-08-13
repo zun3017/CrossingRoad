@@ -87,6 +87,33 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
 }
 
 // ============================================================
+// LẤY TÊN FILE SAVE DUY NHẤT (TỰ ĐỘNG THÊM (1), (2)... NẾU TRÙNG)
+// ============================================================
+std::string SaveManager::getUniqueSaveFileName(const std::string& baseName) {
+    ensureDataDirectory();
+    std::string candidate = baseName;
+    std::string filepath = DATA_DIR + candidate + ".sav";
+
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        return candidate;
+    }
+    file.close();
+
+    int index = 1;
+    while (true) {
+        candidate = baseName + "(" + std::to_string(index) + ")";
+        std::string testPath = DATA_DIR + candidate + ".sav";
+        std::ifstream testFile(testPath);
+        if (!testFile.is_open()) {
+            return candidate;
+        }
+        testFile.close();
+        index++;
+    }
+}
+
+// ============================================================
 // ĐỌC GAME
 // ============================================================
 bool SaveManager::loadGame(const std::string& filename, SaveData& data) {

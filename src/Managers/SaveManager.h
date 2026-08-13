@@ -77,6 +77,9 @@ public:
     // Lưu game vào file assets/data/<filename>.sav
     static bool saveGame(const std::string& filename, const SaveData& data);
 
+    // Lấy tên file duy nhất nếu trùng (thêm (1), (2)...)
+    static std::string getUniqueSaveFileName(const std::string& baseName);
+
     // Đọc game từ file assets/data/<filename>.sav
     static bool loadGame(const std::string& filename, SaveData& data);
 

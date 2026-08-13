@@ -463,7 +463,8 @@ void GameState::initOverlays() {
 
     auto onSaveOk = [this]() {
         if (!m_saveNameInput->getString().empty()) {
-            m_currentSaveSession = m_saveNameInput->getString();
+            std::string inputName = m_saveNameInput->getString();
+            m_currentSaveSession = SaveManager::getUniqueSaveFileName(inputName);
             saveCurrentGameState(m_currentSaveSession);
             m_pauseUIState = PauseUIState::Main;
             m_pauseInstruction.setString("Game Saved to " + m_currentSaveSession + "!\nPress P or Escape to Resume\nPress Q to Quit to Menu");
@@ -596,7 +597,8 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
             if (m_btnSaveOk) m_btnSaveOk->handleEvent(event, window);
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 if (!m_saveNameInput->getString().empty()) {
-                    m_currentSaveSession = m_saveNameInput->getString();
+                    std::string inputName = m_saveNameInput->getString();
+                    m_currentSaveSession = SaveManager::getUniqueSaveFileName(inputName);
                     saveCurrentGameState(m_currentSaveSession);
                     m_pauseUIState = PauseUIState::Main;
                     m_pauseInstruction.setString("Game Saved to " + m_currentSaveSession + "!\nPress P or Escape to Resume\nPress Q to Quit to Menu");
