@@ -56,12 +56,9 @@ void MainMenuState::init()
         m_menuBgSprite.setTexture(m_menuVideoTextures[0]);
         sf::Vector2u size = m_menuVideoTextures[0].getSize();
         if (size.x > 0 && size.y > 0) {
-            float scaleX = 800.f / static_cast<float>(size.x);
-            float scaleY = 600.f / static_cast<float>(size.y);
-            float scale = std::max(scaleX, scaleY); // Giữ đúng tỷ lệ khung hình
-            m_menuBgSprite.setScale(scale, scale);
-            m_menuBgSprite.setOrigin(size.x / 2.0f, size.y / 2.0f);
-            m_menuBgSprite.setPosition(400.f, 300.f);
+            m_menuBgSprite.setScale(800.f / static_cast<float>(size.x), 600.f / static_cast<float>(size.y));
+            m_menuBgSprite.setOrigin(0.f, 0.f);
+            m_menuBgSprite.setPosition(0.f, 0.f);
         }
     } else {
         // Fallback to static menu.png
@@ -73,12 +70,9 @@ void MainMenuState::init()
             m_menuBgSprite.setTexture(m_menuBgTexture);
             sf::Vector2u size = m_menuBgTexture.getSize();
             if (size.x > 0 && size.y > 0) {
-                float scaleX = 800.f / static_cast<float>(size.x);
-                float scaleY = 600.f / static_cast<float>(size.y);
-                float scale = std::max(scaleX, scaleY);
-                m_menuBgSprite.setScale(scale, scale);
-                m_menuBgSprite.setOrigin(size.x / 2.0f, size.y / 2.0f);
-                m_menuBgSprite.setPosition(400.f, 300.f);
+                m_menuBgSprite.setScale(800.f / static_cast<float>(size.x), 600.f / static_cast<float>(size.y));
+                m_menuBgSprite.setOrigin(0.f, 0.f);
+                m_menuBgSprite.setPosition(0.f, 0.f);
             }
         }
     }
