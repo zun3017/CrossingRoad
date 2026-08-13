@@ -2,7 +2,9 @@
 
 #include <SFML/Graphics.hpp>
 #include <string>
+#include <memory>
 #include "../Core/State.h"
+#include "../UI/Button.h"
 
 class HelpState : public State {
 public:
@@ -27,7 +29,6 @@ private:
     sf::Text m_contentText;
 
     // Back button
-    sf::RectangleShape m_backBtnBg;
-    sf::Text m_backBtnText;
-    bool m_backHovered = false;
+    sf::Texture m_backTexture;
+    std::unique_ptr<Button> m_backBtn;
 };

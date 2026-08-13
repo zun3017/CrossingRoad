@@ -25,6 +25,8 @@ GameState::GameState(int level, int score)
 }
 
 void GameState::init() {
+    Game::instance().playBackgroundMusic("assets/audio/bgm_gameplay.ogg");
+
     std::srand(static_cast<unsigned>(std::time(nullptr)));
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
 
@@ -317,9 +319,69 @@ void GameState::initHUD() {
 // Khởi tạo overlay Game Over và Pause
 // ============================================================
 void GameState::initOverlays() {
+    m_texGameOverLoaded = m_texGameOver.loadFromFile("assets/textures/game_over.png");
+    m_texConfirmLoaded = m_texConfirm.loadFromFile("assets/textures/confirm_button.png");
+    m_texYesLoaded = m_texYes.loadFromFile("assets/textures/yes_text.png");
+    m_texNoLoaded = m_texNo.loadFromFile("assets/textures/no_text.png");
+    m_texPlayAgainLoaded = m_texPlayAgain.loadFromFile("assets/textures/play_again_text.png");
+    m_texHomeLoaded = m_texHome.loadFromFile("assets/textures/main_menu_text.png");
+    m_texLabelLoaded = m_texLabel.loadFromFile("assets/textures/label.png");
+    m_texEnterNameTextLoaded = m_texEnterNameText.loadFromFile("assets/textures/enter_name_text.png");
+    m_texNameExistsTextLoaded = m_texNameExistsText.loadFromFile("assets/textures/name_exists_text.png");
+    m_texNameScoreRankTextLoaded = m_texNameScoreRankText.loadFromFile("assets/textures/name_score_rank_text.png");
+
+    bool gL = m_goldMedalTex.loadFromFile("assets/textures/gold_medal.png");
+    bool sL = m_silverMedalTex.loadFromFile("assets/textures/silver_medal.png");
+    bool bL = m_bronzeMedalTex.loadFromFile("assets/textures/bronze_medal.png");
+    m_medalsLoaded = gL && sL && bL;
+
+    if (m_texLabelLoaded) {
+        m_labelSprite.setTexture(m_texLabel);
+        sf::Vector2u texSize = m_texLabel.getSize();
+        if (texSize.x > 0 && texSize.y > 0) {
+            m_labelSprite.setOrigin(texSize.x / 2.0f, texSize.y / 2.0f);
+        }
+    }
+
+    if (m_texEnterNameTextLoaded) {
+        m_enterNameTextSprite.setTexture(m_texEnterNameText);
+        sf::Vector2u size = m_texEnterNameText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_enterNameTextSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+            m_enterNameTextSprite.setScale(270.f / static_cast<float>(size.x), 40.f / static_cast<float>(size.y));
+        }
+        m_enterNameTextSprite.setPosition(400.f, 222.f);
+    }
+
+    if (m_texNameExistsTextLoaded) {
+        m_nameExistsTextSprite.setTexture(m_texNameExistsText);
+        sf::Vector2u size = m_texNameExistsText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_nameExistsTextSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+        }
+    }
+
+    if (m_texNameScoreRankTextLoaded) {
+        m_nameScoreRankTextSprite.setTexture(m_texNameScoreRankText);
+        sf::Vector2u size = m_texNameScoreRankText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_nameScoreRankTextSprite.setOrigin(0.f, 0.f);
+        }
+    }
+
     // Game Over overlay
     m_gameOverOverlay.setSize(sf::Vector2f(800.f, 600.f));
     m_gameOverOverlay.setFillColor(sf::Color(0, 0, 0, 160));
+
+    if (m_texGameOverLoaded) {
+        m_gameOverSprite.setTexture(m_texGameOver);
+        sf::Vector2u texSize = m_texGameOver.getSize();
+        if (texSize.x > 0 && texSize.y > 0) {
+            m_gameOverSprite.setOrigin(texSize.x / 2.0f, texSize.y / 2.0f);
+            m_gameOverSprite.setScale(300.f / static_cast<float>(texSize.x), 80.f / static_cast<float>(texSize.y));
+        }
+        m_gameOverSprite.setPosition(400.f, 180.f);
+    }
 
     m_gameOverText.setFont(m_font);
     m_gameOverText.setString("GAME OVER");
@@ -354,6 +416,33 @@ void GameState::initOverlays() {
                                   piBounds.top + piBounds.height / 2.f);
     m_pauseInstruction.setPosition(400.f, 330.f);
 
+    // HUD Button textures
+    bool b1 = m_texHudBack.loadFromFile("assets/textures/back_button.png");
+    bool b2 = m_texHudPause.loadFromFile("assets/textures/pause_button.png");
+    bool b3 = m_texHudContinue.loadFromFile("assets/textures/continue_button.png");
+    bool b4 = m_texHudSave.loadFromFile("assets/textures/save_button.png");
+    m_texHudButtonsLoaded = b1 && b2 && b3 && b4;
+
+    if (m_texHudButtonsLoaded) {
+        auto onBackClick = [this]() {
+            m_deferredAction = DeferredAction::Quit;
+        };
+        m_hudBtnBack = std::make_unique<Button>(20.f, 530.f, 50.f, 50.f, m_texHudBack, onBackClick);
+
+        auto onSaveClick = [this]() {
+            m_paused = true;
+            m_pauseUIState = PauseUIState::EnterSaveName;
+            if (m_saveNameInput) {
+                m_saveNameInput->clear();
+                m_saveNameInput->setActive(true);
+            }
+            updatePauseButtonTexture();
+        };
+        m_hudBtnSave = std::make_unique<Button>(140.f, 530.f, 50.f, 50.f, m_texHudSave, onSaveClick);
+
+        updatePauseButtonTexture();
+    }
+
     // Save Game UI in Pause
     m_saveNameBoard.setSize(sf::Vector2f(350.f, 150.f));
     m_saveNameBoard.setFillColor(sf::Color(50, 50, 50, 240));
@@ -368,18 +457,40 @@ void GameState::initOverlays() {
     m_saveNamePrompt.setFillColor(sf::Color::White);
     sf::FloatRect prBounds = m_saveNamePrompt.getLocalBounds();
     m_saveNamePrompt.setOrigin(prBounds.left + prBounds.width / 2.f, prBounds.top + prBounds.height / 2.f);
-    m_saveNamePrompt.setPosition(400.f, 250.f);
+    m_saveNamePrompt.setPosition(400.f, 222.f);
 
-    m_saveNameInput = std::make_unique<TextBox>(300.f, 280.f, 200.f, 30.f, m_font);
+    m_saveNameInput = std::make_unique<TextBox>(270.f, 260.f, 260.f, 40.f, m_font);
 
-    m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 30.f, "OK", m_font, [this]() {
+    auto onSaveOk = [this]() {
         if (!m_saveNameInput->getString().empty()) {
             m_currentSaveSession = m_saveNameInput->getString();
             saveCurrentGameState(m_currentSaveSession);
             m_pauseUIState = PauseUIState::Main;
             m_pauseInstruction.setString("Game Saved to " + m_currentSaveSession + "!\nPress P or Escape to Resume\nPress Q to Quit to Menu");
         }
-    });
+    };
+
+    if (m_texConfirmLoaded) {
+        m_btnSaveOk = std::make_unique<Button>(340.f, 320.f, 120.f, 36.f, m_texConfirm, onSaveOk);
+    } else {
+        m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 35.f, "OK", m_font, onSaveOk);
+    }
+}
+
+void GameState::updatePauseButtonTexture() {
+    if (!m_texHudButtonsLoaded) return;
+    auto onPauseClick = [this]() {
+        m_paused = !m_paused;
+        if (m_paused) m_pauseUIState = PauseUIState::Main;
+        updatePauseButtonTexture();
+    };
+    // Tỷ lệ ảnh pause/continue_button.png có viền lớn hơn back/save_button.png 14%, 
+    // điều chỉnh kích thước 43x43 tại (83.5, 533.5) để 3 nút đồng kích thước khung viền 100%
+    if (m_paused) {
+        m_hudBtnPause = std::make_unique<Button>(83.5f, 533.5f, 43.f, 43.f, m_texHudContinue, onPauseClick);
+    } else {
+        m_hudBtnPause = std::make_unique<Button>(83.5f, 533.5f, 43.f, 43.f, m_texHudPause, onPauseClick);
+    }
 }
 
 void GameState::saveCurrentGameState(const std::string& sessionName) {
@@ -449,6 +560,13 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
 // Xử lý input từ người chơi
 // ============================================================
 void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
+    // Xử lý sự kiện cho 3 nút HUD (Back, Pause/Continue, Save)
+    if (!m_playerDead && m_texHudButtonsLoaded) {
+        if (m_hudBtnBack) m_hudBtnBack->handleEvent(event, window);
+        if (m_hudBtnPause) m_hudBtnPause->handleEvent(event, window);
+        if (m_hudBtnSave) m_hudBtnSave->handleEvent(event, window);
+    }
+
     // Nếu đã chết
     if (m_playerDead) {
         if (m_goState == GameOverUIState::EnterName) {
@@ -492,6 +610,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
                 if (event.key.code == sf::Keyboard::P ||
                     event.key.code == sf::Keyboard::Escape) {
                     m_paused = false;
+                    updatePauseButtonTexture();
                 } else if (event.key.code == sf::Keyboard::S) {
                     if (!m_currentSaveSession.empty()) {
                         saveCurrentGameState(m_currentSaveSession);
@@ -537,6 +656,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
         case sf::Keyboard::P:
         case sf::Keyboard::Escape:
             m_paused = true;
+            updatePauseButtonTexture();
             break;
         default:
             break;
@@ -598,6 +718,9 @@ void GameState::update(float dt) {
         m_deferredAction = DeferredAction::None;
         m_level = 1; m_score = 0;
         initPlayer(); generateMap(); initHUD();
+        m_playerDead = false;
+        m_goState = GameOverUIState::None;
+        Game::instance().playBackgroundMusic("assets/audio/bgm_gameplay.ogg");
         return;
     } else if (m_deferredAction == DeferredAction::Quit) {
         m_deferredAction = DeferredAction::None;
@@ -713,6 +836,7 @@ void GameState::updateRailway(float dt) {
             if (row.trafficLight.timer <= 0.f) {
                 row.trafficLight.state = LightState::Blinking;
                 row.trafficLight.timer = 2.f; // 2 giây nhấp nháy
+                Game::instance().playSound("assets/audio/sfx_train_horn.wav");
             }
         } else if (row.trafficLight.state == LightState::Blinking) {
             if (row.trafficLight.timer <= 0.f) {
@@ -776,6 +900,7 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(carHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_car_hit.wav");
                         m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -801,6 +926,7 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(trainHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_train_hit.wav");
                         m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -844,6 +970,7 @@ void GameState::checkCollisions(float dt) {
                         if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
                             if (!m_playerDead) {
                                 m_playerDead = true;
+                                Game::instance().playSound("assets/audio/sfx_water_splash.wav");
                                 m_player->die(DeathType::Drowned);
                                 m_deathTimer = 0.f;
                                 m_goState = GameOverUIState::Delay;
@@ -861,6 +988,7 @@ void GameState::checkCollisions(float dt) {
                     // Rơi xuống sông -> chết đuối
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_water_splash.wav");
                         m_player->die(DeathType::Drowned);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -880,6 +1008,7 @@ void GameState::checkCollisions(float dt) {
             if (!item.collected && playerHitbox.intersects(item.shape.getGlobalBounds())) {
                 item.collected = true;
                 m_score += item.points;
+                Game::instance().playSound("assets/audio/sfx_pick_up.wav");
             }
         }
     }
@@ -890,6 +1019,7 @@ void GameState::checkCollisions(float dt) {
 // ============================================================
 void GameState::checkWinCondition() {
     if (m_player->getPosition().y <= 0.f) {
+        Game::instance().playSound("assets/audio/sfx_next_level.wav");
         m_level++;
         m_score += 5; // Thưởng qua màn cố định là 5 điểm
         resetForNextLevel();
@@ -1068,24 +1198,90 @@ void GameState::draw(sf::RenderWindow& window) {
         window.draw(m_scoreText);
     }
 
+    // Vẽ HUD buttons (Back, Pause/Continue, Save) ở góc dưới bên trái
+    if (m_texHudButtonsLoaded) {
+        if (m_hudBtnBack) window.draw(*m_hudBtnBack);
+        if (m_hudBtnPause) window.draw(*m_hudBtnPause);
+        if (m_hudBtnSave) window.draw(*m_hudBtnSave);
+    }
+
     // Vẽ overlay Game Over
     if (m_playerDead) {
         window.draw(m_gameOverOverlay);
-        if (m_fontLoaded) {
-            if (m_goState == GameOverUIState::Delay) {
+        if (m_goState == GameOverUIState::Delay) {
+            if (m_texGameOverLoaded) {
+                window.draw(m_gameOverSprite);
+            } else if (m_fontLoaded) {
                 window.draw(m_gameOverText);
-            } else if (m_goState == GameOverUIState::EnterName) {
-                window.draw(m_enterNameBoard);
-                window.draw(m_enterNameText);
+            }
+        } else if (m_fontLoaded) {
+            if (m_goState == GameOverUIState::EnterName) {
+                if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 270.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 300.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_enterNameBoard);
+                }
+
+                if (m_texEnterNameTextLoaded) {
+                    window.draw(m_enterNameTextSprite);
+                } else {
+                    window.draw(m_enterNameText);
+                }
                 if (m_nameInput) window.draw(*m_nameInput);
                 if (m_btnOk) window.draw(*m_btnOk);
             } else if (m_goState == GameOverUIState::ConfirmIdentity) {
-                window.draw(m_confirmText);
+                if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(460.f / static_cast<float>(texSize.x), 280.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 300.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_enterNameBoard);
+                }
+
+                if (m_texNameExistsTextLoaded) {
+                    window.draw(m_nameExistsTextSprite);
+                    window.draw(m_confirmBestScoreText);
+                } else {
+                    window.draw(m_confirmText);
+                }
                 if (m_btnYes) window.draw(*m_btnYes);
                 if (m_btnNo) window.draw(*m_btnNo);
             } else if (m_goState == GameOverUIState::ShowScore) {
-                window.draw(m_scoreBoard);
-                window.draw(m_rankText);
+                if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 340.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 290.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_scoreBoard);
+                }
+
+                if (m_texNameScoreRankTextLoaded) {
+                    window.draw(m_nameScoreRankTextSprite);
+                    window.draw(m_showNameText);
+                    window.draw(m_showScoreText);
+                    if (m_finalRank <= 3 && m_medalsLoaded) {
+                        window.draw(m_medalSprite);
+                    } else {
+                        window.draw(m_showRankText);
+                    }
+                } else {
+                    window.draw(m_rankText);
+                }
+
                 if (m_playAgainBtn) window.draw(*m_playAgainBtn);
                 if (m_menuBtn) window.draw(*m_menuBtn);
             }
@@ -1100,27 +1296,42 @@ void GameState::draw(sf::RenderWindow& window) {
                 window.draw(m_pauseText);
                 window.draw(m_pauseInstruction);
             } else if (m_pauseUIState == PauseUIState::EnterSaveName) {
-                window.draw(m_saveNameBoard);
-                window.draw(m_saveNamePrompt);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(440.f / static_cast<float>(texSize.x), 270.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 300.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_saveNameBoard);
+                }
+
+                if (m_texEnterNameTextLoaded) {
+                    window.draw(m_enterNameTextSprite);
+                } else {
+                    window.draw(m_saveNamePrompt);
+                }
                 if (m_saveNameInput) window.draw(*m_saveNameInput);
                 if (m_btnSaveOk) window.draw(*m_btnSaveOk);
             }
         }
     }
 }
-
 // ============================================================
 // Thiết lập giao diện Game Over
 // ============================================================
 void GameState::setupGameOverUI() {
+    Game::instance().playSound("assets/audio/bgm_gameover.wav");
     m_goState = GameOverUIState::EnterName;
 
-    m_enterNameBoard.setSize(sf::Vector2f(350.f, 200.f));
-    m_enterNameBoard.setFillColor(sf::Color(135, 206, 250, 220)); // Xanh nước biển nhạt
-    m_enterNameBoard.setOutlineColor(sf::Color::White);
-    m_enterNameBoard.setOutlineThickness(3.f);
-    m_enterNameBoard.setOrigin(175.f, 100.f);
-    m_enterNameBoard.setPosition(400.f, 290.f);
+    if (m_texEnterNameTextLoaded) {
+        sf::Vector2u size = m_texEnterNameText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_enterNameTextSprite.setScale(270.f / static_cast<float>(size.x), 40.f / static_cast<float>(size.y));
+        }
+        m_enterNameTextSprite.setPosition(400.f, 222.f);
+    }
 
     m_enterNameText.setFont(m_font);
     m_enterNameText.setString("Enter Your Name:");
@@ -1128,20 +1339,20 @@ void GameState::setupGameOverUI() {
     m_enterNameText.setFillColor(sf::Color::Black);
     sf::FloatRect eBounds = m_enterNameText.getLocalBounds();
     m_enterNameText.setOrigin(eBounds.left + eBounds.width / 2.f, eBounds.top + eBounds.height / 2.f);
-    m_enterNameText.setPosition(400.f, 230.f);
+    m_enterNameText.setPosition(400.f, 222.f);
 
-    m_nameInput = std::make_unique<TextBox>(300.f, 260.f, 200.f, 40.f, m_font);
+    m_nameInput = std::make_unique<TextBox>(270.f, 260.f, 260.f, 40.f, m_font);
     m_nameInput->setActive(true);
 
     auto showScoreBoard = [this](const std::string& name) {
         m_goState = GameOverUIState::ShowScore;
         
-        m_scoreBoard.setSize(sf::Vector2f(400.f, 250.f));
-        m_scoreBoard.setFillColor(sf::Color(0, 80, 180, 220)); // Xanh dương trong suốt
+        m_scoreBoard.setSize(sf::Vector2f(440.f, 340.f));
+        m_scoreBoard.setFillColor(sf::Color(0, 80, 180, 220));
         m_scoreBoard.setOutlineColor(sf::Color::White);
         m_scoreBoard.setOutlineThickness(3.f);
-        m_scoreBoard.setOrigin(200.f, 125.f);
-        m_scoreBoard.setPosition(400.f, 300.f);
+        m_scoreBoard.setOrigin(220.f, 170.f);
+        m_scoreBoard.setPosition(400.f, 290.f);
 
         auto scores = SaveManager::loadHighscores();
         m_finalRank = 1;
@@ -1150,21 +1361,72 @@ void GameState::setupGameOverUI() {
             m_finalRank++;
         }
 
+        if (m_texNameScoreRankTextLoaded) {
+            sf::Vector2u size = m_texNameScoreRankText.getSize();
+            if (size.x > 0 && size.y > 0) {
+                m_nameScoreRankTextSprite.setScale(150.f / static_cast<float>(size.x), 95.f / static_cast<float>(size.y));
+            }
+            m_nameScoreRankTextSprite.setPosition(240.f, 178.f);
+        }
+
+        m_showNameText.setFont(m_font);
+        m_showNameText.setString(name);
+        m_showNameText.setCharacterSize(22);
+        m_showNameText.setFillColor(sf::Color::White);
+        m_showNameText.setPosition(405.f, 180.f);
+
+        m_showScoreText.setFont(m_font);
+        m_showScoreText.setString(std::to_string(m_score));
+        m_showScoreText.setCharacterSize(22);
+        m_showScoreText.setFillColor(sf::Color(100, 255, 100));
+        m_showScoreText.setPosition(405.f, 212.f);
+
+        if (m_finalRank <= 3 && m_medalsLoaded) {
+            if (m_finalRank == 1) m_medalSprite.setTexture(m_goldMedalTex);
+            else if (m_finalRank == 2) m_medalSprite.setTexture(m_silverMedalTex);
+            else if (m_finalRank == 3) m_medalSprite.setTexture(m_bronzeMedalTex);
+
+            sf::Vector2u mSize = m_medalSprite.getTexture()->getSize();
+            if (mSize.x > 0 && mSize.y > 0) {
+                m_medalSprite.setScale(28.f / static_cast<float>(mSize.x), 28.f / static_cast<float>(mSize.y));
+            }
+            m_medalSprite.setPosition(405.f, 244.f);
+        } else {
+            m_showRankText.setFont(m_font);
+            m_showRankText.setString("#" + std::to_string(m_finalRank));
+            m_showRankText.setCharacterSize(22);
+            m_showRankText.setFillColor(sf::Color(255, 215, 0));
+            m_showRankText.setPosition(405.f, 244.f);
+        }
+
         m_rankText.setFont(m_font);
         m_rankText.setString("Name: " + name + "\nScore: " + std::to_string(m_score) + "\nRank: #" + std::to_string(m_finalRank));
         m_rankText.setCharacterSize(24);
         m_rankText.setFillColor(sf::Color(255, 215, 0));
         sf::FloatRect rBounds = m_rankText.getLocalBounds();
         m_rankText.setOrigin(rBounds.left + rBounds.width / 2.f, rBounds.top + rBounds.height / 2.f);
-        m_rankText.setPosition(400.f, 260.f);
+        m_rankText.setPosition(400.f, 210.f);
 
-        m_playAgainBtn = std::make_unique<Button>(230.f, 340.f, 140.f, 45.f, "Play Again", m_font, [this]() {
-            m_deferredAction = DeferredAction::Restart;
-        });
+        // Nút PLAY AGAIN (180x44) & MAIN MENU (160x44) giúp tỷ lệ chữ đồng nhất
+        if (m_texPlayAgainLoaded) {
+            m_playAgainBtn = std::make_unique<Button>(310.f, 298.f, 180.f, 44.f, m_texPlayAgain, [this]() {
+                m_deferredAction = DeferredAction::Restart;
+            });
+        } else {
+            m_playAgainBtn = std::make_unique<Button>(310.f, 298.f, 180.f, 44.f, "Play Again", m_font, [this]() {
+                m_deferredAction = DeferredAction::Restart;
+            });
+        }
 
-        m_menuBtn = std::make_unique<Button>(430.f, 340.f, 140.f, 45.f, "Main Menu", m_font, [this]() {
-            m_deferredAction = DeferredAction::Quit;
-        });
+        if (m_texHomeLoaded) {
+            m_menuBtn = std::make_unique<Button>(320.f, 354.f, 160.f, 44.f, m_texHome, [this]() {
+                m_deferredAction = DeferredAction::Quit;
+            });
+        } else {
+            m_menuBtn = std::make_unique<Button>(320.f, 354.f, 160.f, 44.f, "Main Menu", m_font, [this]() {
+                m_deferredAction = DeferredAction::Quit;
+            });
+        }
     };
 
     m_submitNameFunc = [this, showScoreBoard]() {
@@ -1175,22 +1437,52 @@ void GameState::setupGameOverUI() {
         if (SaveManager::hasHighscore(name, existingScore)) {
             m_goState = GameOverUIState::ConfirmIdentity;
             
+            if (m_texNameExistsTextLoaded) {
+                sf::Vector2u size = m_texNameExistsText.getSize();
+                if (size.x > 0 && size.y > 0) {
+                    m_nameExistsTextSprite.setScale(340.f / static_cast<float>(size.x), 55.f / static_cast<float>(size.y));
+                }
+                m_nameExistsTextSprite.setPosition(400.f, 230.f);
+            }
+
+            m_confirmBestScoreText.setFont(m_font);
+            m_confirmBestScoreText.setString(std::to_string(existingScore));
+            m_confirmBestScoreText.setCharacterSize(18);
+            m_confirmBestScoreText.setFillColor(sf::Color(255, 215, 0));
+            m_confirmBestScoreText.setStyle(sf::Text::Bold);
+            sf::FloatRect bScoreBounds = m_confirmBestScoreText.getLocalBounds();
+            m_confirmBestScoreText.setOrigin(bScoreBounds.width / 2.f, bScoreBounds.top + bScoreBounds.height / 2.f);
+            m_confirmBestScoreText.setPosition(485.f, 244.f);
+
             m_confirmText.setFont(m_font);
             m_confirmText.setString("Name exists! Is this you?\n(Current best: " + std::to_string(existingScore) + ")");
             m_confirmText.setCharacterSize(20);
             m_confirmText.setFillColor(sf::Color::Yellow);
             sf::FloatRect cBounds = m_confirmText.getLocalBounds();
             m_confirmText.setOrigin(cBounds.left + cBounds.width / 2.f, cBounds.top + cBounds.height / 2.f);
-            m_confirmText.setPosition(400.f, 260.f);
+            m_confirmText.setPosition(400.f, 230.f);
             
-            m_btnYes = std::make_unique<Button>(280.f, 320.f, 100.f, 45.f, "Yes", m_font, [this, name, showScoreBoard]() {
+            auto onYes = [this, name, showScoreBoard]() {
                 SaveManager::updateHighscore(name, m_score);
                 m_scoreSaved = true;
                 showScoreBoard(name);
-            });
-            m_btnNo = std::make_unique<Button>(420.f, 320.f, 100.f, 45.f, "No", m_font, [this]() {
+            };
+            auto onNo = [this]() {
                 m_goState = GameOverUIState::EnterName;
-            });
+            };
+
+            // Nút YES (130x45) và NO (115x45) cho tỷ lệ chữ hoàn toàn tương xứng
+            if (m_texYesLoaded) {
+                m_btnYes = std::make_unique<Button>(255.f, 320.f, 130.f, 45.f, m_texYes, onYes);
+            } else {
+                m_btnYes = std::make_unique<Button>(255.f, 320.f, 130.f, 45.f, "Yes", m_font, onYes);
+            }
+
+            if (m_texNoLoaded) {
+                m_btnNo = std::make_unique<Button>(420.f, 320.f, 100.f, 45.f, m_texNo, onNo);
+            } else {
+                m_btnNo = std::make_unique<Button>(420.f, 320.f, 100.f, 45.f, "No", m_font, onNo);
+            }
         } else {
             SaveManager::addHighscore(name, m_score);
             m_scoreSaved = true;
@@ -1198,9 +1490,15 @@ void GameState::setupGameOverUI() {
         }
     };
 
-    m_btnOk = std::make_unique<Button>(350.f, 320.f, 100.f, 40.f, "OK", m_font, [this]() {
+    auto onSubmit = [this]() {
         if (m_submitNameFunc) m_submitNameFunc();
-    });
+    };
+
+    if (m_texConfirmLoaded) {
+        m_btnOk = std::make_unique<Button>(350.f, 320.f, 100.f, 40.f, m_texConfirm, onSubmit);
+    } else {
+        m_btnOk = std::make_unique<Button>(350.f, 320.f, 100.f, 40.f, "OK", m_font, onSubmit);
+    }
 }
 
 // ============================================================

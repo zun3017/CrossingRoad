@@ -39,23 +39,17 @@ void LoadGameState::init() {
                              noBounds.top + noBounds.height / 2.f);
     m_noSavesText.setPosition(400.f, 280.f);
 
-    // Nút BACK
-    float backW = 160.f, backH = 45.f;
-    m_backBtnBg.setSize(sf::Vector2f(backW, backH));
-    m_backBtnBg.setOrigin(backW / 2.f, backH / 2.f);
-    m_backBtnBg.setPosition(400.f, 540.f);
-    m_backBtnBg.setFillColor(sf::Color(80, 80, 100));
-    m_backBtnBg.setOutlineColor(sf::Color(120, 120, 160));
-    m_backBtnBg.setOutlineThickness(2.f);
-
-    m_backBtnText.setFont(m_font);
-    m_backBtnText.setString("BACK");
-    m_backBtnText.setCharacterSize(22);
-    m_backBtnText.setFillColor(sf::Color::White);
-    sf::FloatRect backBounds = m_backBtnText.getLocalBounds();
-    m_backBtnText.setOrigin(backBounds.left + backBounds.width / 2.f,
-                             backBounds.top + backBounds.height / 2.f);
-    m_backBtnText.setPosition(400.f, 540.f);
+    // Nút BACK bằng back_text.png
+    bool backLoaded = m_backTexture.loadFromFile("assets/textures/back_text.png");
+    if (backLoaded) {
+        m_backBtn = std::make_unique<Button>(320.f, 520.f, 160.f, 45.f, m_backTexture, []() {
+            Game::instance().getStateMachine().popState();
+        });
+    } else {
+        m_backBtn = std::make_unique<Button>(320.f, 520.f, 160.f, 45.f, "BACK", m_font, []() {
+            Game::instance().getStateMachine().popState();
+        });
+    }
 
     refreshSaveList();
 }
@@ -127,11 +121,12 @@ void LoadGameState::refreshSaveList() {
 }
 
 void LoadGameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
+    if (m_backBtn) m_backBtn->handleEvent(event, window);
+
     if (event.type == sf::Event::MouseButtonPressed &&
         event.mouseButton.button == sf::Mouse::Left)
     {
-        sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x),
-                              static_cast<float>(event.mouseButton.y));
+        sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
 
         // Kiểm tra nút LOAD và DELETE cho từng entry
         for (size_t i = 0; i < m_entries.size(); i++) {
@@ -155,11 +150,6 @@ void LoadGameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
                 return;
             }
         }
-
-        // Nút BACK
-        if (m_backBtnBg.getGlobalBounds().contains(mousePos)) {
-            Game::instance().getStateMachine().popState();
-        }
     }
 
     // Phím ESC để quay lại
@@ -171,15 +161,9 @@ void LoadGameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void LoadGameState::update(float dt) {
-    sf::Vector2i mousePixel = sf::Mouse::getPosition(Game::instance().getWindow());
-    sf::Vector2f mousePos(static_cast<float>(mousePixel.x),
-                          static_cast<float>(mousePixel.y));
+    if (m_backBtn) m_backBtn->update(dt);
 
-    // Cập nhật hover cho nút BACK
-    m_backHovered = m_backBtnBg.getGlobalBounds().contains(mousePos);
-    m_backBtnBg.setFillColor(m_backHovered
-        ? sf::Color(120, 120, 180)
-        : sf::Color(80, 80, 100));
+    sf::Vector2f mousePos = Game::instance().getWindow().mapPixelToCoords(sf::Mouse::getPosition(Game::instance().getWindow()));
 
     // Cập nhật hover cho các entry
     for (auto& entry : m_entries) {
@@ -229,6 +213,5 @@ void LoadGameState::draw(sf::RenderWindow& window) {
         }
     }
 
-    window.draw(m_backBtnBg);
-    window.draw(m_backBtnText);
+    if (m_backBtn) window.draw(*m_backBtn);
 }

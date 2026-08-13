@@ -3,7 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 #include "../Core/State.h"
+#include "../UI/Button.h"
 
 // Mỗi entry hiển thị 1 save file
 struct SaveEntry {
@@ -42,9 +44,8 @@ private:
     sf::Text m_noSavesText;
 
     // Back button
-    sf::RectangleShape m_backBtnBg;
-    sf::Text m_backBtnText;
-    bool m_backHovered = false;
+    sf::Texture m_backTexture;
+    std::unique_ptr<Button> m_backBtn;
 
     void refreshSaveList();
 };
