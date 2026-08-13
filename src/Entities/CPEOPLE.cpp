@@ -208,8 +208,11 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
                 m_sprite.setTexture(*tex, true);
                 auto texSize = tex->getSize();
                 m_sprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
-                m_sprite.setScale(PLAYER_SIZE * 2.4f / static_cast<float>(texSize.x), PLAYER_SIZE * 2.4f / static_cast<float>(texSize.y));
-                m_sprite.setOrigin(0.f, 0.f);
+                float scale = (PLAYER_SIZE * 1.8f) / static_cast<float>(texSize.x);
+                m_sprite.setScale(scale, scale);
+                float originX = 236.8f - (PLAYER_SIZE / 2.f) / scale;
+                float originY = 304.9f - (PLAYER_SIZE / 2.f) / scale;
+                m_sprite.setOrigin(originX, originY);
                 m_isDrowned = false;
             } else {
                 m_isDrowned = true;
