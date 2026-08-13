@@ -384,7 +384,7 @@ void GameState::initOverlays() {
             m_gameOverSprite.setOrigin(texSize.x / 2.0f, texSize.y / 2.0f);
             m_gameOverSprite.setScale(300.f / static_cast<float>(texSize.x), 80.f / static_cast<float>(texSize.y));
         }
-        m_gameOverSprite.setPosition(400.f, 180.f);
+        m_gameOverSprite.setPosition(400.f, 150.f);
     }
 
     m_gameOverText.setFont(m_font);
