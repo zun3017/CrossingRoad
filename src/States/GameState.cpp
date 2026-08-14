@@ -687,7 +687,6 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
             sPad.movingRight = log.movingRight;
             sf::Color c = log.shape.getFillColor();
             sPad.r = c.r; sPad.g = c.g; sPad.b = c.b;
-            sPad.isLotus = log.isLotus;
             sRow.lilyPads.push_back(sPad);
         }
         
@@ -1942,7 +1941,7 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     }
     
 
-    // Khôi phục khúc gỗ / lá sen
+    // Khôi phục khúc gỗ
     for (const auto& sPad : savedRow.lilyPads) {
         Log log;
         log.shape.setSize(sf::Vector2f(sPad.width, sPad.height));
@@ -1952,14 +1951,20 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         log.shape.setOutlineThickness(1.f);
         log.speed = sPad.speed;
         log.movingRight = sPad.movingRight;
-        log.isLotus = sPad.isLotus;
         row.logs.push_back(log);
     }
 
     // Khôi phục đèn đường nếu là làn cỏ trong màn đêm
     if (row.type == TerrainType::Grass && isNightMode()) {
-        row.streetLamps.push_back({ 120.f, row.yPosition + m_cellSize });
-        row.streetLamps.push_back({ 680.f, row.yPosition + m_cellSize });
+        row.streetLamps.push_back({ 140.f, row.yPosition + m_cellSize });
+        row.streetLamps.push_back({ 660.f, row.yPosition + m_cellSize });
+    }
+
+    // Khôi phục lá sen có đèn trang trí nếu là sông trong màn đêm
+    if (row.type == TerrainType::River && isNightMode()) {
+        row.decorLotuses.push_back({ 140.f, row.yPosition + m_cellSize / 2.f });
+        row.decorLotuses.push_back({ 410.f, row.yPosition + m_cellSize / 2.f });
+        row.decorLotuses.push_back({ 680.f, row.yPosition + m_cellSize / 2.f });
     }
 
     // Khởi tạo thông số mặc định cho tàu hoả
