@@ -235,6 +235,7 @@ private:
     void movePlayer(float dx, float dy);
     void resetForNextLevel();
     void initHUD();
+    void updateHUDText();
     void initOverlays();
     void setupGameOverUI();
 };

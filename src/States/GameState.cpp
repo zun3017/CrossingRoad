@@ -302,14 +302,14 @@ void GameState::initHUD() {
         m_hudBoardLoaded = true;
         m_hudBoardSprite.setTexture(labelTex);
         sf::Vector2u texSize = labelTex.getSize();
-        float boardWidth = 150.f;
-        float boardHeight = 68.f;
+        float boardWidth = 145.f;
+        float boardHeight = 65.f;
         m_hudBoardSprite.setScale(boardWidth / static_cast<float>(texSize.x), boardHeight / static_cast<float>(texSize.y));
-        m_hudBoardSprite.setPosition(6.f, 4.f);
+        m_hudBoardSprite.setPosition(8.f, 6.f);
     } else {
         // Fallback panel nền mờ cho HUD nếu không tải được ảnh
         m_hudBg.setSize(sf::Vector2f(140.f, 60.f));
-        m_hudBg.setPosition(0.f, 0.f);
+        m_hudBg.setPosition(8.f, 6.f);
         m_hudBg.setFillColor(sf::Color(0, 0, 0, 160));
     }
 
@@ -319,8 +319,6 @@ void GameState::initHUD() {
     m_levelText.setOutlineColor(sf::Color::Black);
     m_levelText.setOutlineThickness(1.5f);
     m_levelText.setStyle(sf::Text::Bold);
-    m_levelText.setPosition(24.f, 14.f);
-    m_levelText.setString("Level: " + std::to_string(m_level));
 
     m_scoreText.setFont(m_font);
     m_scoreText.setCharacterSize(16);
@@ -328,8 +326,22 @@ void GameState::initHUD() {
     m_scoreText.setOutlineColor(sf::Color::Black);
     m_scoreText.setOutlineThickness(1.5f);
     m_scoreText.setStyle(sf::Text::Bold);
-    m_scoreText.setPosition(24.f, 36.f);
+
+    updateHUDText();
+}
+
+void GameState::updateHUDText() {
+    float boardCenterX = 8.f + 145.f / 2.f; // 80.5f
+
+    m_levelText.setString("Level: " + std::to_string(m_level));
+    sf::FloatRect lb = m_levelText.getLocalBounds();
+    m_levelText.setOrigin(lb.left + lb.width / 2.f, lb.top + lb.height / 2.f);
+    m_levelText.setPosition(boardCenterX, 24.f);
+
     m_scoreText.setString("Score: " + std::to_string(m_score));
+    sf::FloatRect sb = m_scoreText.getLocalBounds();
+    m_scoreText.setOrigin(sb.left + sb.width / 2.f, sb.top + sb.height / 2.f);
+    m_scoreText.setPosition(boardCenterX, 47.f);
 }
 
 // ============================================================
@@ -779,8 +791,7 @@ void GameState::update(float dt) {
     m_player->update(dt);
 
     // Cập nhật HUD
-    m_levelText.setString("Level: " + std::to_string(m_level));
-    m_scoreText.setString("Score: " + std::to_string(m_score));
+    updateHUDText();
 }
 
 // ============================================================
