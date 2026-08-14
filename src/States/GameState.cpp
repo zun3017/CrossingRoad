@@ -188,9 +188,9 @@ void GameState::generateMap() {
             auto& targetRow = m_terrains[chosenIdx];
             ItemData clockItem;
             float itemX = static_cast<float>(80 + std::rand() % 640);
-            clockItem.shape.setRadius(19.f); // Tăng kích thước đồng hồ to rõ hơn (đường kính 38px)
+            clockItem.shape.setRadius(23.f); // Tăng kích thước đồng hồ to rõ, nổi bật (đường kính 46px)
             clockItem.shape.setFillColor(sf::Color(0, 229, 255));
-            clockItem.shape.setPosition(itemX, targetRow.yPosition + m_cellSize / 2.f - 19.f);
+            clockItem.shape.setPosition(itemX, targetRow.yPosition + m_cellSize / 2.f - 23.f);
             clockItem.collected = false;
             clockItem.points = 0;
             clockItem.type = ItemType::Clock;
@@ -227,9 +227,9 @@ void GameState::createGrassRow(float y, bool safeZone) {
         } else if (r < 40) { // 15% cơ hội ra đồng hồ ngưng đọng thời gian
             ItemData item;
             float itemX = static_cast<float>(50 + std::rand() % 700);
-            item.shape.setRadius(19.f); // Đồng hồ to hơn
+            item.shape.setRadius(23.f); // Đồng hồ to nổi bật
             item.shape.setFillColor(sf::Color(0, 229, 255));
-            item.shape.setPosition(itemX, y + m_cellSize / 2.f - 19.f);
+            item.shape.setPosition(itemX, y + m_cellSize / 2.f - 23.f);
             item.collected = false;
             item.points = 0;
             item.type = ItemType::Clock;
@@ -256,9 +256,9 @@ void GameState::createRoadRow(float y) {
     if (std::rand() % 100 < 18) {
         ItemData item;
         float itemX = static_cast<float>(80 + std::rand() % 640);
-        item.shape.setRadius(19.f); // Đồng hồ to hơn
+        item.shape.setRadius(23.f); // Đồng hồ to nổi bật
         item.shape.setFillColor(sf::Color(0, 229, 255));
-        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 19.f);
+        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 23.f);
         item.collected = false;
         item.points = 0;
         item.type = ItemType::Clock;
@@ -1685,7 +1685,7 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     for (const auto& sItem : savedRow.items) {
         ItemData item;
         item.type = static_cast<ItemType>(sItem.type);
-        float rad = (item.type == ItemType::Clock) ? 19.f : 14.f;
+        float rad = (item.type == ItemType::Clock) ? 23.f : 14.f;
         item.shape.setRadius(rad);
         item.shape.setFillColor(item.type == ItemType::Clock ? sf::Color(0, 229, 255) : sf::Color(255, 215, 0));
         item.shape.setPosition(sItem.x, sItem.y);
