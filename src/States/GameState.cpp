@@ -301,27 +301,27 @@ void GameState::initHUD() {
     if (labelTex.getSize().x > 0) {
         m_hudBoardLoaded = true;
         m_hudBoardSprite.setTexture(labelTex);
-        sf::Vector2u texSize = labelTex.getSize();
-        float boardWidth = 145.f;
-        float boardHeight = 65.f;
-        m_hudBoardSprite.setScale(boardWidth / static_cast<float>(texSize.x), boardHeight / static_cast<float>(texSize.y));
-        m_hudBoardSprite.setPosition(8.f, 6.f);
+        // Tâm hiển thị thực tế của bảng gỗ trong ảnh label.png (loại bỏ viền trong suốt)
+        m_hudBoardSprite.setOrigin(184.f, 113.f);
+        m_hudBoardSprite.setScale(145.f / 324.f, 62.f / 184.f);
+        m_hudBoardSprite.setPosition(80.f, 36.f);
     } else {
         // Fallback panel nền mờ cho HUD nếu không tải được ảnh
         m_hudBg.setSize(sf::Vector2f(140.f, 60.f));
-        m_hudBg.setPosition(8.f, 6.f);
+        m_hudBg.setOrigin(70.f, 30.f);
+        m_hudBg.setPosition(80.f, 36.f);
         m_hudBg.setFillColor(sf::Color(0, 0, 0, 160));
     }
 
     m_levelText.setFont(m_font);
-    m_levelText.setCharacterSize(16);
+    m_levelText.setCharacterSize(15);
     m_levelText.setFillColor(sf::Color(253, 216, 53)); // Vàng nổi bật #fdd835
     m_levelText.setOutlineColor(sf::Color::Black);
     m_levelText.setOutlineThickness(1.5f);
     m_levelText.setStyle(sf::Text::Bold);
 
     m_scoreText.setFont(m_font);
-    m_scoreText.setCharacterSize(16);
+    m_scoreText.setCharacterSize(15);
     m_scoreText.setFillColor(sf::Color::White);
     m_scoreText.setOutlineColor(sf::Color::Black);
     m_scoreText.setOutlineThickness(1.5f);
@@ -331,12 +331,12 @@ void GameState::initHUD() {
 }
 
 void GameState::updateHUDText() {
-    float boardCenterX = 8.f + 145.f / 2.f; // 80.5f
+    float boardCenterX = 80.f;
 
     m_levelText.setString("Level: " + std::to_string(m_level));
     sf::FloatRect lb = m_levelText.getLocalBounds();
     m_levelText.setOrigin(lb.left + lb.width / 2.f, lb.top + lb.height / 2.f);
-    m_levelText.setPosition(boardCenterX, 24.f);
+    m_levelText.setPosition(boardCenterX, 25.f);
 
     m_scoreText.setString("Score: " + std::to_string(m_score));
     sf::FloatRect sb = m_scoreText.getLocalBounds();
