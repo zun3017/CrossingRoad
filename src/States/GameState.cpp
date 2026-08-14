@@ -1993,15 +1993,14 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
 
     // Khôi phục đèn đường nếu là làn cỏ trong màn đêm
     if (row.type == TerrainType::Grass && isNightMode()) {
-        row.streetLamps.push_back({ 140.f, row.yPosition + m_cellSize });
-        row.streetLamps.push_back({ 660.f, row.yPosition + m_cellSize });
+        row.streetLamps.push_back({ 75.f, row.yPosition + m_cellSize });
+        row.streetLamps.push_back({ 725.f, row.yPosition + m_cellSize });
     }
 
     // Khôi phục lá sen có đèn trang trí nếu là sông trong màn đêm
     if (row.type == TerrainType::River && isNightMode()) {
-        row.decorLotuses.push_back({ 140.f, row.yPosition + m_cellSize / 2.f });
-        row.decorLotuses.push_back({ 410.f, row.yPosition + m_cellSize / 2.f });
-        row.decorLotuses.push_back({ 680.f, row.yPosition + m_cellSize / 2.f });
+        row.decorLotuses.push_back({ 220.f, row.yPosition + m_cellSize / 2.f });
+        row.decorLotuses.push_back({ 580.f, row.yPosition + m_cellSize / 2.f });
     }
 
     // Khởi tạo thông số mặc định cho tàu hoả

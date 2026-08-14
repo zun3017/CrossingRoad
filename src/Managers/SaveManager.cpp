@@ -41,8 +41,8 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
     file << data.score << "\n";
     // Dòng 3: Cấp độ
     file << data.level << "\n";
-    // Dòng 6: playerX playerY maxPlayerY
-    file << data.playerX << " " << data.playerY << " " << data.maxPlayerY << "\n";
+    // Dòng 6: playerX playerY maxPlayerY timeFreezeTimer
+    file << data.playerX << " " << data.playerY << " " << data.maxPlayerY << " " << data.timeFreezeTimer << "\n";
     // Dòng 7: Số lượng terrain
     file << data.numTerrains << "\n";
     // Dòng 8+: Chi tiết terrain
@@ -56,7 +56,7 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
             }
             file << row.lilyPads.size() << "\n";
             for (const auto& pad : row.lilyPads) {
-                file << pad.x << " " << pad.y << " " << pad.width << " " << pad.height << " " << pad.speed << " " << pad.movingRight << " " << pad.r << " " << pad.g << " " << pad.b << " " << pad.isLotus << "\n";
+                file << pad.x << " " << pad.y << " " << pad.width << " " << pad.height << " " << pad.speed << " " << pad.movingRight << " " << pad.r << " " << pad.g << " " << pad.b << "\n";
             }
             file << row.items.size() << "\n";
             for (const auto& item : row.items) {
@@ -142,11 +142,14 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
     try { data.level = std::stoi(line); }
     catch (...) { data.level = 1; }
 
-    // Dòng 6: playerX playerY maxPlayerY
+    // Dòng 6: playerX playerY maxPlayerY timeFreezeTimer
     if (!std::getline(file, line)) return false;
     {
         std::stringstream ss(line);
         ss >> data.playerX >> data.playerY >> data.maxPlayerY;
+        if (!(ss >> data.timeFreezeTimer)) {
+            data.timeFreezeTimer = 0.f;
+        }
     }
 
     // Dòng 7: numTerrains
@@ -186,11 +189,7 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
             if (!std::getline(file, line)) break;
             std::stringstream ssPad(line);
             SavedLilyPad pad;
-            pad.isLotus = false;
             ssPad >> pad.x >> pad.y >> pad.width >> pad.height >> pad.speed >> pad.movingRight >> pad.r >> pad.g >> pad.b;
-            if (!(ssPad >> pad.isLotus)) {
-                pad.isLotus = false;
-            }
             row.lilyPads.push_back(pad);
         }
 

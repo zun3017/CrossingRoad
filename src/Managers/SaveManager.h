@@ -25,7 +25,6 @@ struct SavedLilyPad {
     int r = 0;
     int g = 0;
     int b = 0;
-    bool isLotus = false;
 };
 
 enum class ItemType : int {
