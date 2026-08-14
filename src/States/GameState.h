@@ -33,10 +33,14 @@ struct Log {
     sf::RectangleShape shape;
     float speed;
     bool movingRight;
-    bool isLotus = false; // Lá sen có đèn phát sáng trong màn đêm
 };
 
 struct StreetLamp {
+    float x = 0.f;
+    float y = 0.f;
+};
+
+struct DecorLotus {
     float x = 0.f;
     float y = 0.f;
 };
@@ -53,8 +57,9 @@ struct TerrainRow {
     float yPosition;
     sf::RectangleShape background;
     std::vector<std::unique_ptr<CVEHICLE>> vehicles;
-    std::vector<Log> logs;              // Khúc gỗ hoặc Lá sen có đèn trôi trên sông
-    std::vector<StreetLamp> streetLamps; // Đèn đường trên bãi cỏ
+    std::vector<Log> logs;                  // Khúc gỗ trôi trên sông
+    std::vector<DecorLotus> decorLotuses;   // Lá sen có đèn trang trí cố định trên sông
+    std::vector<StreetLamp> streetLamps;    // Đèn đường trên bãi cỏ
     std::vector<ItemData> items;           // Vật phẩm thu thập
     CTRAFFICLIGHT trafficLight;     // Đèn giao thông (cho đường ray)
     TrainData train;                   // Tàu hoả (cho đường ray)
@@ -121,8 +126,8 @@ private:
     bool m_streetLampLoaded = false;
     sf::Sprite m_lotusSprite;
     bool m_lotusLoaded = false;
-    sf::RectangleShape m_nightOverlay;
-    sf::CircleShape m_playerLightAura;
+    sf::RenderTexture m_lightMap;
+    bool m_lightMapCreated = false;
     
 
     // Player
