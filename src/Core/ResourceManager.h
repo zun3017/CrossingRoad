@@ -34,11 +34,12 @@ public:
         // Chưa có -> load từ file
         auto resource = std::make_unique<Resource>();
         if (!resource->loadFromFile(filename)) {
-            std::cerr << "[ResourceManager] Khong the load: " << filename << std::endl;
-            // Vẫn lưu resource rỗng vào cache để tránh load lại liên tục
-            // Resource mặc định (texture trắng, font rỗng...) sẽ được dùng
-            m_resources[filename] = std::move(resource);
-            return *(m_resources[filename]);
+            std::string altPath = "CrossingRoad/" + filename;
+            if (!resource->loadFromFile(altPath)) {
+                std::cerr << "[ResourceManager] Khong the load: " << filename << std::endl;
+                m_resources[filename] = std::move(resource);
+                return *(m_resources[filename]);
+            }
         }
 
         std::cout << "[ResourceManager] Da load: " << filename << std::endl;

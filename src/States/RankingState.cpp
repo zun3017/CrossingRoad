@@ -1,27 +1,40 @@
 #include "RankingState.h"
 #include "../Core/Game.h"
+#include "../Core/ResourceManager.h"
 #include "../Managers/SaveManager.h"
 #include <memory>
 #include <algorithm>
 
 void RankingState::init() {
-    m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
-    m_cupLoaded = m_cupTexture.loadFromFile("assets/textures/cup.png");
-    bool gL = m_goldMedalTex.loadFromFile("assets/textures/gold_medal.png");
-    bool sL = m_silverMedalTex.loadFromFile("assets/textures/silver_medal.png");
-    bool bL = m_bronzeMedalTex.loadFromFile("assets/textures/bronze_medal.png");
-    m_medalsLoaded = gL && sL && bL;
+    auto& font = FontManager::getInstance().get("assets/fonts/arial.ttf");
+    m_font = font;
+    m_fontLoaded = true;
 
-    // Load menu.png background
-    m_bgLoaded = m_bgTexture.loadFromFile("assets/textures/menu.png");
-    if (m_bgLoaded) {
-        m_bgSprite.setTexture(m_bgTexture);
-        sf::Vector2u size = m_bgTexture.getSize();
-        if (size.x > 0 && size.y > 0) {
-            m_bgSprite.setScale(
-                800.f / static_cast<float>(size.x),
-                600.f / static_cast<float>(size.y));
-        }
+    auto& cupTex = TextureManager::getInstance().get("assets/textures/cup.png");
+    if (cupTex.getSize().x > 0) {
+        m_cupLoaded = true;
+        m_cupTexture = cupTex;
+    }
+
+    auto& goldTex = TextureManager::getInstance().get("assets/textures/gold_medal.png");
+    auto& silverTex = TextureManager::getInstance().get("assets/textures/silver_medal.png");
+    auto& bronzeTex = TextureManager::getInstance().get("assets/textures/bronze_medal.png");
+    if (goldTex.getSize().x > 0 && silverTex.getSize().x > 0 && bronzeTex.getSize().x > 0) {
+        m_medalsLoaded = true;
+        m_goldMedalTex = goldTex;
+        m_silverMedalTex = silverTex;
+        m_bronzeMedalTex = bronzeTex;
+    }
+
+    // Load menu.png background from cache
+    auto& bgTex = TextureManager::getInstance().get("assets/textures/menu.png");
+    if (bgTex.getSize().x > 0) {
+        m_bgLoaded = true;
+        m_bgSprite.setTexture(bgTex);
+        sf::Vector2u size = bgTex.getSize();
+        m_bgSprite.setScale(
+            800.f / static_cast<float>(size.x),
+            600.f / static_cast<float>(size.y));
     } else {
         m_background.setSize(sf::Vector2f(800.f, 600.f));
         m_background.setFillColor(sf::Color(124, 179, 66));
@@ -184,9 +197,9 @@ void RankingState::init() {
     }
 
     // Back Button (Wooden pixel style)
-    bool backLoaded = m_backTexture.loadFromFile("assets/textures/back_text.png");
-    if (backLoaded) {
-        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, m_backTexture, []() {
+    auto& backTex = TextureManager::getInstance().get("assets/textures/back_text.png");
+    if (backTex.getSize().x > 0) {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, backTex, []() {
             Game::instance().getStateMachine().popState();
         });
     } else {

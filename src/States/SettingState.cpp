@@ -1,6 +1,8 @@
 #include "SettingState.h"
 #include "../Core/Game.h"
+#include "../Core/ResourceManager.h"
 #include <memory>
+#include <iostream>
 
 bool SettingState::getSettingValue(SettingId id) const {
     switch (id) {
@@ -36,20 +38,31 @@ void SettingState::resetDefaults() {
 }
 
 void SettingState::init() {
-    m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
-    m_onLoaded = m_onTexture.loadFromFile("assets/textures/on_button.png");
-    m_offLoaded = m_offTexture.loadFromFile("assets/textures/off_button.png");
+    auto& font = FontManager::getInstance().get("assets/fonts/arial.ttf");
+    m_font = font;
+    m_fontLoaded = true;
 
-    // Load menu.png background
-    m_bgLoaded = m_bgTexture.loadFromFile("assets/textures/menu.png");
-    if (m_bgLoaded) {
-        m_bgSprite.setTexture(m_bgTexture);
-        sf::Vector2u size = m_bgTexture.getSize();
-        if (size.x > 0 && size.y > 0) {
-            m_bgSprite.setScale(
-                800.f / static_cast<float>(size.x),
-                600.f / static_cast<float>(size.y));
-        }
+    auto& onTex = TextureManager::getInstance().get("assets/textures/on_button.png");
+    if (onTex.getSize().x > 0) {
+        m_onLoaded = true;
+        m_onTexture = onTex;
+    }
+
+    auto& offTex = TextureManager::getInstance().get("assets/textures/off_button.png");
+    if (offTex.getSize().x > 0) {
+        m_offLoaded = true;
+        m_offTexture = offTex;
+    }
+
+    // Load menu.png background from cache
+    auto& bgTex = TextureManager::getInstance().get("assets/textures/menu.png");
+    if (bgTex.getSize().x > 0) {
+        m_bgLoaded = true;
+        m_bgSprite.setTexture(bgTex);
+        sf::Vector2u size = bgTex.getSize();
+        m_bgSprite.setScale(
+            800.f / static_cast<float>(size.x),
+            600.f / static_cast<float>(size.y));
     } else {
         m_background.setSize(sf::Vector2f(800.f, 600.f));
         m_background.setFillColor(sf::Color(124, 179, 66));
@@ -139,9 +152,9 @@ void SettingState::init() {
     initToggle(m_motionToggle, "FX", "Motion Effects", 305.f, SettingId::Motion);
 
     // Back Button (Wooden pixel style)
-    bool backLoaded = m_backTexture.loadFromFile("assets/textures/back_text.png");
-    if (backLoaded) {
-        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, m_backTexture, []() {
+    auto& backTex = TextureManager::getInstance().get("assets/textures/back_text.png");
+    if (backTex.getSize().x > 0) {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, backTex, []() {
             Game::instance().getStateMachine().popState();
         });
     } else {

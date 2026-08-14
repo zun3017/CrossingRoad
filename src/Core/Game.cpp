@@ -3,6 +3,7 @@
 // =============================================================================
 
 #include "Game.h"
+#include "ResourceManager.h"
 #include "../States/MainMenuState.h"
 #include <iostream>
 
@@ -23,11 +24,12 @@ Game::Game()
     // Tắt tính năng lặp phím khi giữ phím (chống lỗi nhân vật chạy quá nhanh dẫn đến chết đột ngột)
     m_window.setKeyRepeatEnabled(false);
 
-    // Đặt icon cửa sổ (nếu có) - bỏ qua nếu file không tồn tại
-    // sf::Image icon;
-    // if (icon.loadFromFile("assets/icon.png")) {
-    //     m_window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
-    // }
+    // Preload các texture và font dùng chung để chuyển cảnh không bị khựng (0ms lag)
+    TextureManager::getInstance().preload("assets/textures/menu.png");
+    TextureManager::getInstance().preload("assets/textures/back_text.png");
+    TextureManager::getInstance().preload("assets/textures/on_button.png");
+    TextureManager::getInstance().preload("assets/textures/off_button.png");
+    FontManager::getInstance().preload("assets/fonts/arial.ttf");
 
     std::cout << "=== Crossing Road ===" << std::endl;
     std::cout << "Cua so: " << WINDOW_WIDTH << "x" << WINDOW_HEIGHT << std::endl;
