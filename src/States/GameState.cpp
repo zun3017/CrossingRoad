@@ -727,12 +727,6 @@ void GameState::movePlayer(float dx, float dy) {
 
     // Gọi startMove để kích hoạt animation
     m_player->startMove(newPos.x - m_player->getPosition().x, newPos.y - m_player->getPosition().y);
-    
-    // Tăng điểm khi tiến lên (chỉ thưởng nếu đi lên cao hơn mức cao nhất từng đạt được)
-    if (newPos.y < m_maxPlayerY) {
-        m_score += 5;
-        m_maxPlayerY = newPos.y;
-    }
 }
 
 // ============================================================
