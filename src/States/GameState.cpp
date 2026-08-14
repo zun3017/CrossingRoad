@@ -1428,10 +1428,26 @@ void GameState::draw(sf::RenderWindow& window) {
     if (!m_playerDrowned) {
         window.draw(*m_player);
 
-        // Trong màn tối, Shin cầm đèn lồng nhỏ xinh bên tay
+        // Trong màn tối, Shin cầm đèn lồng nhỏ xinh bên tay theo đúng hướng di chuyển
         if (isNightMode() && m_handLampLoaded && !m_playerDead) {
             sf::Vector2f pPos = m_player->getPosition();
-            m_handLampSprite.setPosition(pPos.x + m_playerSize - 8.f, pPos.y + 12.f);
+            int animRow = m_player->m_animRow;
+            float lampX = pPos.x + 28.f;
+            float lampY = pPos.y + 16.f;
+            if (animRow == 0) { // Đi Lên (Lưng) -> Cầm bên tay phải
+                lampX = pPos.x + 26.f;
+                lampY = pPos.y + 14.f;
+            } else if (animRow == 1) { // Đi Xuống (Mặt) -> Cầm bên tay phải
+                lampX = pPos.x + 28.f;
+                lampY = pPos.y + 16.f;
+            } else if (animRow == 2) { // Đi Sang Phải -> Đưa đèn ra phía trước mặt bên phải
+                lampX = pPos.x + 26.f;
+                lampY = pPos.y + 14.f;
+            } else if (animRow == 3) { // Đi Sang Trái -> Đưa đèn ra phía trước mặt bên trái
+                lampX = pPos.x - 2.f;
+                lampY = pPos.y + 14.f;
+            }
+            m_handLampSprite.setPosition(lampX, lampY);
             window.draw(m_handLampSprite);
         }
     }
@@ -1478,11 +1494,33 @@ void GameState::draw(sf::RenderWindow& window) {
             m_lightMap.draw(fan, sf::BlendAdd);
         };
 
-        // 2. Vầng sáng Đèn lồng ấm áp quanh Shin (lan tỏa tự nhiên)
+        // 2. Vầng sáng Đèn lồng ấm áp quanh Shin (tâm sáng phát ra chính xác từ bóng đèn cầm tay)
         if (!m_playerDrowned) {
-            sf::Vector2f pCenter = m_player->getPosition() + sf::Vector2f(m_playerSize / 2.f, m_playerSize / 2.f);
-            drawRadialGlow(pCenter.x, pCenter.y, 115.f, 105.f, sf::Color(165, 145, 95));
-            drawRadialGlow(pCenter.x + 12.f, pCenter.y + 4.f, 50.f, 45.f, sf::Color(190, 175, 120));
+            sf::Vector2f pPos = m_player->getPosition();
+            int animRow = m_player->m_animRow;
+            float lampX = pPos.x + 28.f;
+            float lampY = pPos.y + 16.f;
+            if (animRow == 0) {
+                lampX = pPos.x + 26.f;
+                lampY = pPos.y + 14.f;
+            } else if (animRow == 1) {
+                lampX = pPos.x + 28.f;
+                lampY = pPos.y + 16.f;
+            } else if (animRow == 2) {
+                lampX = pPos.x + 26.f;
+                lampY = pPos.y + 14.f;
+            } else if (animRow == 3) {
+                lampX = pPos.x - 2.f;
+                lampY = pPos.y + 14.f;
+            }
+
+            float bulbX = lampX + 7.f;
+            float bulbY = lampY + 11.f;
+
+            // Quầng sáng vàng ấm tỏa trực tiếp từ ngọn đèn lồng của Shin
+            drawRadialGlow(bulbX, bulbY, 120.f, 110.f, sf::Color(165, 145, 95));
+            drawRadialGlow(bulbX, bulbY, 55.f, 50.f, sf::Color(210, 195, 130));
+            drawRadialGlow(bulbX, bulbY, 22.f, 20.f, sf::Color(255, 240, 180));
         }
 
         // 3. Vầng sáng từ Đèn Đường, Lá Sen, Đèn Pha Ô Tô và Đèn Ray
