@@ -73,7 +73,10 @@ void GameState::init() {
             if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
             
             m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+            if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
+            
             m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
+            if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/assets/textures/player_drown.png");
             
             m_texturesLoaded = true;
         }
@@ -381,7 +384,7 @@ void GameState::initOverlays() {
             m_gameOverSprite.setOrigin(texSize.x / 2.0f, texSize.y / 2.0f);
             m_gameOverSprite.setScale(300.f / static_cast<float>(texSize.x), 80.f / static_cast<float>(texSize.y));
         }
-        m_gameOverSprite.setPosition(400.f, 180.f);
+        m_gameOverSprite.setPosition(400.f, 150.f);
     }
 
     m_gameOverText.setFont(m_font);
@@ -734,7 +737,8 @@ void GameState::update(float dt) {
     if (m_playerDead) {
         if (m_goState == GameOverUIState::Delay) {
             m_deathTimer += dt;
-            if (m_deathTimer >= 1.0f) {
+            if (m_player) m_player->update(dt);
+            if (m_deathTimer >= 1.2f) {
                 setupGameOverUI();
             }
         } else if (m_goState == GameOverUIState::EnterName) {
@@ -1210,13 +1214,11 @@ void GameState::draw(sf::RenderWindow& window) {
 
     // Vẽ overlay Game Over
     if (m_playerDead) {
-        window.draw(m_gameOverOverlay);
+        if (m_goState != GameOverUIState::Delay) {
+            window.draw(m_gameOverOverlay);
+        }
         if (m_goState == GameOverUIState::Delay) {
-            if (m_texGameOverLoaded) {
-                window.draw(m_gameOverSprite);
-            } else if (m_fontLoaded) {
-                window.draw(m_gameOverText);
-            }
+            // Delay 1.2s: Giữ nguyên màn hình chơi để nhìn rõ animation nhân vật chìm sông
         } else if (m_fontLoaded) {
             if (m_goState == GameOverUIState::EnterName) {
                 if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
@@ -1578,6 +1580,13 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         log.movingRight = sPad.movingRight;
         row.logs.push_back(log);
     }
+
+    // Khởi tạo thông số mặc định cho tàu hoả
+    row.train.movingRight = false;
+    row.train.speed = 1200.f;
+    row.train.isActive = false;
+    row.train.shape.setSize(sf::Vector2f(800.f, m_cellSize));
+    row.train.shape.setPosition(800.f + 100.f, row.yPosition);
 
     m_terrains.push_back(std::move(row));
 }
