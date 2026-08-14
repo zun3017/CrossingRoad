@@ -31,8 +31,8 @@ struct TrainData {
 
 struct Log {
     sf::RectangleShape shape;
-    float speed;
-    bool movingRight;
+    float speed = 0.f;
+    bool movingRight = true;
 };
 
 struct StreetLamp {
@@ -53,8 +53,8 @@ struct ItemData {
 };
 
 struct TerrainRow {
-    TerrainType type;
-    float yPosition;
+    TerrainType type = TerrainType::Grass;
+    float yPosition = 0.f;
     sf::RectangleShape background;
     std::vector<std::unique_ptr<CVEHICLE>> vehicles;
     std::vector<Log> logs;                  // Khúc gỗ trôi trên sông

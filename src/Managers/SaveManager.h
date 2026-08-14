@@ -7,17 +7,24 @@
 #include <vector>
 
 struct SavedVehicle {
-    int type; // 0=Car, 1=Truck
-    float x, y, speed;
-    int direction;
+    int type = 0; // 0=Car, 1=Truck
+    float x = 0.f;
+    float y = 0.f;
+    float speed = 0.f;
+    int direction = 1;
     bool isCrazy = false;
 };
 
-
 struct SavedLilyPad {
-    float x, y, width, height, speed;
-    bool movingRight;
-    int r, g, b;
+    float x = 0.f;
+    float y = 0.f;
+    float width = 0.f;
+    float height = 0.f;
+    float speed = 0.f;
+    bool movingRight = true;
+    int r = 0;
+    int g = 0;
+    int b = 0;
     bool isLotus = false;
 };
 
@@ -27,15 +34,16 @@ enum class ItemType : int {
 };
 
 struct SavedItem {
-    float x, y;
-    bool collected;
-    int points;
+    float x = 0.f;
+    float y = 0.f;
+    bool collected = false;
+    int points = 0;
     int type = 0; // 0 = Superhero, 1 = Clock
 };
 
 struct SavedTerrainRow {
-    int type; // 0=Grass, 1=Road, 2=River
-    float yPosition;
+    int type = 0; // 0=Grass, 1=Road, 2=River
+    float yPosition = 0.f;
     std::vector<SavedVehicle> vehicles;
     std::vector<SavedLilyPad> lilyPads;
     std::vector<SavedItem> items;
