@@ -162,6 +162,41 @@ void GameState::generateMap() {
             createGrassRow(y, false);
         }
     }
+
+    // Đảm bảo mỗi màn chơi luôn có ít nhất 1 đồng hồ (watch.png)
+    bool hasClock = false;
+    for (const auto& row : m_terrains) {
+        for (const auto& item : row.items) {
+            if (item.type == ItemType::Clock) {
+                hasClock = true;
+                break;
+            }
+        }
+        if (hasClock) break;
+    }
+
+    if (!hasClock) {
+        // Tìm các hàng đường hoặc hàng cỏ (bỏ 2 hàng xuất phát dưới cùng và hàng đích trên cùng)
+        std::vector<int> candidateIndices;
+        for (int idx = 2; idx < static_cast<int>(m_terrains.size()) - 2; ++idx) {
+            if (m_terrains[idx].type == TerrainType::Road || m_terrains[idx].type == TerrainType::Grass) {
+                candidateIndices.push_back(idx);
+            }
+        }
+        if (!candidateIndices.empty()) {
+            int chosenIdx = candidateIndices[std::rand() % candidateIndices.size()];
+            auto& targetRow = m_terrains[chosenIdx];
+            ItemData clockItem;
+            float itemX = static_cast<float>(80 + std::rand() % 640);
+            clockItem.shape.setRadius(14.f);
+            clockItem.shape.setFillColor(sf::Color(0, 229, 255));
+            clockItem.shape.setPosition(itemX, targetRow.yPosition + m_cellSize / 2.f - 14.f);
+            clockItem.collected = false;
+            clockItem.points = 0;
+            clockItem.type = ItemType::Clock;
+            targetRow.items.push_back(clockItem);
+        }
+    }
 }
 
 // ============================================================
@@ -1083,7 +1118,7 @@ void GameState::checkCollisions(float dt) {
             if (!item.collected && playerHitbox.intersects(item.shape.getGlobalBounds())) {
                 item.collected = true;
                 if (item.type == ItemType::Clock) {
-                    m_timeFreezeTimer = 5.0f; // 5 giây ngưng đọng thời gian
+                    m_timeFreezeTimer = 1.0f; // 1.0 giây ngưng đọng thời gian
                     Game::instance().playSound("assets/audio/sfx_hovering.wav");
                 } else {
                     m_score += item.points;
