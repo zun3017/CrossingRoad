@@ -271,10 +271,10 @@ void GameState::createGrassRow(float y, bool safeZone) {
         }
     }
 
-    // Ban đêm: cắm 2 cột đèn đường tỏa sáng trên làn cỏ
+    // Ban đêm: cắm 2 cột đèn đường ở hai bên rìa làn cỏ
     if (isNightMode()) {
-        row.streetLamps.push_back({ 120.f, y + m_cellSize });
-        row.streetLamps.push_back({ 680.f, y + m_cellSize });
+        row.streetLamps.push_back({ 75.f, y + m_cellSize });
+        row.streetLamps.push_back({ 725.f, y + m_cellSize });
     }
 
     m_terrains.push_back(std::move(row));
@@ -382,9 +382,8 @@ void GameState::createRiverRow(float y) {
 
     // Ban đêm: thêm các lá sen có đèn phát sáng trang trí cố định trên dòng sông
     if (isNightMode()) {
-        row.decorLotuses.push_back({ 140.f, y + m_cellSize / 2.f });
-        row.decorLotuses.push_back({ 410.f, y + m_cellSize / 2.f });
-        row.decorLotuses.push_back({ 680.f, y + m_cellSize / 2.f });
+        row.decorLotuses.push_back({ 220.f, y + m_cellSize / 2.f });
+        row.decorLotuses.push_back({ 580.f, y + m_cellSize / 2.f });
     }
 
     m_terrains.push_back(std::move(row));
@@ -1437,7 +1436,7 @@ void GameState::draw(sf::RenderWindow& window) {
         }
     }
 
-    // Hệ thống ánh sáng 2D trong Màn Đêm (2D Dynamic Lightmap Multiplying)
+    // Hệ thống ánh sáng 2D trong Màn Đêm (2D Smooth Gradient Lightmap)
     if (isNightMode()) {
         if (!m_lightMapCreated) {
             m_lightMap.create(800, 600);
@@ -1445,98 +1444,86 @@ void GameState::draw(sf::RenderWindow& window) {
             m_lightMapCreated = true;
         }
 
-        // 1. Màn đêm đen sẫm huyền bí
-        m_lightMap.clear(sf::Color(15, 18, 35));
+        // 1. Ánh trăng đêm huyền ảo (Midnight Moonlit Ambient Blue)
+        // Phủ một lớp màn đêm xanh tím huyền bí (~45% sáng) để vẫn nhìn rõ khung cảnh
+        m_lightMap.clear(sf::Color(100, 115, 155));
 
-        // 2. Vầng sáng Đèn pin ấm áp quanh Shin
+        // Hàm vẽ quầng sáng hình tròn/elip tỏa mịn không có viền gấp khúc (Smooth Radial Gradient)
+        auto drawRadialGlow = [&](float cx, float cy, float rx, float ry, sf::Color coreColor) {
+            const int segments = 24;
+            sf::VertexArray fan(sf::TriangleFan, segments + 2);
+            fan[0].position = sf::Vector2f(cx, cy);
+            fan[0].color = coreColor;
+            for (int i = 0; i <= segments; ++i) {
+                float angle = i * 2.f * 3.14159265f / segments;
+                fan[i + 1].position = sf::Vector2f(cx + rx * std::cos(angle), cy + ry * std::sin(angle));
+                fan[i + 1].color = sf::Color(0, 0, 0, 0);
+            }
+            m_lightMap.draw(fan, sf::BlendAdd);
+        };
+
+        // Hàm vẽ chùm sáng đèn pha hình quạt mượt mà phía trước xe
+        auto drawHeadlightBeam = [&](float startX, float startY, float dir, float length, float width, sf::Color beamColor) {
+            const int segments = 14;
+            sf::VertexArray fan(sf::TriangleFan, segments + 2);
+            fan[0].position = sf::Vector2f(startX, startY);
+            fan[0].color = beamColor;
+            float baseAngle = (dir > 0) ? 0.f : 3.14159265f;
+            float spread = 0.28f;
+            for (int i = 0; i <= segments; ++i) {
+                float a = baseAngle - spread + (2.f * spread * i / segments);
+                fan[i + 1].position = sf::Vector2f(startX + length * std::cos(a), startY + (width * (static_cast<float>(i) / segments - 0.5f)));
+                fan[i + 1].color = sf::Color(0, 0, 0, 0);
+            }
+            m_lightMap.draw(fan, sf::BlendAdd);
+        };
+
+        // 2. Vầng sáng Đèn lồng ấm áp quanh Shin (lan tỏa tự nhiên)
         if (!m_playerDrowned) {
             sf::Vector2f pCenter = m_player->getPosition() + sf::Vector2f(m_playerSize / 2.f, m_playerSize / 2.f);
-
-            sf::CircleShape outerAura(95.f);
-            outerAura.setOrigin(95.f, 95.f);
-            outerAura.setPosition(pCenter);
-            outerAura.setFillColor(sf::Color(160, 140, 90));
-            m_lightMap.draw(outerAura, sf::BlendAdd);
-
-            sf::CircleShape midAura(65.f);
-            midAura.setOrigin(65.f, 65.f);
-            midAura.setPosition(pCenter);
-            midAura.setFillColor(sf::Color(210, 190, 130));
-            m_lightMap.draw(midAura, sf::BlendAdd);
-
-            sf::CircleShape innerAura(38.f);
-            innerAura.setOrigin(38.f, 38.f);
-            innerAura.setPosition(pCenter);
-            innerAura.setFillColor(sf::Color(255, 245, 210));
-            m_lightMap.draw(innerAura, sf::BlendAdd);
+            drawRadialGlow(pCenter.x, pCenter.y, 115.f, 105.f, sf::Color(165, 145, 95));
+            drawRadialGlow(pCenter.x + 12.f, pCenter.y + 4.f, 50.f, 45.f, sf::Color(190, 175, 120));
         }
 
         // 3. Vầng sáng từ Đèn Đường, Lá Sen, Đèn Pha Ô Tô và Đèn Ray
         for (const auto& row : m_terrains) {
             if (row.type == TerrainType::Grass) {
-                // Đèn đường phát sáng rọi xuống mặt cỏ
+                // Đèn đường: quầng sáng vàng ấm tỏa từ đầu đèn rọi xuống mặt cỏ
                 for (const auto& lamp : row.streetLamps) {
-                    sf::CircleShape lampGlowOuter(68.f);
-                    lampGlowOuter.setOrigin(68.f, 68.f);
-                    lampGlowOuter.setPosition(lamp.x, lamp.y - 45.f);
-                    lampGlowOuter.setScale(1.25f, 0.9f);
-                    lampGlowOuter.setFillColor(sf::Color(160, 140, 70));
-                    m_lightMap.draw(lampGlowOuter, sf::BlendAdd);
-
-                    sf::CircleShape lampGlowCore(36.f);
-                    lampGlowCore.setOrigin(36.f, 36.f);
-                    lampGlowCore.setPosition(lamp.x, lamp.y - 45.f);
-                    lampGlowCore.setScale(1.25f, 0.9f);
-                    lampGlowCore.setFillColor(sf::Color(255, 235, 140));
-                    m_lightMap.draw(lampGlowCore, sf::BlendAdd);
+                    drawRadialGlow(lamp.x, lamp.y - 48.f, 100.f, 80.f, sf::Color(170, 145, 80));
+                    drawRadialGlow(lamp.x, lamp.y - 60.f, 35.f, 30.f, sf::Color(220, 200, 130));
                 }
             } else if (row.type == TerrainType::River) {
-                // Lá sen có đèn phát sáng lung linh trên sông
+                // Lá sen có đèn: vầng sáng ngọc bích / vàng dịu lung linh trên mặt nước
                 for (const auto& lotus : row.decorLotuses) {
-                    sf::CircleShape lotusGlowOuter(48.f);
-                    lotusGlowOuter.setOrigin(48.f, 48.f);
-                    lotusGlowOuter.setPosition(lotus.x, lotus.y);
-                    lotusGlowOuter.setFillColor(sf::Color(120, 160, 140));
-                    m_lightMap.draw(lotusGlowOuter, sf::BlendAdd);
-
-                    sf::CircleShape lotusGlowCore(24.f);
-                    lotusGlowCore.setOrigin(24.f, 24.f);
-                    lotusGlowCore.setPosition(lotus.x, lotus.y);
-                    lotusGlowCore.setFillColor(sf::Color(220, 255, 210));
-                    m_lightMap.draw(lotusGlowCore, sf::BlendAdd);
+                    drawRadialGlow(lotus.x, lotus.y, 65.f, 50.f, sf::Color(120, 165, 150));
+                    drawRadialGlow(lotus.x, lotus.y - 4.f, 25.f, 20.f, sf::Color(180, 230, 200));
                 }
             } else if (row.type == TerrainType::Road) {
-                // Đèn pha ô tô rọi sáng mặt đường
+                // Đèn pha ô tô rọi sáng mặt đường phía trước
                 for (const auto& v : row.vehicles) {
                     float vx = v->getPosition().x;
-                    float vy = v->getPosition().y + 18.f;
-                    sf::ConvexShape headlight(3);
+                    float vy = v->getPosition().y + 20.f;
                     if (v->getDirection() > 0) {
-                        headlight.setPoint(0, sf::Vector2f(vx + 55.f, vy));
-                        headlight.setPoint(1, sf::Vector2f(vx + 210.f, vy - 36.f));
-                        headlight.setPoint(2, sf::Vector2f(vx + 210.f, vy + 36.f));
+                        drawHeadlightBeam(vx + 52.f, vy, 1.f, 140.f, 55.f, sf::Color(140, 130, 85));
                     } else {
-                        headlight.setPoint(0, sf::Vector2f(vx + 5.f, vy));
-                        headlight.setPoint(1, sf::Vector2f(vx - 150.f, vy - 36.f));
-                        headlight.setPoint(2, sf::Vector2f(vx - 150.f, vy + 36.f));
+                        drawHeadlightBeam(vx + 4.f, vy, -1.f, 140.f, 55.f, sf::Color(140, 130, 85));
                     }
-                    headlight.setFillColor(sf::Color(220, 200, 120));
-                    m_lightMap.draw(headlight, sf::BlendAdd);
                 }
             } else if (row.type == TerrainType::Railway) {
                 // Đèn tín hiệu đường ray
-                sf::CircleShape lightGlow(35.f);
-                lightGlow.setOrigin(35.f, 35.f);
-                lightGlow.setPosition(750.f, row.yPosition + 14.f);
-                if (row.trafficLight.state == LightState::Red) lightGlow.setFillColor(sf::Color(255, 60, 60));
-                else if (row.trafficLight.state == LightState::Green) lightGlow.setFillColor(sf::Color(60, 255, 100));
-                else lightGlow.setFillColor(sf::Color(180, 180, 80));
-                m_lightMap.draw(lightGlow, sf::BlendAdd);
+                if (row.trafficLight.state == LightState::Red) {
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(200, 50, 50));
+                } else if (row.trafficLight.state == LightState::Green) {
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(50, 200, 80));
+                } else {
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 40.f, 40.f, sf::Color(160, 150, 60));
+                }
 
                 if (row.train.isActive) {
                     sf::RectangleShape trainBeam(sf::Vector2f(800.f, 48.f));
                     trainBeam.setPosition(0.f, row.yPosition);
-                    trainBeam.setFillColor(sf::Color(100, 120, 180));
+                    trainBeam.setFillColor(sf::Color(70, 90, 140));
                     m_lightMap.draw(trainBeam, sf::BlendAdd);
                 }
             }
@@ -1544,7 +1531,7 @@ void GameState::draw(sf::RenderWindow& window) {
 
         m_lightMap.display();
 
-        // Hòa trộn ánh sáng lên màn hình game (vùng tối chìm vào đêm, vùng đèn sáng bừng)
+        // Hòa trộn ánh sáng lên màn hình game (vùng tối phủ ánh trăng xanh tím, vùng đèn sáng bừng)
         sf::Sprite lightSprite(m_lightMap.getTexture());
         window.draw(lightSprite, sf::BlendMultiply);
     }
