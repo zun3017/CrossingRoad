@@ -32,6 +32,8 @@ public:
     void setCrazy(bool crazy) { m_isCrazy = crazy; }
     bool hasHonked() const { return m_hasHonked; }
     void setHonked(bool honked) { m_hasHonked = honked; }
+    float getTimeToEnrage() const { return m_timeToEnrage; }
+    void setTimeToEnrage(float t) { m_timeToEnrage = t; }
 
 protected:
     float m_speed;       // Tốc độ (pixel/giây)
@@ -39,4 +41,5 @@ protected:
     bool m_stopped = false;  // Đang dừng vì đèn đỏ
     bool m_isCrazy = false;  // Cờ xe điên chạy nhanh xả khói
     bool m_hasHonked = false; // Đã bóp còi cảnh báo trong lượt chạy này chưa
+    float m_timeToEnrage = -1.f; // Bộ đếm thời gian để biến thành xe điên khi đang chạy
 };

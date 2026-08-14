@@ -288,13 +288,14 @@ void GameState::createRoadRow(float y) {
 
         int direction = movingRight ? 1 : -1;
         
-        // 35% cơ hội chiếc xe đầu tiên trong làn là "Xe Điên" (chạy siêu tốc x2.3 và xả khói)
-        bool isCrazy = (v == 0 && std::rand() % 100 < 35);
-        if (isCrazy) {
-            float crazySpeed = (baseSpeed + 60.f) * 2.3f;
-            row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, crazySpeed, direction, true));
-        } else if (std::rand() % 100 < 70) {
-            row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, speed, direction, false));
+        // Tỉ lệ: 75% ra CCAR, 25% ra CTRUCK
+        if (std::rand() % 100 < 75) {
+            auto car = std::make_unique<CCAR>(startX, y + 2.f, speed, direction, false);
+            // 40% cơ hội chiếc xe sẽ bất ngờ bóp còi tăng tốc thành "Xe Điên" khi đang chạy trên đường
+            if (v == 0 && std::rand() % 100 < 50) {
+                car->setTimeToEnrage(1.5f + static_cast<float>(std::rand() % 35) / 10.f);
+            }
+            row.vehicles.push_back(std::move(car));
         } else {
             row.vehicles.push_back(std::make_unique<CTRUCK>(startX, y + 2.f, speed, direction));
         }
@@ -885,32 +886,64 @@ void GameState::updateObstacles(float dt) {
             for (auto& v : row.vehicles) {
                 v->update(dt);
                 
-                // Xe điên bóp còi báo động to rõ khi vừa lao vào màn hình
-                if (v->isCrazy()) {
-                    float vx = v->getPosition().x;
-                    if (vx >= -40.f && vx <= 840.f && !v->hasHonked()) {
-                        Game::instance().playSound("assets/audio/sfx_car_horn.wav");
-                        v->setHonked(true);
+                // Logic Hóa Xe Điên khi đang chạy trên đường:
+                // Xe đang đi bình thường thì bỗng kêu bíp bíp rồi lập tức tăng tốc và xả khói!
+                if (!v->isCrazy() && v->getTimeToEnrage() > 0.f) {
+                    v->setTimeToEnrage(v->getTimeToEnrage() - dt);
+                    if (v->getTimeToEnrage() <= 0.f) {
+                        float vx = v->getPosition().x;
+                        // Kích hoạt khi xe đang hiện rõ trên màn hình
+                        if (vx >= 60.f && vx <= 740.f) {
+                            v->setCrazy(true);
+                            // Tốc độ xe điên: nhanh gấp đôi xe thường nhưng bị giới hạn tối đa 320 px/s (chậm hơn rất nhiều so với tàu hoả 1200 px/s)
+                            float crazySpeed = std::min(v->getSpeed() * 2.0f, 320.f);
+                            if (crazySpeed < 230.f) crazySpeed = 230.f;
+                            v->setSpeed(crazySpeed);
+
+                            // Bấm còi báo hiệu nguy hiểm to rõ
+                            Game::instance().playSound("assets/audio/sfx_car_horn.wav");
+                            v->setHonked(true);
+                            v->setTimeToEnrage(-1.f);
+                        } else {
+                            // Nếu xe chưa vào tầm nhìn, hoãn lại một chút để chờ vào giữa màn hình mới hóa điên
+                            v->setTimeToEnrage(0.4f);
+                        }
                     }
                 }
                 
                 // Wrap quanh khi xe vừa thoát hết khỏi màn hình
                 if (v->getDirection() > 0 && v->getPosition().x > 860.f) {
                     v->setPosition(-180.f, v->getPosition().y);
+                    v->setCrazy(false); // Trở lại xe bình thường khi ra khỏi màn hình
                     v->setHonked(false); // Reset còi cho vòng chạy tiếp theo
-                    // Random lại tốc độ khi quay vòng
+                    
+                    // Khôi phục tốc độ bình thường
                     float baseSpeed = 80.f + static_cast<float>(m_level * 15);
-                    float newSpeed = v->isCrazy() ? ((baseSpeed + 60.f) * 2.3f) : (baseSpeed + static_cast<float>(std::rand() % 100 - 30));
+                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
                     if (newSpeed < 40.f) newSpeed = 40.f;
                     v->setSpeed(newSpeed);
+
+                    // 40% cơ hội sẽ hóa điên lại trong lượt chạy tiếp theo
+                    if (std::rand() % 100 < 40) {
+                        v->setTimeToEnrage(1.5f + static_cast<float>(std::rand() % 35) / 10.f);
+                    } else {
+                        v->setTimeToEnrage(-1.f);
+                    }
                 } else if (v->getDirection() < 0 && v->getPosition().x < -90.f) {
                     v->setPosition(860.f, v->getPosition().y);
-                    v->setHonked(false); // Reset còi cho vòng chạy tiếp theo
-                    // Random lại tốc độ khi quay vòng
+                    v->setCrazy(false);
+                    v->setHonked(false);
+                    
                     float baseSpeed = 80.f + static_cast<float>(m_level * 15);
-                    float newSpeed = v->isCrazy() ? ((baseSpeed + 60.f) * 2.3f) : (baseSpeed + static_cast<float>(std::rand() % 100 - 30));
+                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
                     if (newSpeed < 40.f) newSpeed = 40.f;
                     v->setSpeed(newSpeed);
+
+                    if (std::rand() % 100 < 40) {
+                        v->setTimeToEnrage(1.5f + static_cast<float>(std::rand() % 35) / 10.f);
+                    } else {
+                        v->setTimeToEnrage(-1.f);
+                    }
                 }
             }
         }

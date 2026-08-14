@@ -26,15 +26,14 @@ CCAR::CCAR(float x, float y, float speed, int direction, bool isCrazy)
             }
         }
 
-        // Tải texture khói cho xe điên
-        if (m_isCrazy) {
-            auto& smokeTex = ResourceManager<sf::Texture>::getInstance().get("assets/textures/smoke.png");
-            if (smokeTex.getSize().x > 0) {
-                const_cast<sf::Sprite&>(m_smokeSprite).setTexture(smokeTex);
-                m_hasSmokeTexture = true;
-                float smokeScale = 28.f / static_cast<float>(smokeTex.getSize().y);
-                const_cast<sf::Sprite&>(m_smokeSprite).setScale(smokeScale, smokeScale);
-            }
+        // Luôn tải sẵn texture khói để khi xe bất ngờ hóa điên có thể xả khói ngay
+        auto& smokeTex = ResourceManager<sf::Texture>::getInstance().get("assets/textures/smoke.png");
+        if (smokeTex.getSize().x > 0) {
+            const_cast<sf::Sprite&>(m_smokeSprite).setTexture(smokeTex);
+            m_hasSmokeTexture = true;
+            // Khói to 38px (to hơn đáng kể so với bánh xe ~16px)
+            float smokeScale = 38.f / static_cast<float>(smokeTex.getSize().y);
+            const_cast<sf::Sprite&>(m_smokeSprite).setScale(smokeScale, smokeScale);
         }
     } catch (...) {}
 
@@ -44,19 +43,20 @@ CCAR::CCAR(float x, float y, float speed, int direction, bool isCrazy)
 void CCAR::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     states.transform *= getTransform();
 
-    // Nếu là xe điên, vẽ khói bốc ra ở bánh xe sau
+    // 1. Nếu là xe điên, vẽ khói bốc ra ở dưới bánh xe sau (vẽ trước để khói nằm dưới thân xe)
     if (m_isCrazy && m_hasSmokeTexture && !m_stopped) {
         sf::RenderStates smokeStates = states;
         if (m_direction > 0) {
-            // Xe chạy sang phải -> đuôi xe và bánh sau nằm ở bên trái
-            smokeStates.transform.translate(-24.f, 10.f);
+            // Xe chạy sang phải -> khói nằm dưới bánh sau ở bên trái
+            smokeStates.transform.translate(-30.f, 14.f);
         } else {
-            // Xe chạy sang trái -> đuôi xe và bánh sau nằm ở bên phải
-            smokeStates.transform.translate(56.f, 10.f);
+            // Xe chạy sang trái -> khói nằm dưới bánh sau ở bên phải
+            smokeStates.transform.translate(52.f, 14.f);
         }
         target.draw(m_smokeSprite, smokeStates);
     }
 
+    // 2. Vẽ thân xe đè lên khói
     if (!m_usesFallback && m_sprite.getTexture()) {
         target.draw(m_sprite, states);
     } else {
