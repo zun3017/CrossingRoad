@@ -1553,13 +1553,19 @@ void GameState::draw(sf::RenderWindow& window) {
                     }
                 }
             } else if (row.type == TerrainType::Railway) {
-                // Đèn tín hiệu đường ray
+                // Đèn tín hiệu đường ray: phát sáng theo đúng trạng thái (Đỏ, Xanh, và Chớp tắt Xanh)
                 if (row.trafficLight.state == LightState::Red) {
-                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(220, 50, 50));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 60.f, 60.f, sf::Color(240, 40, 40));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 25.f, 25.f, sf::Color(255, 160, 160));
                 } else if (row.trafficLight.state == LightState::Green) {
-                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(50, 220, 80));
-                } else {
-                    drawRadialGlow(750.f, row.yPosition + 14.f, 40.f, 40.f, sf::Color(180, 170, 70));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 55.f, 55.f, sf::Color(50, 230, 90));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 25.f, 25.f, sf::Color(180, 255, 200));
+                } else if (row.trafficLight.state == LightState::Blinking) {
+                    // Khi chớp tắt: nhấp nháy phát quang màu xanh đồng bộ theo từng khung hình của đèn
+                    if ((row.trafficLight.frameIndex % 2) == 0) {
+                        drawRadialGlow(750.f, row.yPosition + 14.f, 60.f, 60.f, sf::Color(50, 230, 90));
+                        drawRadialGlow(750.f, row.yPosition + 14.f, 25.f, 25.f, sf::Color(180, 255, 200));
+                    }
                 }
 
                 // Tàu hoả: chỉ chiếu sáng chùm đèn pha mạnh mẽ về phía trước đầu tàu
