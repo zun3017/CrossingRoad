@@ -56,7 +56,7 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
             }
             file << row.lilyPads.size() << "\n";
             for (const auto& pad : row.lilyPads) {
-                file << pad.x << " " << pad.y << " " << pad.width << " " << pad.height << " " << pad.speed << " " << pad.movingRight << " " << pad.r << " " << pad.g << " " << pad.b << "\n";
+                file << pad.x << " " << pad.y << " " << pad.width << " " << pad.height << " " << pad.speed << " " << pad.movingRight << " " << pad.r << " " << pad.g << " " << pad.b << " " << pad.isLotus << "\n";
             }
             file << row.items.size() << "\n";
             for (const auto& item : row.items) {
@@ -186,7 +186,11 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
             if (!std::getline(file, line)) break;
             std::stringstream ssPad(line);
             SavedLilyPad pad;
+            pad.isLotus = false;
             ssPad >> pad.x >> pad.y >> pad.width >> pad.height >> pad.speed >> pad.movingRight >> pad.r >> pad.g >> pad.b;
+            if (!(ssPad >> pad.isLotus)) {
+                pad.isLotus = false;
+            }
             row.lilyPads.push_back(pad);
         }
 

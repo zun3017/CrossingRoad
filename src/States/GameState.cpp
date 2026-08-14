@@ -78,6 +78,30 @@ void GameState::init() {
         if (tLightRed.getSize().x > 0) m_lightRedSprite.setTexture(tLightRed);
         if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
         
+        auto& tHandLamp = ResourceManager<sf::Texture>::getInstance().get("assets/textures/hand_lamp.png");
+        if (tHandLamp.getSize().x > 0) {
+            m_handLampSprite.setTexture(tHandLamp);
+            m_handLampLoaded = true;
+            float lampScale = 22.f / static_cast<float>(tHandLamp.getSize().y);
+            m_handLampSprite.setScale(lampScale, lampScale);
+        }
+
+        auto& tStreetLamp = ResourceManager<sf::Texture>::getInstance().get("assets/textures/street_lamp.png");
+        if (tStreetLamp.getSize().x > 0) {
+            m_streetLampSprite.setTexture(tStreetLamp);
+            m_streetLampLoaded = true;
+            float lampH = 68.f;
+            float lampScale = lampH / static_cast<float>(tStreetLamp.getSize().y);
+            m_streetLampSprite.setScale(lampScale, lampScale);
+            m_streetLampSprite.setOrigin(static_cast<float>(tStreetLamp.getSize().x) / 2.f, static_cast<float>(tStreetLamp.getSize().y));
+        }
+
+        auto& tLotus = ResourceManager<sf::Texture>::getInstance().get("assets/textures/lotus_lamp.png");
+        if (tLotus.getSize().x > 0) {
+            m_lotusSprite.setTexture(tLotus);
+            m_lotusLoaded = true;
+        }
+
         m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
         if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
         
@@ -87,6 +111,13 @@ void GameState::init() {
         m_texturesLoaded = true;
     }
 } catch (...) {}
+
+m_nightOverlay.setSize(sf::Vector2f(800.f, 600.f));
+m_nightOverlay.setFillColor(sf::Color(10, 18, 45, 160)); // Bóng đêm huyền bí
+
+m_playerLightAura.setRadius(55.f);
+m_playerLightAura.setOrigin(55.f, 55.f);
+m_playerLightAura.setFillColor(sf::Color(255, 235, 140, 50)); // Ánh sáng vàng dịu soi đường
 
 m_freezeOverlay.setSize(sf::Vector2f(800.f, 600.f));
 m_freezeOverlay.setFillColor(sf::Color(100, 210, 255, 45)); // Ánh xanh băng tuyết
@@ -237,6 +268,12 @@ void GameState::createGrassRow(float y, bool safeZone) {
         }
     }
 
+    // Ban đêm: cắm 2 cột đèn đường tỏa sáng trên làn cỏ
+    if (isNightMode()) {
+        row.streetLamps.push_back({ 120.f, y + m_cellSize });
+        row.streetLamps.push_back({ 680.f, y + m_cellSize });
+    }
+
     m_terrains.push_back(std::move(row));
 }
 
@@ -305,7 +342,7 @@ void GameState::createRoadRow(float y) {
 }
 
 // ============================================================
-// Tạo hàng sông với khúc gỗ
+// Tạo hàng sông với khúc gỗ / Lá sen có đèn
 // ============================================================
 void GameState::createRiverRow(float y) {
     TerrainRow row;
@@ -316,7 +353,7 @@ void GameState::createRiverRow(float y) {
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(30, 100, 200)); // Xanh nước
 
-    // Tạo 3-5 khúc gỗ trên sông
+    // Tạo 3-5 khúc gỗ hoặc lá sen có đèn trên sông
     int numLogs = 3 + std::rand() % 3;
     // Dùng toạ độ y để luân phiên hướng chạy, tránh 2 hàng gỗ đi cùng chiều bị so le làm kẹt người chơi
     bool movingRight = (static_cast<int>(std::round(std::abs(y) / m_cellSize)) % 2 == 0);
@@ -336,6 +373,7 @@ void GameState::createRiverRow(float y) {
 
         log.speed = logSpeed;
         log.movingRight = movingRight;
+        log.isLotus = isNightMode(); // Màn đêm sử dụng lá sen có đèn phát sáng!
 
         row.logs.push_back(log);
     }
@@ -640,6 +678,7 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
             sPad.movingRight = log.movingRight;
             sf::Color c = log.shape.getFillColor();
             sPad.r = c.r; sPad.g = c.g; sPad.b = c.b;
+            sPad.isLotus = log.isLotus;
             sRow.lilyPads.push_back(sPad);
         }
         
@@ -1209,8 +1248,8 @@ void GameState::resetForNextLevel() {
 // Vẽ toàn bộ game lên màn hình
 // ============================================================
 void GameState::draw(sf::RenderWindow& window) {
-    // Nền đen
-    window.clear(sf::Color(20, 20, 20));
+    // Nền tối hơn trong màn đêm
+    window.clear(isNightMode() ? sf::Color(10, 15, 28) : sf::Color(20, 20, 20));
 
     // Vẽ các hàng địa hình từ trên (xa) xuống dưới (gần) để sửa lỗi đè hình (Z-index)
     for (auto it = m_terrains.rbegin(); it != m_terrains.rend(); ++it) {
@@ -1266,8 +1305,28 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
-        // Vẽ xe cộ (đè lên mặt đường và vật phẩm)
+        // Vẽ xe cộ và đèn pha ô tô trong đêm
         if (row.type == TerrainType::Road) {
+            // Vẽ đèn pha xe rọi sáng mặt đường trong màn đêm
+            if (isNightMode()) {
+                for (auto& v : row.vehicles) {
+                    sf::ConvexShape headlight(3);
+                    float vx = v->getPosition().x;
+                    float vy = v->getPosition().y + 18.f;
+                    if (v->getDirection() > 0) {
+                        headlight.setPoint(0, sf::Vector2f(vx + 60.f, vy));
+                        headlight.setPoint(1, sf::Vector2f(vx + 160.f, vy - 24.f));
+                        headlight.setPoint(2, sf::Vector2f(vx + 160.f, vy + 24.f));
+                    } else {
+                        headlight.setPoint(0, sf::Vector2f(vx, vy));
+                        headlight.setPoint(1, sf::Vector2f(vx - 100.f, vy - 24.f));
+                        headlight.setPoint(2, sf::Vector2f(vx - 100.f, vy + 24.f));
+                    }
+                    headlight.setFillColor(sf::Color(255, 245, 140, 50));
+                    window.draw(headlight);
+                }
+            }
+
             for (auto& v : row.vehicles) {
                 window.draw(*v);
             }
@@ -1348,9 +1407,14 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
-        // Vẽ khúc gỗ
+        // Vẽ khúc gỗ hoặc Lá sen có đèn phát sáng trên sông
         for (auto& log : row.logs) {
-            if (m_texturesLoaded && m_logSprite.getTexture()) {
+            if (log.isLotus && m_lotusLoaded && m_lotusSprite.getTexture()) {
+                auto texSize = m_lotusSprite.getTexture()->getSize();
+                m_lotusSprite.setScale(log.shape.getSize().x / texSize.x, (log.shape.getSize().y + 12.f) / texSize.y);
+                m_lotusSprite.setPosition(log.shape.getPosition().x, log.shape.getPosition().y - 6.f);
+                window.draw(m_lotusSprite);
+            } else if (m_texturesLoaded && m_logSprite.getTexture()) {
                 auto texSize = m_logSprite.getTexture()->getSize();
                 // Ép hình ảnh khúc gỗ co giãn đúng bằng kích thước hitbox vật lý
                 m_logSprite.setScale(log.shape.getSize().x / texSize.x, log.shape.getSize().y / texSize.y);
@@ -1360,11 +1424,36 @@ void GameState::draw(sf::RenderWindow& window) {
                 window.draw(log.shape);
             }
         }
+
+        // Vẽ cột đèn đường trên các bãi cỏ trong màn đêm
+        if (isNightMode() && m_streetLampLoaded && row.type == TerrainType::Grass) {
+            for (const auto& lamp : row.streetLamps) {
+                m_streetLampSprite.setPosition(lamp.x, lamp.y);
+                window.draw(m_streetLampSprite);
+            }
+        }
+    }
+
+    // Hiệu ứng bóng đêm và vầng sáng đèn pin quanh Shin trong màn tối
+    if (isNightMode()) {
+        window.draw(m_nightOverlay);
+        if (!m_playerDrowned) {
+            sf::Vector2f pCenter = m_player->getPosition() + sf::Vector2f(m_playerSize / 2.f, m_playerSize / 2.f);
+            m_playerLightAura.setPosition(pCenter);
+            window.draw(m_playerLightAura);
+        }
     }
 
     // Vẽ người chơi
     if (!m_playerDrowned) {
         window.draw(*m_player);
+
+        // Trong màn tối, Shin cầm đèn lồng nhỏ xinh bên tay
+        if (isNightMode() && m_handLampLoaded && !m_playerDead) {
+            sf::Vector2f pPos = m_player->getPosition();
+            m_handLampSprite.setPosition(pPos.x + m_playerSize - 8.f, pPos.y + 12.f);
+            window.draw(m_handLampSprite);
+        }
     }
 
     // Hiệu ứng ngưng đọng thời gian (Time Freeze Tint & Badge)
@@ -1759,7 +1848,7 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     }
     
 
-    // Khôi phục khúc gỗ
+    // Khôi phục khúc gỗ / lá sen
     for (const auto& sPad : savedRow.lilyPads) {
         Log log;
         log.shape.setSize(sf::Vector2f(sPad.width, sPad.height));
@@ -1769,7 +1858,14 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         log.shape.setOutlineThickness(1.f);
         log.speed = sPad.speed;
         log.movingRight = sPad.movingRight;
+        log.isLotus = sPad.isLotus;
         row.logs.push_back(log);
+    }
+
+    // Khôi phục đèn đường nếu là làn cỏ trong màn đêm
+    if (row.type == TerrainType::Grass && isNightMode()) {
+        row.streetLamps.push_back({ 120.f, row.yPosition + m_cellSize });
+        row.streetLamps.push_back({ 680.f, row.yPosition + m_cellSize });
     }
 
     // Khởi tạo thông số mặc định cho tàu hoả

@@ -18,6 +18,7 @@ struct SavedLilyPad {
     float x, y, width, height, speed;
     bool movingRight;
     int r, g, b;
+    bool isLotus = false;
 };
 
 enum class ItemType : int {
