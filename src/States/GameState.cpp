@@ -297,25 +297,38 @@ void GameState::createRailwayRow(float y) {
 // Khởi tạo HUD hiển thị level và điểm
 // ============================================================
 void GameState::initHUD() {
-    // Panel nền mờ cho HUD (che sprite nhân vật phía sau)
-    m_hudBg.setSize(sf::Vector2f(130.f, 55.f));
-    m_hudBg.setPosition(0.f, 0.f);
-    m_hudBg.setFillColor(sf::Color(0, 0, 0, 160)); // Đen bán trong suốt
+    auto& labelTex = TextureManager::getInstance().get("assets/textures/label.png");
+    if (labelTex.getSize().x > 0) {
+        m_hudBoardLoaded = true;
+        m_hudBoardSprite.setTexture(labelTex);
+        sf::Vector2u texSize = labelTex.getSize();
+        float boardWidth = 150.f;
+        float boardHeight = 68.f;
+        m_hudBoardSprite.setScale(boardWidth / static_cast<float>(texSize.x), boardHeight / static_cast<float>(texSize.y));
+        m_hudBoardSprite.setPosition(6.f, 4.f);
+    } else {
+        // Fallback panel nền mờ cho HUD nếu không tải được ảnh
+        m_hudBg.setSize(sf::Vector2f(140.f, 60.f));
+        m_hudBg.setPosition(0.f, 0.f);
+        m_hudBg.setFillColor(sf::Color(0, 0, 0, 160));
+    }
 
     m_levelText.setFont(m_font);
-    m_levelText.setCharacterSize(18);
-    m_levelText.setFillColor(sf::Color::White);
+    m_levelText.setCharacterSize(16);
+    m_levelText.setFillColor(sf::Color(253, 216, 53)); // Vàng nổi bật #fdd835
     m_levelText.setOutlineColor(sf::Color::Black);
-    m_levelText.setOutlineThickness(1.f);
-    m_levelText.setPosition(10.f, 5.f);
+    m_levelText.setOutlineThickness(1.5f);
+    m_levelText.setStyle(sf::Text::Bold);
+    m_levelText.setPosition(24.f, 14.f);
     m_levelText.setString("Level: " + std::to_string(m_level));
 
     m_scoreText.setFont(m_font);
-    m_scoreText.setCharacterSize(18);
+    m_scoreText.setCharacterSize(16);
     m_scoreText.setFillColor(sf::Color::White);
     m_scoreText.setOutlineColor(sf::Color::Black);
-    m_scoreText.setOutlineThickness(1.f);
-    m_scoreText.setPosition(10.f, 28.f);
+    m_scoreText.setOutlineThickness(1.5f);
+    m_scoreText.setStyle(sf::Text::Bold);
+    m_scoreText.setPosition(24.f, 36.f);
     m_scoreText.setString("Score: " + std::to_string(m_score));
 }
 
@@ -1198,9 +1211,13 @@ void GameState::draw(sf::RenderWindow& window) {
         window.draw(*m_player);
     }
 
-    // Vẽ HUD (panel nền + text)
+    // Vẽ HUD (bảng gỗ nền + text)
     if (m_fontLoaded) {
-        window.draw(m_hudBg);   // Vẽ nền trước để che mọi thứ phía sau
+        if (m_hudBoardLoaded) {
+            window.draw(m_hudBoardSprite);
+        } else {
+            window.draw(m_hudBg);   // Vẽ nền fallback trước để che mọi thứ phía sau
+        }
         window.draw(m_levelText);
         window.draw(m_scoreText);
     }

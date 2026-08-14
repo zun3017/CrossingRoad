@@ -116,10 +116,12 @@ private:
     int m_level = 1;
     int m_score = 0;
 
-    // HUD text
+    // HUD text & board
     sf::Text m_levelText;
     sf::Text m_scoreText;
-    sf::RectangleShape m_hudBg; // Panel nền cho HUD
+    sf::RectangleShape m_hudBg; // Fallback panel nền cho HUD
+    sf::Sprite m_hudBoardSprite;
+    bool m_hudBoardLoaded = false;
 
     // Game over overlay
     sf::RectangleShape m_gameOverOverlay;
