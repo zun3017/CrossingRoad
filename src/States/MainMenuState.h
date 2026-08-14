@@ -127,10 +127,6 @@ private:
     // Khoảng cách button di chuyển lên khi click
     const float PRESSED_OFFSET = 2.f;
 
-    // ========================================================
-    // Functions
-    // ========================================================
-
     void initBackground();
     void initClouds();
     void initButtons();
@@ -139,4 +135,49 @@ private:
     void updateButtonHover();
 
     void onButtonClick(int index);
+
+    // ========================================================
+    // Skins Button (Góc dưới trái màn hình)
+    // ========================================================
+    sf::Texture m_skinsButtonTexture;
+    bool m_skinsButtonLoaded = false;
+    sf::Texture m_skinsTextTexture;
+    bool m_skinsTextLoaded = false;
+    sf::Sprite m_skinsTextSprite;
+    MenuButton m_skinsButton;
+
+    // ========================================================
+    // Skin Selection UI Popup
+    // ========================================================
+    bool m_showSkinsUI = false;
+    int m_viewingSkinIndex = 0;
+    static const int TOTAL_SKINS = 3;
+
+    sf::Texture m_skinPreviewTextures[TOTAL_SKINS];
+    bool m_skinPreviewLoaded[TOTAL_SKINS] = {false};
+    sf::Sprite m_skinPreviewSprite;
+
+    sf::Texture m_selectTextTexture;
+    sf::Texture m_selectedTextTexture;
+    bool m_selectTextLoaded = false;
+    bool m_selectedTextLoaded = false;
+    sf::Sprite m_selectBtnSprite;
+
+    sf::Text m_skinNameText;
+    sf::Text m_skinTitleText;
+    sf::Text m_arrowLeftText;
+    sf::Text m_arrowRightText;
+    sf::Text m_skinCloseBtn;
+
+    sf::RectangleShape m_skinOverlayDim;
+    sf::RectangleShape m_skinOuterFrame;
+    sf::RectangleShape m_skinInnerFrame;
+
+    bool m_arrowLeftHovered = false;
+    bool m_arrowRightHovered = false;
+    bool m_selectBtnHovered = false;
+    bool m_skinCloseHovered = false;
+
+    void initSkinSelectionUI();
+    void updateSkinPreview();
 };
