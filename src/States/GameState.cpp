@@ -1581,5 +1581,12 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         row.logs.push_back(log);
     }
 
+    // Khởi tạo thông số mặc định cho tàu hoả
+    row.train.movingRight = false;
+    row.train.speed = 1200.f;
+    row.train.isActive = false;
+    row.train.shape.setSize(sf::Vector2f(800.f, m_cellSize));
+    row.train.shape.setPosition(800.f + 100.f, row.yPosition);
+
     m_terrains.push_back(std::move(row));
 }
