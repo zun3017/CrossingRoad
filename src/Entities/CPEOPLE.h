@@ -45,8 +45,8 @@ public:
     bool isDead() const { return m_isDead; }
 
     // LERP & Animation — public vì GameState cần truy cập trực tiếp
-    sf::Vector2f m_startPos;
-    sf::Vector2f m_targetPos;
+    sf::Vector2f m_startPos = { 0.f, 0.f };
+    sf::Vector2f m_targetPos = { 0.f, 0.f };
     bool m_isAnimating = false;
     float m_animTimer = 0.f;
     int m_animRow = 0;
