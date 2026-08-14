@@ -69,13 +69,9 @@ private:
     // Background
     // ========================================================
 
-    sf::Texture m_menuBgTexture; // Static fallback
+    sf::Texture m_menuBgTexture;
     sf::Sprite m_menuBgSprite;
     bool m_menuBgLoaded = false;
-    
-    std::vector<sf::Texture> m_menuVideoTextures;
-    float m_videoAnimTimer = 0.f;
-    int m_currentVideoFrame = 0;
 
     sf::RectangleShape m_bgTop;
     sf::RectangleShape m_bgBottom;

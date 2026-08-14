@@ -11,10 +11,16 @@ enum class SettingId { Sound, Music, Motion };
 
 // Toggle row cho Settings
 struct SettingToggle {
+    sf::RectangleShape cardBg;
     sf::RectangleShape checkbox;
+    sf::Text iconText;
     sf::Text label;
     sf::Text statusText;
     sf::Sprite statusSprite;
+    sf::RectangleShape volumeBarBg;
+    sf::RectangleShape volumeBarFill;
+    sf::Text volumeLabel;
+    sf::Text volumeValueText;
     SettingId settingId = SettingId::Sound;
     bool hovered = false;
 };
@@ -40,9 +46,30 @@ private:
 
     // Background
     sf::RectangleShape m_background;
+    sf::Texture m_bgTexture;
+    sf::Sprite m_bgSprite;
+    bool m_bgLoaded = false;
 
-    // Title
+    // Main window container (Sky blue)
+    sf::RectangleShape m_mainContainer;
+    sf::RectangleShape m_containerBorder;
+    sf::RectangleShape m_topRibbon;
+
+    // Header Title & Accent Bar
+    sf::Text m_titleShadow;
     sf::Text m_titleText;
+    sf::RectangleShape m_accentBar;
+    sf::RectangleShape m_accentBarBorder;
+
+    // Content Box
+    sf::RectangleShape m_contentBox;
+    sf::RectangleShape m_contentBoxBorder;
+
+    // Bottom Preset Info Bar
+    sf::RectangleShape m_infoBarBg;
+    sf::Text m_infoBarText;
+    sf::Text m_resetDefaultsBtnText;
+    sf::FloatRect m_resetBtnBounds;
 
     // Toggle rows
     SettingToggle m_soundToggle;
@@ -57,8 +84,10 @@ private:
     bool getSettingValue(SettingId id) const;
     // Đảo giá trị một setting
     void toggleSetting(SettingId id);
+    // Reset defaults
+    void resetDefaults();
 
-    void initToggle(SettingToggle& toggle, const std::string& labelStr,
+    void initToggle(SettingToggle& toggle, const std::string& iconStr, const std::string& labelStr,
                     float y, SettingId id);
     void updateToggleVisual(SettingToggle& toggle);
 };

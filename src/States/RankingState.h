@@ -9,11 +9,15 @@
 
 // Mỗi hàng bảng xếp hạng
 struct RankEntry {
+    int rank = 0;
+    std::string name;
+    int score = 0;
     sf::Text rankText;
     sf::Sprite medalSprite;
     bool isMedal = false;
     sf::Text nameText;
     sf::Text scoreText;
+    sf::Text ptsText;
 };
 
 class RankingState : public State {
@@ -31,9 +35,20 @@ private:
 
     // Background
     sf::RectangleShape m_background;
+    sf::Texture m_bgTexture;
+    sf::Sprite m_bgSprite;
+    bool m_bgLoaded = false;
 
-    // Title
+    // Main window container (Sky blue)
+    sf::RectangleShape m_mainContainer;
+    sf::RectangleShape m_containerBorder;
+    sf::RectangleShape m_topRibbon;
+
+    // Header Title & Accent Bar
+    sf::Text m_titleShadow;
     sf::Text m_titleText;
+    sf::RectangleShape m_accentBar;
+    sf::RectangleShape m_accentBarBorder;
 
     // Cup sprite
     sf::Texture m_cupTexture;
@@ -46,10 +61,13 @@ private:
     sf::Texture m_bronzeMedalTex;
     bool m_medalsLoaded = false;
 
-    // Table header
+    // Table container & Header
+    sf::RectangleShape m_tableBox;
+    sf::RectangleShape m_tableBoxBorder;
     sf::Text m_headerRank;
     sf::Text m_headerName;
     sf::Text m_headerScore;
+    sf::RectangleShape m_headerDivider;
 
     // Rank entries
     std::vector<RankEntry> m_entries;

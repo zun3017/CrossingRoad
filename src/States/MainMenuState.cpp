@@ -35,45 +35,20 @@ void MainMenuState::init()
     // LOAD BACKGROUND
     // ========================================================
 
-    // Attempt to load video frames (video_000.jpg to video_034.jpg)
-    for (int i = 0; i <= 34; ++i) {
-        char buffer[128];
-        snprintf(buffer, sizeof(buffer), "assets/textures/menu_video/video_%03d.jpg", i);
-        std::string filename = buffer;
-        sf::Texture tex;
-        if (tex.loadFromFile(filename)) {
-            m_menuVideoTextures.push_back(tex);
-        } else {
-            filename = "CrossingRoad/" + filename;
-            if (tex.loadFromFile(filename)) {
-                m_menuVideoTextures.push_back(tex);
-            }
-        }
-    }
+    m_menuBgLoaded = m_menuBgTexture.loadFromFile(
+        "assets/textures/menu.png");
 
-    if (!m_menuVideoTextures.empty()) {
-        m_menuBgLoaded = true;
-        m_menuBgSprite.setTexture(m_menuVideoTextures[0]);
-        sf::Vector2u size = m_menuVideoTextures[0].getSize();
-        if (size.x > 0 && size.y > 0) {
-            m_menuBgSprite.setScale(800.f / static_cast<float>(size.x), 600.f / static_cast<float>(size.y));
-            m_menuBgSprite.setOrigin(0.f, 0.f);
-            m_menuBgSprite.setPosition(0.f, 0.f);
-        }
-    } else {
-        // Fallback to static menu.png
-        m_menuBgLoaded = m_menuBgTexture.loadFromFile("assets/textures/menu.png");
-        if (!m_menuBgLoaded) {
-            m_menuBgLoaded = m_menuBgTexture.loadFromFile("CrossingRoad/assets/textures/menu.png");
-        }
-        if (m_menuBgLoaded) {
-            m_menuBgSprite.setTexture(m_menuBgTexture);
-            sf::Vector2u size = m_menuBgTexture.getSize();
-            if (size.x > 0 && size.y > 0) {
-                m_menuBgSprite.setScale(800.f / static_cast<float>(size.x), 600.f / static_cast<float>(size.y));
-                m_menuBgSprite.setOrigin(0.f, 0.f);
-                m_menuBgSprite.setPosition(0.f, 0.f);
-            }
+    if (m_menuBgLoaded)
+    {
+        m_menuBgSprite.setTexture(m_menuBgTexture);
+
+        sf::Vector2u size = m_menuBgTexture.getSize();
+
+        if (size.x > 0 && size.y > 0)
+        {
+            m_menuBgSprite.setScale(
+                800.f / static_cast<float>(size.x),
+                600.f / static_cast<float>(size.y));
         }
     }
 
@@ -736,26 +711,6 @@ void MainMenuState::update(float dt)
     Game::instance().playBackgroundMusic("assets/audio/bgm_menu.ogg");
 
     // ========================================================
-    // Background Video Animation
-    // ========================================================
-    if (!m_menuVideoTextures.empty()) {
-        if (Game::instance().isMotionEnabled()) {
-            m_videoAnimTimer += dt;
-            // Phát video ở tốc độ ~12 fps (chậm lại)
-            if (m_videoAnimTimer >= 1.0f / 12.0f) {
-                m_videoAnimTimer = 0.f;
-                m_currentVideoFrame = (m_currentVideoFrame + 1) % m_menuVideoTextures.size();
-                m_menuBgSprite.setTexture(m_menuVideoTextures[m_currentVideoFrame]);
-            }
-        } else {
-            // Khi cài đặt Motion bị tắt -> Hiển thị ảnh đầu tiên
-            m_currentVideoFrame = 0;
-            m_videoAnimTimer = 0.f;
-            m_menuBgSprite.setTexture(m_menuVideoTextures[0]);
-        }
-    }
-
-    // ========================================================
     // Subtitle blinking
     // ========================================================
 
@@ -781,40 +736,37 @@ void MainMenuState::update(float dt)
     // Clouds
     // ========================================================
 
-    if (Game::instance().isMotionEnabled())
+    for (auto &cloud : m_clouds)
     {
-        for (auto &cloud : m_clouds)
+        cloud.shape.move(
+            cloud.speed * dt,
+            0.f);
+
+        if (m_cloudLoaded)
         {
-            cloud.shape.move(
+            cloud.sprite.move(
                 cloud.speed * dt,
                 0.f);
+        }
+
+        // Nếu ra ngoài màn hình
+        if (cloud.shape.getPosition().x > 820.f)
+        {
+            float newX =
+                -cloud.shape.getSize().x;
+
+            float y =
+                cloud.shape.getPosition().y;
+
+            cloud.shape.setPosition(
+                newX,
+                y);
 
             if (m_cloudLoaded)
             {
-                cloud.sprite.move(
-                    cloud.speed * dt,
-                    0.f);
-            }
-
-            // Nếu ra ngoài màn hình
-            if (cloud.shape.getPosition().x > 820.f)
-            {
-                float newX =
-                    -cloud.shape.getSize().x;
-
-                float y =
-                    cloud.shape.getPosition().y;
-
-                cloud.shape.setPosition(
+                cloud.sprite.setPosition(
                     newX,
                     y);
-
-                if (m_cloudLoaded)
-                {
-                    cloud.sprite.setPosition(
-                        newX,
-                        y);
-                }
             }
         }
     }

@@ -21,16 +21,7 @@
     <ClCompile Include="..\src\Core\StateMachine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Entities\CANIMAL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Entities\CBIRD.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Entities\CCAR.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Entities\CDINAUSOR.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Entities\CPEOPLE.cpp">
@@ -119,16 +110,7 @@
     <ClInclude Include="..\src\Core\StateMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Entities\CANIMAL.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Entities\CBIRD.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Entities\CCAR.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Entities\CDINAUSOR.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Entities\CPEOPLE.h">

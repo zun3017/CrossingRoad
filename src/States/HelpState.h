@@ -21,12 +21,24 @@ private:
 
     // Background
     sf::RectangleShape m_background;
+    sf::Texture m_bgTexture;
+    sf::Sprite m_bgSprite;
+    bool m_bgLoaded = false;
 
-    // Title
+    // Main window container (Sky blue)
+    sf::RectangleShape m_mainContainer;
+    sf::RectangleShape m_containerBorder;
+    sf::RectangleShape m_topRibbon;
+
+    // Header Title & Accent Bar
+    sf::Text m_titleShadow;
     sf::Text m_titleText;
+    sf::RectangleShape m_accentBar;
+    sf::RectangleShape m_accentBarBorder;
 
-    // Content text
-    sf::Text m_contentText;
+    // Content Panel
+    sf::RectangleShape m_contentBox;
+    sf::RectangleShape m_contentBoxBorder;
 
     // Back button
     sf::Texture m_backTexture;
