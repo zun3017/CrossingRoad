@@ -24,17 +24,6 @@ Lilypad::Lilypad(float x, float y, float speed, int direction)
 void Lilypad::update(float dt) {
     sf::Vector2f pos = getPosition();
     pos.x += m_speed * static_cast<float>(m_direction) * dt;
-
-    // Quấn vòng: khi lá sen đi ra ngoài một bên, xuất hiện lại ở bên kia
-    if (m_direction > 0 && pos.x > SCREEN_WIDTH) {
-        // Đi sang phải, ra ngoài bên phải -> quay lại bên trái
-        pos.x = -LILYPAD_WIDTH;
-    }
-    else if (m_direction < 0 && pos.x + LILYPAD_WIDTH < 0.f) {
-        // Đi sang trái, ra ngoài bên trái -> quay lại bên phải
-        pos.x = SCREEN_WIDTH;
-    }
-
     setPosition(pos);
 }
 

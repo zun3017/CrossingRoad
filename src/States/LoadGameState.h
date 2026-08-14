@@ -3,7 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 #include "../Core/State.h"
+#include "../UI/Button.h"
 
 // Mỗi entry hiển thị 1 save file
 struct SaveEntry {
@@ -33,18 +35,32 @@ private:
 
     // Background
     sf::RectangleShape m_background;
+    sf::Texture m_bgTexture;
+    sf::Sprite m_bgSprite;
+    bool m_bgLoaded = false;
 
-    // Title
+    // Main window container (Sky blue)
+    sf::RectangleShape m_mainContainer;
+    sf::RectangleShape m_containerBorder;
+    sf::RectangleShape m_topRibbon;
+
+    // Header Title & Accent Bar
+    sf::Text m_titleShadow;
     sf::Text m_titleText;
+    sf::RectangleShape m_accentBar;
+    sf::RectangleShape m_accentBarBorder;
+
+    // Content Box
+    sf::RectangleShape m_contentBox;
+    sf::RectangleShape m_contentBoxBorder;
 
     // Save entries
     std::vector<SaveEntry> m_entries;
     sf::Text m_noSavesText;
 
     // Back button
-    sf::RectangleShape m_backBtnBg;
-    sf::Text m_backBtnText;
-    bool m_backHovered = false;
+    sf::Texture m_backTexture;
+    std::unique_ptr<Button> m_backBtn;
 
     void refreshSaveList();
 };

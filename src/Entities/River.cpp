@@ -1,5 +1,6 @@
 #include "River.h"
 #include <random>
+#include <algorithm>
 
 // Bộ sinh số ngẫu nhiên cho sông
 static std::mt19937& getRiverRNG() {
@@ -34,10 +35,22 @@ River::River(float posY, float lilypadSpeed, int direction)
 }
 
 void River::update(float dt) {
-    // Cập nhật tất cả lá sen (di chuyển + quấn vòng)
+    // Cập nhật tất cả lá sen (di chuyển)
     for (auto& lilypad : m_lilypads) {
         lilypad->update(dt);
     }
+
+    // Xóa các lá sen trôi ra ngoài màn hình để tránh rò rỉ bộ nhớ
+    m_lilypads.erase(
+        std::remove_if(m_lilypads.begin(), m_lilypads.end(),
+            [this](const std::unique_ptr<Lilypad>& pad) {
+                sf::FloatRect bounds = pad->getBounds();
+                if (m_direction > 0 && bounds.left > 850.f) return true;
+                if (m_direction < 0 && bounds.left + bounds.width < -50.f) return true;
+                return false;
+            }),
+        m_lilypads.end()
+    );
 
     // Spawn lá sen mới theo bộ đếm thời gian
     m_spawnTimer += dt;

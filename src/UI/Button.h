@@ -14,6 +14,11 @@ public:
            const std::string& text, sf::Font& font,
            std::function<void()> onClick = nullptr);
 
+    // Tạo nút bấm bằng hình ảnh (Texture)
+    Button(float x, float y, float width, float height,
+           const sf::Texture& texture,
+           std::function<void()> onClick = nullptr);
+
     ~Button() override = default;
 
     // Xử lý sự kiện chuột (hover, click)
@@ -22,7 +27,7 @@ public:
     // Cập nhật animation (scale khi hover)
     void update(float dt) override;
 
-    // Vẽ nút bấm (hình chữ nhật + text)
+    // Vẽ nút bấm (hình chữ nhật + text hoặc sprite)
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
     // Đặt callback khi nhấn nút
@@ -44,8 +49,11 @@ private:
     // Căn giữa text trong nút
     void centerText();
 
-    sf::RectangleShape m_shape;          // Hình dạng nút bấm
+    sf::RectangleShape m_shape;          // Hình dạng nút bấm (nếu không dùng texture)
     sf::Text m_text;                      // Text hiển thị trên nút
+    sf::Sprite m_sprite;                  // Sprite hiển thị (nếu dùng texture)
+    bool m_hasTexture = false;            // Nút dùng texture hay không
+    sf::Vector2f m_baseScale{1.0f, 1.0f}; // Scale gốc cho sprite
 
     std::function<void()> m_onClick;      // Hàm callback khi nhấn
 

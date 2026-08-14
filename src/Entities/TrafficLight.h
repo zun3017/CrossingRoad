@@ -1,14 +1,11 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "LightStateEnum.h"
 
-// Trạng thái đèn giao thông
-enum class LightState {
-    Green,  // Xe được đi
-    Red     // Xe phải dừng
-};
+// TrafficLight.h - Đèn giao thông cho hàng đường (Road)
+// Tự động chuyển đổi Green <-> Red theo bộ đếm thời gian ngẫu nhiên
+// Lưu ý: Chỉ dùng Green và Red (không Blinking - Blinking dành cho đường ray)
 
-// Đèn giao thông - điều khiển lưu lượng xe trên đường
-// Tự động chuyển đổi giữa Xanh và Đỏ theo bộ đếm thời gian
 class TrafficLight {
 public:
     TrafficLight();
@@ -22,7 +19,7 @@ public:
 
     // Kiểm tra trạng thái
     LightState getState() const { return m_state; }
-    bool isRed() const { return m_state == LightState::Red; }
+    bool isRed()   const { return m_state == LightState::Red; }
     bool isGreen() const { return m_state == LightState::Green; }
 
     // Đặt vị trí đèn

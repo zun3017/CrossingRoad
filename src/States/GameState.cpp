@@ -25,10 +25,14 @@ GameState::GameState(int level, int score)
 }
 
 void GameState::init() {
+    Game::instance().playBackgroundMusic("assets/audio/bgm_gameplay.ogg");
+
     std::srand(static_cast<unsigned>(std::time(nullptr)));
     m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
 
     try {
+        // Preload player texture vào ResourceManager cache,
+        // để CPEOPLE constructor dùng lại mà không cần load từ file lần nữa.
         auto& tPlayer = ResourceManager<sf::Texture>::getInstance().get("assets/textures/player.png");
         auto& tGrass = ResourceManager<sf::Texture>::getInstance().get("assets/textures/grass.png");
         auto& tRoad = ResourceManager<sf::Texture>::getInstance().get("assets/textures/road.png");
@@ -45,12 +49,8 @@ void GameState::init() {
         auto& tLightBlink = ResourceManager<sf::Texture>::getInstance().get("assets/textures/light_blink.png");
         
         if (tPlayer.getSize().x > 0) {
-            m_playerSprite.setTexture(tPlayer);
-            int frameW = tPlayer.getSize().x / 4;
-            int frameH = tPlayer.getSize().y / 4;
-            m_playerSprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
-            m_playerSprite.setScale(m_playerSize / frameW, m_playerSize / frameH);
-            
+            // (m_playerSprite đã xóa - player load texture trực tiếp trong CPEOPLE constructor)
+
             m_grassSprite.setTexture(tGrass);
             m_grassSprite.setScale(800.f / tGrass.getSize().x, m_cellSize / tGrass.getSize().y);
             
@@ -63,9 +63,7 @@ void GameState::init() {
             m_logSprite.setTexture(tLog);
             m_logSprite.setScale(56.f / tLog.getSize().x, 40.f / tLog.getSize().y);
             
-            if (tCarBlue.getSize().x > 0) m_carBlueSprite.setTexture(tCarBlue);
-            if (tCarRed.getSize().x > 0) m_carRedSprite.setTexture(tCarRed);
-            if (tCarYellow.getSize().x > 0) m_carYellowSprite.setTexture(tCarYellow);
+
             if (tItem.getSize().x > 0) m_itemSprite.setTexture(tItem);
             
             if (tTrack.getSize().x > 0) m_trackSprite.setTexture(tTrack);
@@ -75,6 +73,7 @@ void GameState::init() {
             if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
             
             m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+            m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
             
             m_texturesLoaded = true;
         }
@@ -93,7 +92,9 @@ void GameState::init() {
 // ============================================================
 void GameState::initPlayer() {
     m_player = std::make_unique<CPEOPLE>();
-    m_player->forcePosition(400.f - 20.f, 600.f - m_cellSize - 4.f);
+    float offsetX = (m_cellSize - m_playerSize) / 2.f;
+    int col = static_cast<int>(800.f / m_cellSize) / 2; // Cột ở giữa (cột 8)
+    m_player->forcePosition(col * m_cellSize + offsetX, 600.f - m_cellSize - offsetX);
     m_playerDead = false;
     m_maxPlayerY = m_player->getPosition().y;
     m_scoreSaved = false;
@@ -156,15 +157,15 @@ void GameState::createGrassRow(float y, bool safeZone) {
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(34, 139, 34)); // Xanh lá đậm
 
-    // Thêm item ngẫu nhiên trên cỏ (không phải vùng an toàn)
+    // Thêm vật phẩm (ItemData) ngẫu nhiên trên cỏ (không phải vùng an toàn)
     if (!safeZone && std::rand() % 100 < 30) {
-        Item item;
+        ItemData item;
         float itemX = static_cast<float>(50 + std::rand() % 700);
         item.shape.setRadius(14.f); // To hơn để dễ nhìn (bán kính 14 -> đường kính 28)
         item.shape.setFillColor(sf::Color(255, 215, 0)); // Vàng gold
         item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
         item.collected = false;
-        item.points = 10 + (m_level - 1) * 5;
+        item.points = 10; // Vật phẩm luôn luôn được 10 điểm
         row.items.push_back(item);
     }
     
@@ -189,28 +190,29 @@ void GameState::createRoadRow(float y) {
     // Vẽ vạch kẻ đường (trang trí, lưu vào obstacles sẽ phức tạp quá)
     // Tạo 2-4 xe ngẫu nhiên trên mỗi hàng đường
     int numVehicles = 2 + std::rand() % 3;
-    bool movingRight = (std::rand() % 2 == 0); // Hướng chạy ngẫu nhiên
+    // Dùng toạ độ y để luân phiên hướng chạy, đảm bảo các hàng liền kề luôn đi ngược chiều nhau
+    bool movingRight = (static_cast<int>(std::round(std::abs(y) / m_cellSize)) % 2 == 0);
     float baseSpeed = 80.f + static_cast<float>(m_level * 15 + std::rand() % 40);
 
     for (int v = 0; v < numVehicles; v++) {
-        // Spawn vehicles spread across the full route so they enter naturally:
-        // - Right-moving: spread from -200 to 600 (some off-screen left, some on-screen)
-        // - Left-moving:  spread from 200 to 1000 (some on-screen, some off-screen right)
         float startX;
         if (movingRight) {
-            // First vehicle guaranteed off-screen, rest spread across route
             float spacing = 900.f / numVehicles;
-            startX = -150.f + static_cast<float>(v) * spacing + static_cast<float>(std::rand() % 60);
+            startX = -150.f + static_cast<float>(v) * spacing + static_cast<float>(std::rand() % 150 - 50);
         } else {
-            // Vehicles enter from the right side naturally
             float spacing = 900.f / numVehicles;
-            startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 60);
+            startX = 950.f - static_cast<float>(v) * spacing - static_cast<float>(std::rand() % 150 - 50);
         }
 
-        float speed = baseSpeed;
+        // Tốc độ thay đổi ngẫu nhiên từng xe (thêm bớt 30) để có hiện tượng vượt nhau.
+        // Người chơi chấp nhận việc xe đi xuyên qua nhau, nên ta cứ để tốc độ khác biệt!
+        float speed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
+        if (speed < 40.f) speed = 40.f;
+
         int direction = movingRight ? 1 : -1;
         
-        if (std::rand() % 2 == 0) {
+        // Tỉ lệ: 75% ra CCAR (các xe con nhiều màu), 25% ra CTRUCK (xe tải đỏ)
+        if (std::rand() % 100 < 75) {
             row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, speed, direction));
         } else {
             row.vehicles.push_back(std::make_unique<CTRUCK>(startX, y + 2.f, speed, direction));
@@ -221,7 +223,7 @@ void GameState::createRoadRow(float y) {
 }
 
 // ============================================================
-// Tạo hàng sông với lá sen
+// Tạo hàng sông với khúc gỗ
 // ============================================================
 void GameState::createRiverRow(float y) {
     TerrainRow row;
@@ -232,27 +234,28 @@ void GameState::createRiverRow(float y) {
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(30, 100, 200)); // Xanh nước
 
-    // Tạo 3-5 lá sen trên sông
-    int numPads = 3 + std::rand() % 3;
-    bool movingRight = (std::rand() % 2 == 0);
-    float padSpeed = 50.f + static_cast<float>(m_level * 10 + std::rand() % 30);
+    // Tạo 3-5 khúc gỗ trên sông
+    int numLogs = 3 + std::rand() % 3;
+    // Dùng toạ độ y để luân phiên hướng chạy, tránh 2 hàng gỗ đi cùng chiều bị so le làm kẹt người chơi
+    bool movingRight = (static_cast<int>(std::round(std::abs(y) / m_cellSize)) % 2 == 0);
+    float logSpeed = 50.f + static_cast<float>(m_level * 10 + std::rand() % 30);
 
-    for (int p = 0; p < numPads; p++) {
-        LilyPad pad;
-        float padWidth = 55.f + static_cast<float>(std::rand() % 25);
-        float padHeight = m_cellSize - 8.f;
+    for (int p = 0; p < numLogs; p++) {
+        Log log;
+        float logWidth = 55.f + static_cast<float>(std::rand() % 25);
+        float logHeight = m_cellSize - 8.f;
 
-        pad.shape.setSize(sf::Vector2f(padWidth, padHeight));
+        log.shape.setSize(sf::Vector2f(logWidth, logHeight));
         float startX = static_cast<float>(p * 170 + std::rand() % 60);
-        pad.shape.setPosition(startX, y + 4.f);
-        pad.shape.setFillColor(sf::Color(0, 160, 0)); // Xanh lá sen
-        pad.shape.setOutlineColor(sf::Color(0, 100, 0));
-        pad.shape.setOutlineThickness(1.f);
+        log.shape.setPosition(startX, y + 4.f);
+        log.shape.setFillColor(sf::Color(139, 90, 43)); // Nâu gỗ (fallback khi không có texture)
+        log.shape.setOutlineColor(sf::Color(80, 50, 20));
+        log.shape.setOutlineThickness(1.f);
 
-        pad.speed = padSpeed;
-        pad.movingRight = movingRight;
+        log.speed = logSpeed;
+        log.movingRight = movingRight;
 
-        row.lilyPads.push_back(pad);
+        row.logs.push_back(log);
     }
 
     m_terrains.push_back(std::move(row));
@@ -317,9 +320,69 @@ void GameState::initHUD() {
 // Khởi tạo overlay Game Over và Pause
 // ============================================================
 void GameState::initOverlays() {
+    m_texGameOverLoaded = m_texGameOver.loadFromFile("assets/textures/game_over.png");
+    m_texConfirmLoaded = m_texConfirm.loadFromFile("assets/textures/confirm_button.png");
+    m_texYesLoaded = m_texYes.loadFromFile("assets/textures/yes_text.png");
+    m_texNoLoaded = m_texNo.loadFromFile("assets/textures/no_text.png");
+    m_texPlayAgainLoaded = m_texPlayAgain.loadFromFile("assets/textures/play_again_text.png");
+    m_texHomeLoaded = m_texHome.loadFromFile("assets/textures/main_menu_text.png");
+    m_texLabelLoaded = m_texLabel.loadFromFile("assets/textures/label.png");
+    m_texEnterNameTextLoaded = m_texEnterNameText.loadFromFile("assets/textures/enter_name_text.png");
+    m_texNameExistsTextLoaded = m_texNameExistsText.loadFromFile("assets/textures/name_exists_text.png");
+    m_texNameScoreRankTextLoaded = m_texNameScoreRankText.loadFromFile("assets/textures/name_score_rank_text.png");
+
+    bool gL = m_goldMedalTex.loadFromFile("assets/textures/gold_medal.png");
+    bool sL = m_silverMedalTex.loadFromFile("assets/textures/silver_medal.png");
+    bool bL = m_bronzeMedalTex.loadFromFile("assets/textures/bronze_medal.png");
+    m_medalsLoaded = gL && sL && bL;
+
+    if (m_texLabelLoaded) {
+        m_labelSprite.setTexture(m_texLabel);
+        sf::Vector2u texSize = m_texLabel.getSize();
+        if (texSize.x > 0 && texSize.y > 0) {
+            m_labelSprite.setOrigin(texSize.x / 2.0f, texSize.y / 2.0f);
+        }
+    }
+
+    if (m_texEnterNameTextLoaded) {
+        m_enterNameTextSprite.setTexture(m_texEnterNameText);
+        sf::Vector2u size = m_texEnterNameText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_enterNameTextSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+            m_enterNameTextSprite.setScale(220.f / static_cast<float>(size.x), 32.f / static_cast<float>(size.y));
+        }
+        m_enterNameTextSprite.setPosition(400.f, 230.f);
+    }
+
+    if (m_texNameExistsTextLoaded) {
+        m_nameExistsTextSprite.setTexture(m_texNameExistsText);
+        sf::Vector2u size = m_texNameExistsText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_nameExistsTextSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+        }
+    }
+
+    if (m_texNameScoreRankTextLoaded) {
+        m_nameScoreRankTextSprite.setTexture(m_texNameScoreRankText);
+        sf::Vector2u size = m_texNameScoreRankText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_nameScoreRankTextSprite.setOrigin(0.f, 0.f);
+        }
+    }
+
     // Game Over overlay
     m_gameOverOverlay.setSize(sf::Vector2f(800.f, 600.f));
     m_gameOverOverlay.setFillColor(sf::Color(0, 0, 0, 160));
+
+    if (m_texGameOverLoaded) {
+        m_gameOverSprite.setTexture(m_texGameOver);
+        sf::Vector2u texSize = m_texGameOver.getSize();
+        if (texSize.x > 0 && texSize.y > 0) {
+            m_gameOverSprite.setOrigin(texSize.x / 2.0f, texSize.y / 2.0f);
+            m_gameOverSprite.setScale(300.f / static_cast<float>(texSize.x), 80.f / static_cast<float>(texSize.y));
+        }
+        m_gameOverSprite.setPosition(400.f, 180.f);
+    }
 
     m_gameOverText.setFont(m_font);
     m_gameOverText.setString("GAME OVER");
@@ -354,6 +417,33 @@ void GameState::initOverlays() {
                                   piBounds.top + piBounds.height / 2.f);
     m_pauseInstruction.setPosition(400.f, 330.f);
 
+    // HUD Button textures
+    bool b1 = m_texHudBack.loadFromFile("assets/textures/back_button.png");
+    bool b2 = m_texHudPause.loadFromFile("assets/textures/pause_button.png");
+    bool b3 = m_texHudContinue.loadFromFile("assets/textures/continue_button.png");
+    bool b4 = m_texHudSave.loadFromFile("assets/textures/save_button.png");
+    m_texHudButtonsLoaded = b1 && b2 && b3 && b4;
+
+    if (m_texHudButtonsLoaded) {
+        auto onBackClick = [this]() {
+            m_deferredAction = DeferredAction::Quit;
+        };
+        m_hudBtnBack = std::make_unique<Button>(20.f, 530.f, 50.f, 50.f, m_texHudBack, onBackClick);
+
+        auto onSaveClick = [this]() {
+            m_paused = true;
+            m_pauseUIState = PauseUIState::EnterSaveName;
+            if (m_saveNameInput) {
+                m_saveNameInput->clear();
+                m_saveNameInput->setActive(true);
+            }
+            updatePauseButtonTexture();
+        };
+        m_hudBtnSave = std::make_unique<Button>(140.f, 530.f, 50.f, 50.f, m_texHudSave, onSaveClick);
+
+        updatePauseButtonTexture();
+    }
+
     // Save Game UI in Pause
     m_saveNameBoard.setSize(sf::Vector2f(350.f, 150.f));
     m_saveNameBoard.setFillColor(sf::Color(50, 50, 50, 240));
@@ -368,18 +458,41 @@ void GameState::initOverlays() {
     m_saveNamePrompt.setFillColor(sf::Color::White);
     sf::FloatRect prBounds = m_saveNamePrompt.getLocalBounds();
     m_saveNamePrompt.setOrigin(prBounds.left + prBounds.width / 2.f, prBounds.top + prBounds.height / 2.f);
-    m_saveNamePrompt.setPosition(400.f, 250.f);
+    m_saveNamePrompt.setPosition(400.f, 230.f);
 
-    m_saveNameInput = std::make_unique<TextBox>(300.f, 280.f, 200.f, 30.f, m_font);
+    m_saveNameInput = std::make_unique<TextBox>(290.f, 270.f, 220.f, 40.f, m_font);
 
-    m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 30.f, "OK", m_font, [this]() {
+    auto onSaveOk = [this]() {
         if (!m_saveNameInput->getString().empty()) {
-            m_currentSaveSession = m_saveNameInput->getString();
+            std::string inputName = m_saveNameInput->getString();
+            m_currentSaveSession = SaveManager::getUniqueSaveFileName(inputName);
             saveCurrentGameState(m_currentSaveSession);
             m_pauseUIState = PauseUIState::Main;
             m_pauseInstruction.setString("Game Saved to " + m_currentSaveSession + "!\nPress P or Escape to Resume\nPress Q to Quit to Menu");
         }
-    });
+    };
+
+    if (m_texConfirmLoaded) {
+        m_btnSaveOk = std::make_unique<Button>(340.f, 320.f, 120.f, 36.f, m_texConfirm, onSaveOk);
+    } else {
+        m_btnSaveOk = std::make_unique<Button>(350.f, 320.f, 100.f, 35.f, "OK", m_font, onSaveOk);
+    }
+}
+
+void GameState::updatePauseButtonTexture() {
+    if (!m_texHudButtonsLoaded) return;
+    auto onPauseClick = [this]() {
+        m_paused = !m_paused;
+        if (m_paused) m_pauseUIState = PauseUIState::Main;
+        updatePauseButtonTexture();
+    };
+    // Tỷ lệ ảnh pause/continue_button.png có viền lớn hơn back/save_button.png 14%, 
+    // điều chỉnh kích thước 43x43 tại (83.5, 533.5) để 3 nút đồng kích thước khung viền 100%
+    if (m_paused) {
+        m_hudBtnPause = std::make_unique<Button>(83.5f, 533.5f, 43.f, 43.f, m_texHudContinue, onPauseClick);
+    } else {
+        m_hudBtnPause = std::make_unique<Button>(83.5f, 533.5f, 43.f, 43.f, m_texHudPause, onPauseClick);
+    }
 }
 
 void GameState::saveCurrentGameState(const std::string& sessionName) {
@@ -408,15 +521,15 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
         }
         
 
-        for (auto& pad : row.lilyPads) {
+        for (auto& log : row.logs) {
             SavedLilyPad sPad;
-            sPad.x = pad.shape.getPosition().x;
-            sPad.y = pad.shape.getPosition().y;
-            sPad.width = pad.shape.getSize().x;
-            sPad.height = pad.shape.getSize().y;
-            sPad.speed = pad.speed;
-            sPad.movingRight = pad.movingRight;
-            sf::Color c = pad.shape.getFillColor();
+            sPad.x = log.shape.getPosition().x;
+            sPad.y = log.shape.getPosition().y;
+            sPad.width = log.shape.getSize().x;
+            sPad.height = log.shape.getSize().y;
+            sPad.speed = log.speed;
+            sPad.movingRight = log.movingRight;
+            sf::Color c = log.shape.getFillColor();
             sPad.r = c.r; sPad.g = c.g; sPad.b = c.b;
             sRow.lilyPads.push_back(sPad);
         }
@@ -449,6 +562,13 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
 // Xử lý input từ người chơi
 // ============================================================
 void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
+    // Xử lý sự kiện cho 3 nút HUD (Back, Pause/Continue, Save)
+    if (!m_playerDead && m_texHudButtonsLoaded) {
+        if (m_hudBtnBack) m_hudBtnBack->handleEvent(event, window);
+        if (m_hudBtnPause) m_hudBtnPause->handleEvent(event, window);
+        if (m_hudBtnSave) m_hudBtnSave->handleEvent(event, window);
+    }
+
     // Nếu đã chết
     if (m_playerDead) {
         if (m_goState == GameOverUIState::EnterName) {
@@ -478,7 +598,8 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
             if (m_btnSaveOk) m_btnSaveOk->handleEvent(event, window);
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 if (!m_saveNameInput->getString().empty()) {
-                    m_currentSaveSession = m_saveNameInput->getString();
+                    std::string inputName = m_saveNameInput->getString();
+                    m_currentSaveSession = SaveManager::getUniqueSaveFileName(inputName);
                     saveCurrentGameState(m_currentSaveSession);
                     m_pauseUIState = PauseUIState::Main;
                     m_pauseInstruction.setString("Game Saved to " + m_currentSaveSession + "!\nPress P or Escape to Resume\nPress Q to Quit to Menu");
@@ -492,6 +613,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
                 if (event.key.code == sf::Keyboard::P ||
                     event.key.code == sf::Keyboard::Escape) {
                     m_paused = false;
+                    updatePauseButtonTexture();
                 } else if (event.key.code == sf::Keyboard::S) {
                     if (!m_currentSaveSession.empty()) {
                         saveCurrentGameState(m_currentSaveSession);
@@ -537,6 +659,7 @@ void GameState::handleInput(sf::RenderWindow& window, sf::Event& event) {
         case sf::Keyboard::P:
         case sf::Keyboard::Escape:
             m_paused = true;
+            updatePauseButtonTexture();
             break;
         default:
             break;
@@ -572,27 +695,9 @@ void GameState::movePlayer(float dx, float dy) {
     if (newPos.x > 800.f - m_playerSize) newPos.x = 800.f - m_playerSize;
     if (newPos.y > 600.f - m_cellSize) newPos.y = 600.f - m_cellSize;
 
-    // Nếu di chuyển lên/xuống sang vùng không phải sông, căn x về cột lưới gần nhất
-    if (dy != 0.f) {
-        float targetY = newPos.y + m_playerSize / 2.f;
-        bool isTargetRiver = false;
-        for (auto& row : m_terrains) {
-            if (row.type == TerrainType::River) {
-                sf::FloatRect rowBounds = row.background.getGlobalBounds();
-                if (targetY > rowBounds.top && targetY < rowBounds.top + rowBounds.height) {
-                    isTargetRiver = true;
-                    break;
-                }
-            }
-        }
-        if (!isTargetRiver) {
-            float offsetX = (m_cellSize - m_playerSize) / 2.f;
-            int col = static_cast<int>(std::round((newPos.x - offsetX) / m_cellSize));
-            newPos.x = col * m_cellSize + offsetX;
-        }
-    }
+    // Không còn ép grid X nữa, người chơi nhảy thẳng tắp từ vị trí hiện tại
 
-    // Gọi startMove để kích hoạt animation thay vì setPosition dịch chuyển tức thời
+    // Gọi startMove để kích hoạt animation
     m_player->startMove(newPos.x - m_player->getPosition().x, newPos.y - m_player->getPosition().y);
     
     // Tăng điểm khi tiến lên (chỉ thưởng nếu đi lên cao hơn mức cao nhất từng đạt được)
@@ -616,6 +721,9 @@ void GameState::update(float dt) {
         m_deferredAction = DeferredAction::None;
         m_level = 1; m_score = 0;
         initPlayer(); generateMap(); initHUD();
+        m_playerDead = false;
+        m_goState = GameOverUIState::None;
+        Game::instance().playBackgroundMusic("assets/audio/bgm_gameplay.ogg");
         return;
     } else if (m_deferredAction == DeferredAction::Quit) {
         m_deferredAction = DeferredAction::None;
@@ -667,12 +775,21 @@ void GameState::updateObstacles(float dt) {
             for (auto& v : row.vehicles) {
                 v->update(dt);
                 
-                // Wrap around logic cho xe cộ (Logic Game)
-                // Wrap khi xe vừa thoát hết khỏi màn hình
+                // Wrap quanh khi xe vừa thoát hết khỏi màn hình
                 if (v->getDirection() > 0 && v->getPosition().x > 860.f) {
                     v->setPosition(-180.f, v->getPosition().y);
+                    // Random lại tốc độ khi quay vòng để các xe bị đè (dính vào nhau) sẽ tách ra
+                    float baseSpeed = 80.f + static_cast<float>(m_level * 15);
+                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 100 - 30);
+                    if (newSpeed < 40.f) newSpeed = 40.f;
+                    v->setSpeed(newSpeed);
                 } else if (v->getDirection() < 0 && v->getPosition().x < -90.f) {
                     v->setPosition(860.f, v->getPosition().y);
+                    // Random lại tốc độ khi quay vòng
+                    float baseSpeed = 80.f + static_cast<float>(m_level * 15);
+                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 100 - 30);
+                    if (newSpeed < 40.f) newSpeed = 40.f;
+                    v->setSpeed(newSpeed);
                 }
             }
         }
@@ -680,23 +797,23 @@ void GameState::updateObstacles(float dt) {
 }
 
 // ============================================================
-// Cập nhật vị trí lá sen trên sông
+// Cập nhật vị trí khúc gỗ trôi trên sông
 // ============================================================
 void GameState::updateLilyPads(float dt) {
     for (auto& row : m_terrains) {
         if (row.type != TerrainType::River) continue;
 
-        for (auto& pad : row.lilyPads) {
-            float moveX = pad.speed * dt * (pad.movingRight ? 1.f : -1.f);
-            pad.shape.move(moveX, 0.f);
+        for (auto& log : row.logs) {
+            float moveX = log.speed * dt * (log.movingRight ? 1.f : -1.f);
+            log.shape.move(moveX, 0.f);
 
             // Quay vòng khi ra khỏi màn hình
-            sf::Vector2f pos = pad.shape.getPosition();
-            float w = pad.shape.getSize().x;
-            if (pad.movingRight && pos.x > 820.f) {
-                pad.shape.setPosition(-w, pos.y);
-            } else if (!pad.movingRight && pos.x + w < -20.f) {
-                pad.shape.setPosition(820.f, pos.y);
+            sf::Vector2f pos = log.shape.getPosition();
+            float w = log.shape.getSize().x;
+            if (log.movingRight && pos.x > 820.f) {
+                log.shape.setPosition(-w, pos.y);
+            } else if (!log.movingRight && pos.x + w < -20.f) {
+                log.shape.setPosition(820.f, pos.y);
             }
         }
     }
@@ -722,6 +839,7 @@ void GameState::updateRailway(float dt) {
             if (row.trafficLight.timer <= 0.f) {
                 row.trafficLight.state = LightState::Blinking;
                 row.trafficLight.timer = 2.f; // 2 giây nhấp nháy
+                Game::instance().playSound("assets/audio/sfx_train_horn.wav");
             }
         } else if (row.trafficLight.state == LightState::Blinking) {
             if (row.trafficLight.timer <= 0.f) {
@@ -766,10 +884,10 @@ void GameState::updateRailway(float dt) {
 // ============================================================
 void GameState::checkCollisions(float dt) {
     sf::FloatRect playerBounds = m_player->getBounds();
-    // Thu nhỏ hitbox để gameplay fair hơn
+    // Thu nhỏ hitbox để gameplay fair hơn và khớp với hình ảnh nhân vật (bỏ viền trong suốt)
     sf::FloatRect playerHitbox(
-        playerBounds.left + 4.f, playerBounds.top + 10.f, // Cắt viền trên nhiều hơn để tránh chạm nhầm hàng địa hình phía trên
-        playerBounds.width - 8.f, playerBounds.height - 16.f // Cắt viền dưới để hitbox nằm lọt thỏm trong 1 ô
+        playerBounds.left + 12.f, playerBounds.top + 10.f, // Cắt viền trái 12px
+        playerBounds.width - 24.f, playerBounds.height - 16.f // Cắt viền phải 12px (tổng 24)
     );
 
     for (auto& row : m_terrains) {
@@ -785,6 +903,7 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(carHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_car_hit.wav");
                         m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -810,6 +929,7 @@ void GameState::checkCollisions(float dt) {
                 if (playerHitbox.intersects(trainHitbox)) {
                     if (!m_playerDead) {
                         m_playerDead = true;
+                        Game::instance().playSound("assets/audio/sfx_train_hit.wav");
                         m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
@@ -823,29 +943,38 @@ void GameState::checkCollisions(float dt) {
             }
         }
 
-        // Kiểm tra sông: phải đứng trên lá sen
+        // Kiểm tra sông: phải đứng trên khúc gỗ
         if (row.type == TerrainType::River) {
             sf::FloatRect rowBounds = row.background.getGlobalBounds();
+            // Mở rộng X của sông ra vô tận để bắt va chạm ngay cả khi player ra khỏi màn hình
+            rowBounds.left = -10000.f;
+            rowBounds.width = 20000.f;
             if (playerHitbox.intersects(rowBounds)) {
-                // Nếu đang animation LERP nhảy LÊN khỏi hàng sông (về phía bờ),
-                // bỏ qua kiểm tra chết đuối để tránh chết nhầm khi nhảy lên bờ
-                if (m_player->m_isAnimating && m_player->m_targetPos.y < rowBounds.top) {
-                    continue; // Đang nhảy lên bờ -> bỏ qua
+                // Nếu đang nhảy (animating), nhân vật lơ lửng trên không, 
+                // bỏ qua kiểm tra chết đuối và không bị khúc gỗ đẩy đi để tránh chết oan khi đang nhảy vào khúc gỗ.
+                if (m_player->m_isAnimating) {
+                    continue; // Đang bay trên không -> bỏ qua
                 }
 
-                bool onPad = false;
-                for (auto& pad : row.lilyPads) {
-                    if (playerHitbox.intersects(pad.shape.getGlobalBounds())) {
-                        onPad = true;
-                        // Di chuyển theo lá sen đồng bộ với dt
-                        float padMove = pad.speed * dt * (pad.movingRight ? 1.f : -1.f);
-                        m_player->setPosition(m_player->getPosition().x + padMove, m_player->getPosition().y);
+                bool onLog = false;
+                for (auto& log : row.logs) {
+                    sf::FloatRect logHitbox = log.shape.getGlobalBounds();
+                    // Thu nhỏ hitbox khúc gỗ để sát với hình ảnh gỗ thật (bỏ viền nước trong suốt)
+                    logHitbox.left += 10.f;
+                    logHitbox.width -= 20.f;
+
+                    if (playerHitbox.intersects(logHitbox)) {
+                        onLog = true;
+                        // Di chuyển theo khúc gỗ đồng bộ với dt
+                        float logMove = log.speed * dt * (log.movingRight ? 1.f : -1.f);
+                        m_player->setPosition(m_player->getPosition().x + logMove, m_player->getPosition().y);
 
                         // Nếu bị đẩy ra ngoài màn hình thì chết
                         if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
                             if (!m_playerDead) {
                                 m_playerDead = true;
-                                m_player->die(DeathType::HitByCar, m_hitByCarLoaded ? &m_hitByCarTexture : nullptr);
+                                Game::instance().playSound("assets/audio/sfx_water_splash.wav");
+                                m_player->die(DeathType::Drowned, m_playerDrownLoaded ? &m_playerDrownTexture : nullptr);
                                 m_deathTimer = 0.f;
                                 m_goState = GameOverUIState::Delay;
                                 if (!m_currentSaveSession.empty()) {
@@ -858,11 +987,12 @@ void GameState::checkCollisions(float dt) {
                         break;
                     }
                 }
-                if (!onPad) {
-                    // Rơi xuống sông -> chết
+                if (!onLog) {
+                    // Rơi xuống sông -> chết đuối
                     if (!m_playerDead) {
                         m_playerDead = true;
-                        m_player->die(DeathType::Drowned);
+                        Game::instance().playSound("assets/audio/sfx_water_splash.wav");
+                        m_player->die(DeathType::Drowned, m_playerDrownLoaded ? &m_playerDrownTexture : nullptr);
                         m_deathTimer = 0.f;
                         m_goState = GameOverUIState::Delay;
                         if (!m_currentSaveSession.empty()) {
@@ -881,6 +1011,7 @@ void GameState::checkCollisions(float dt) {
             if (!item.collected && playerHitbox.intersects(item.shape.getGlobalBounds())) {
                 item.collected = true;
                 m_score += item.points;
+                Game::instance().playSound("assets/audio/sfx_pick_up.wav");
             }
         }
     }
@@ -891,8 +1022,9 @@ void GameState::checkCollisions(float dt) {
 // ============================================================
 void GameState::checkWinCondition() {
     if (m_player->getPosition().y <= 0.f) {
+        Game::instance().playSound("assets/audio/sfx_next_level.wav");
         m_level++;
-        m_score += 50 * m_level; // Thưởng qua level
+        m_score += 5; // Thưởng qua màn cố định là 5 điểm
         resetForNextLevel();
     }
 }
@@ -1028,24 +1160,16 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
-        // Vẽ lá sen
-        for (auto& pad : row.lilyPads) {
+        // Vẽ khúc gỗ
+        for (auto& log : row.logs) {
             if (m_texturesLoaded && m_logSprite.getTexture()) {
                 auto texSize = m_logSprite.getTexture()->getSize();
                 // Ép hình ảnh khúc gỗ co giãn đúng bằng kích thước hitbox vật lý
-                m_logSprite.setScale(pad.shape.getSize().x / texSize.x, pad.shape.getSize().y / texSize.y);
-                m_logSprite.setPosition(pad.shape.getPosition());
+                m_logSprite.setScale(log.shape.getSize().x / texSize.x, log.shape.getSize().y / texSize.y);
+                m_logSprite.setPosition(log.shape.getPosition());
                 window.draw(m_logSprite);
             } else {
-                window.draw(pad.shape);
-                // Vẽ chi tiết trên lá sen
-                sf::CircleShape padDetail(5.f);
-                padDetail.setFillColor(sf::Color(0, 200, 0, 120));
-                padDetail.setPosition(
-                    pad.shape.getPosition().x + pad.shape.getSize().x / 2.f - 5.f,
-                    pad.shape.getPosition().y + pad.shape.getSize().y / 2.f - 5.f
-                );
-                window.draw(padDetail);
+                window.draw(log.shape);
             }
         }
 
@@ -1077,24 +1201,90 @@ void GameState::draw(sf::RenderWindow& window) {
         window.draw(m_scoreText);
     }
 
+    // Vẽ HUD buttons (Back, Pause/Continue, Save) ở góc dưới bên trái
+    if (m_texHudButtonsLoaded) {
+        if (m_hudBtnBack) window.draw(*m_hudBtnBack);
+        if (m_hudBtnPause) window.draw(*m_hudBtnPause);
+        if (m_hudBtnSave) window.draw(*m_hudBtnSave);
+    }
+
     // Vẽ overlay Game Over
     if (m_playerDead) {
         window.draw(m_gameOverOverlay);
-        if (m_fontLoaded) {
-            if (m_goState == GameOverUIState::Delay) {
+        if (m_goState == GameOverUIState::Delay) {
+            if (m_texGameOverLoaded) {
+                window.draw(m_gameOverSprite);
+            } else if (m_fontLoaded) {
                 window.draw(m_gameOverText);
-            } else if (m_goState == GameOverUIState::EnterName) {
-                window.draw(m_enterNameBoard);
-                window.draw(m_enterNameText);
+            }
+        } else if (m_fontLoaded) {
+            if (m_goState == GameOverUIState::EnterName) {
+                if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 290.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 290.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_enterNameBoard);
+                }
+
+                if (m_texEnterNameTextLoaded) {
+                    window.draw(m_enterNameTextSprite);
+                } else {
+                    window.draw(m_enterNameText);
+                }
                 if (m_nameInput) window.draw(*m_nameInput);
                 if (m_btnOk) window.draw(*m_btnOk);
             } else if (m_goState == GameOverUIState::ConfirmIdentity) {
-                window.draw(m_confirmText);
+                if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 290.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 290.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_enterNameBoard);
+                }
+
+                if (m_texNameExistsTextLoaded) {
+                    window.draw(m_nameExistsTextSprite);
+                    window.draw(m_confirmBestScoreText);
+                } else {
+                    window.draw(m_confirmText);
+                }
                 if (m_btnYes) window.draw(*m_btnYes);
                 if (m_btnNo) window.draw(*m_btnNo);
             } else if (m_goState == GameOverUIState::ShowScore) {
-                window.draw(m_scoreBoard);
-                window.draw(m_rankText);
+                if (m_texGameOverLoaded) window.draw(m_gameOverSprite);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 360.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 290.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_scoreBoard);
+                }
+
+                if (m_texNameScoreRankTextLoaded) {
+                    window.draw(m_nameScoreRankTextSprite);
+                    window.draw(m_showNameText);
+                    window.draw(m_showScoreText);
+                    if (m_finalRank <= 3 && m_medalsLoaded) {
+                        window.draw(m_medalSprite);
+                    } else {
+                        window.draw(m_showRankText);
+                    }
+                } else {
+                    window.draw(m_rankText);
+                }
+
                 if (m_playAgainBtn) window.draw(*m_playAgainBtn);
                 if (m_menuBtn) window.draw(*m_menuBtn);
             }
@@ -1109,27 +1299,42 @@ void GameState::draw(sf::RenderWindow& window) {
                 window.draw(m_pauseText);
                 window.draw(m_pauseInstruction);
             } else if (m_pauseUIState == PauseUIState::EnterSaveName) {
-                window.draw(m_saveNameBoard);
-                window.draw(m_saveNamePrompt);
+                if (m_texLabelLoaded) {
+                    sf::Vector2u texSize = m_texLabel.getSize();
+                    if (texSize.x > 0 && texSize.y > 0) {
+                        m_labelSprite.setScale(500.f / static_cast<float>(texSize.x), 290.f / static_cast<float>(texSize.y));
+                    }
+                    m_labelSprite.setPosition(400.f, 290.f);
+                    window.draw(m_labelSprite);
+                } else {
+                    window.draw(m_saveNameBoard);
+                }
+
+                if (m_texEnterNameTextLoaded) {
+                    window.draw(m_enterNameTextSprite);
+                } else {
+                    window.draw(m_saveNamePrompt);
+                }
                 if (m_saveNameInput) window.draw(*m_saveNameInput);
                 if (m_btnSaveOk) window.draw(*m_btnSaveOk);
             }
         }
     }
 }
-
 // ============================================================
 // Thiết lập giao diện Game Over
 // ============================================================
 void GameState::setupGameOverUI() {
+    Game::instance().playSound("assets/audio/bgm_gameover.wav");
     m_goState = GameOverUIState::EnterName;
 
-    m_enterNameBoard.setSize(sf::Vector2f(350.f, 200.f));
-    m_enterNameBoard.setFillColor(sf::Color(135, 206, 250, 220)); // Xanh nước biển nhạt
-    m_enterNameBoard.setOutlineColor(sf::Color::White);
-    m_enterNameBoard.setOutlineThickness(3.f);
-    m_enterNameBoard.setOrigin(175.f, 100.f);
-    m_enterNameBoard.setPosition(400.f, 290.f);
+    if (m_texEnterNameTextLoaded) {
+        sf::Vector2u size = m_texEnterNameText.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_enterNameTextSprite.setScale(220.f / static_cast<float>(size.x), 32.f / static_cast<float>(size.y));
+        }
+        m_enterNameTextSprite.setPosition(400.f, 230.f);
+    }
 
     m_enterNameText.setFont(m_font);
     m_enterNameText.setString("Enter Your Name:");
@@ -1139,18 +1344,18 @@ void GameState::setupGameOverUI() {
     m_enterNameText.setOrigin(eBounds.left + eBounds.width / 2.f, eBounds.top + eBounds.height / 2.f);
     m_enterNameText.setPosition(400.f, 230.f);
 
-    m_nameInput = std::make_unique<TextBox>(300.f, 260.f, 200.f, 40.f, m_font);
+    m_nameInput = std::make_unique<TextBox>(290.f, 270.f, 220.f, 40.f, m_font);
     m_nameInput->setActive(true);
 
     auto showScoreBoard = [this](const std::string& name) {
         m_goState = GameOverUIState::ShowScore;
         
-        m_scoreBoard.setSize(sf::Vector2f(400.f, 250.f));
-        m_scoreBoard.setFillColor(sf::Color(0, 80, 180, 220)); // Xanh dương trong suốt
+        m_scoreBoard.setSize(sf::Vector2f(440.f, 340.f));
+        m_scoreBoard.setFillColor(sf::Color(0, 80, 180, 220));
         m_scoreBoard.setOutlineColor(sf::Color::White);
         m_scoreBoard.setOutlineThickness(3.f);
-        m_scoreBoard.setOrigin(200.f, 125.f);
-        m_scoreBoard.setPosition(400.f, 300.f);
+        m_scoreBoard.setOrigin(220.f, 170.f);
+        m_scoreBoard.setPosition(400.f, 290.f);
 
         auto scores = SaveManager::loadHighscores();
         m_finalRank = 1;
@@ -1159,21 +1364,72 @@ void GameState::setupGameOverUI() {
             m_finalRank++;
         }
 
+        if (m_texNameScoreRankTextLoaded) {
+            sf::Vector2u size = m_texNameScoreRankText.getSize();
+            if (size.x > 0 && size.y > 0) {
+                m_nameScoreRankTextSprite.setScale(150.f / static_cast<float>(size.x), 95.f / static_cast<float>(size.y));
+            }
+            m_nameScoreRankTextSprite.setPosition(240.f, 198.f);
+        }
+
+        m_showNameText.setFont(m_font);
+        m_showNameText.setString(name);
+        m_showNameText.setCharacterSize(22);
+        m_showNameText.setFillColor(sf::Color::White);
+        m_showNameText.setPosition(405.f, 200.f);
+
+        m_showScoreText.setFont(m_font);
+        m_showScoreText.setString(std::to_string(m_score));
+        m_showScoreText.setCharacterSize(22);
+        m_showScoreText.setFillColor(sf::Color(100, 255, 100));
+        m_showScoreText.setPosition(405.f, 232.f);
+
+        if (m_finalRank <= 3 && m_medalsLoaded) {
+            if (m_finalRank == 1) m_medalSprite.setTexture(m_goldMedalTex);
+            else if (m_finalRank == 2) m_medalSprite.setTexture(m_silverMedalTex);
+            else if (m_finalRank == 3) m_medalSprite.setTexture(m_bronzeMedalTex);
+
+            sf::Vector2u mSize = m_medalSprite.getTexture()->getSize();
+            if (mSize.x > 0 && mSize.y > 0) {
+                m_medalSprite.setScale(28.f / static_cast<float>(mSize.x), 28.f / static_cast<float>(mSize.y));
+            }
+            m_medalSprite.setPosition(405.f, 264.f);
+        } else {
+            m_showRankText.setFont(m_font);
+            m_showRankText.setString("#" + std::to_string(m_finalRank));
+            m_showRankText.setCharacterSize(22);
+            m_showRankText.setFillColor(sf::Color(255, 215, 0));
+            m_showRankText.setPosition(405.f, 264.f);
+        }
+
         m_rankText.setFont(m_font);
         m_rankText.setString("Name: " + name + "\nScore: " + std::to_string(m_score) + "\nRank: #" + std::to_string(m_finalRank));
         m_rankText.setCharacterSize(24);
         m_rankText.setFillColor(sf::Color(255, 215, 0));
         sf::FloatRect rBounds = m_rankText.getLocalBounds();
         m_rankText.setOrigin(rBounds.left + rBounds.width / 2.f, rBounds.top + rBounds.height / 2.f);
-        m_rankText.setPosition(400.f, 260.f);
+        m_rankText.setPosition(400.f, 230.f);
 
-        m_playAgainBtn = std::make_unique<Button>(230.f, 340.f, 140.f, 45.f, "Play Again", m_font, [this]() {
-            m_deferredAction = DeferredAction::Restart;
-        });
+        // Nút PLAY AGAIN (180x44) & MAIN MENU (160x44) giúp tỷ lệ chữ đồng nhất
+        if (m_texPlayAgainLoaded) {
+            m_playAgainBtn = std::make_unique<Button>(310.f, 318.f, 180.f, 44.f, m_texPlayAgain, [this]() {
+                m_deferredAction = DeferredAction::Restart;
+            });
+        } else {
+            m_playAgainBtn = std::make_unique<Button>(310.f, 318.f, 180.f, 44.f, "Play Again", m_font, [this]() {
+                m_deferredAction = DeferredAction::Restart;
+            });
+        }
 
-        m_menuBtn = std::make_unique<Button>(430.f, 340.f, 140.f, 45.f, "Main Menu", m_font, [this]() {
-            m_deferredAction = DeferredAction::Quit;
-        });
+        if (m_texHomeLoaded) {
+            m_menuBtn = std::make_unique<Button>(310.f, 374.f, 180.f, 44.f, m_texHome, [this]() {
+                m_deferredAction = DeferredAction::Quit;
+            });
+        } else {
+            m_menuBtn = std::make_unique<Button>(310.f, 374.f, 180.f, 44.f, "Main Menu", m_font, [this]() {
+                m_deferredAction = DeferredAction::Quit;
+            });
+        }
     };
 
     m_submitNameFunc = [this, showScoreBoard]() {
@@ -1184,22 +1440,52 @@ void GameState::setupGameOverUI() {
         if (SaveManager::hasHighscore(name, existingScore)) {
             m_goState = GameOverUIState::ConfirmIdentity;
             
+            if (m_texNameExistsTextLoaded) {
+                sf::Vector2u size = m_texNameExistsText.getSize();
+                if (size.x > 0 && size.y > 0) {
+                    m_nameExistsTextSprite.setScale(340.f / static_cast<float>(size.x), 55.f / static_cast<float>(size.y));
+                }
+                m_nameExistsTextSprite.setPosition(400.f, 245.f);
+            }
+
+            m_confirmBestScoreText.setFont(m_font);
+            m_confirmBestScoreText.setString(std::to_string(existingScore));
+            m_confirmBestScoreText.setCharacterSize(18);
+            m_confirmBestScoreText.setFillColor(sf::Color(255, 215, 0));
+            m_confirmBestScoreText.setStyle(sf::Text::Bold);
+            sf::FloatRect bScoreBounds = m_confirmBestScoreText.getLocalBounds();
+            m_confirmBestScoreText.setOrigin(bScoreBounds.width / 2.f, bScoreBounds.top + bScoreBounds.height / 2.f);
+            m_confirmBestScoreText.setPosition(485.f, 259.f);
+
             m_confirmText.setFont(m_font);
             m_confirmText.setString("Name exists! Is this you?\n(Current best: " + std::to_string(existingScore) + ")");
             m_confirmText.setCharacterSize(20);
             m_confirmText.setFillColor(sf::Color::Yellow);
             sf::FloatRect cBounds = m_confirmText.getLocalBounds();
             m_confirmText.setOrigin(cBounds.left + cBounds.width / 2.f, cBounds.top + cBounds.height / 2.f);
-            m_confirmText.setPosition(400.f, 260.f);
+            m_confirmText.setPosition(400.f, 245.f);
             
-            m_btnYes = std::make_unique<Button>(280.f, 320.f, 100.f, 45.f, "Yes", m_font, [this, name, showScoreBoard]() {
+            auto onYes = [this, name, showScoreBoard]() {
                 SaveManager::updateHighscore(name, m_score);
                 m_scoreSaved = true;
                 showScoreBoard(name);
-            });
-            m_btnNo = std::make_unique<Button>(420.f, 320.f, 100.f, 45.f, "No", m_font, [this]() {
+            };
+            auto onNo = [this]() {
                 m_goState = GameOverUIState::EnterName;
-            });
+            };
+
+            // Nút YES và NO cùng kích thước và căn giữa
+            if (m_texYesLoaded) {
+                m_btnYes = std::make_unique<Button>(270.f, 330.f, 120.f, 45.f, m_texYes, onYes);
+            } else {
+                m_btnYes = std::make_unique<Button>(270.f, 330.f, 120.f, 45.f, "Yes", m_font, onYes);
+            }
+
+            if (m_texNoLoaded) {
+                m_btnNo = std::make_unique<Button>(410.f, 330.f, 120.f, 45.f, m_texNo, onNo);
+            } else {
+                m_btnNo = std::make_unique<Button>(410.f, 330.f, 120.f, 45.f, "No", m_font, onNo);
+            }
         } else {
             SaveManager::addHighscore(name, m_score);
             m_scoreSaved = true;
@@ -1207,9 +1493,15 @@ void GameState::setupGameOverUI() {
         }
     };
 
-    m_btnOk = std::make_unique<Button>(350.f, 320.f, 100.f, 40.f, "OK", m_font, [this]() {
+    auto onSubmit = [this]() {
         if (m_submitNameFunc) m_submitNameFunc();
-    });
+    };
+
+    if (m_texConfirmLoaded) {
+        m_btnOk = std::make_unique<Button>(340.f, 340.f, 120.f, 40.f, m_texConfirm, onSubmit);
+    } else {
+        m_btnOk = std::make_unique<Button>(340.f, 340.f, 120.f, 40.f, "OK", m_font, onSubmit);
+    }
 }
 
 // ============================================================
@@ -1233,7 +1525,6 @@ void GameState::loadGame(const std::string& sessionName, const SaveData& data) {
     m_maxPlayerY = data.maxPlayerY;
     
     m_isLoadedGame = true;
-    m_currentSaveSession = sessionName;
     
     initHUD();
 }
@@ -1256,7 +1547,7 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
 
     // Khôi phục items
     for (const auto& sItem : savedRow.items) {
-        Item item;
+        ItemData item;
         item.shape.setRadius(8.f);
         item.shape.setFillColor(sf::Color::Yellow);
         item.shape.setPosition(sItem.x, sItem.y);
@@ -1275,17 +1566,17 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     }
     
 
-    // Khôi phục lilypads
+    // Khôi phục khúc gỗ
     for (const auto& sPad : savedRow.lilyPads) {
-        LilyPad pad;
-        pad.shape.setSize(sf::Vector2f(sPad.width, sPad.height));
-        pad.shape.setPosition(sPad.x, sPad.y);
-        pad.shape.setFillColor(sf::Color(sPad.r, sPad.g, sPad.b));
-        pad.shape.setOutlineColor(sf::Color(0, 100, 0));
-        pad.shape.setOutlineThickness(1.f);
-        pad.speed = sPad.speed;
-        pad.movingRight = sPad.movingRight;
-        row.lilyPads.push_back(pad);
+        Log log;
+        log.shape.setSize(sf::Vector2f(sPad.width, sPad.height));
+        log.shape.setPosition(sPad.x, sPad.y);
+        log.shape.setFillColor(sf::Color(sPad.r, sPad.g, sPad.b));
+        log.shape.setOutlineColor(sf::Color(80, 50, 20));
+        log.shape.setOutlineThickness(1.f);
+        log.speed = sPad.speed;
+        log.movingRight = sPad.movingRight;
+        row.logs.push_back(log);
     }
 
     m_terrains.push_back(std::move(row));

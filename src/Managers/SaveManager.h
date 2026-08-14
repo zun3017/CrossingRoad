@@ -36,11 +36,8 @@ struct SavedTerrainRow {
 // Dữ liệu lưu trữ game
 struct SaveData {
     std::string playerName = "Player";   // Tên người chơi
-    int characterType = 0;                // Loại nhân vật (0, 1, 2, ...)
     int score = 0;                        // Điểm số
     int level = 1;                        // Cấp độ hiện tại
-    int gameMode = 0;                     // Chế độ chơi: 0=Classic, 1=Endless
-    
     float playerX = 400.f;
     float playerY = 500.f;
     float maxPlayerY = 500.f;
@@ -79,6 +76,9 @@ public:
 
     // Lưu game vào file assets/data/<filename>.sav
     static bool saveGame(const std::string& filename, const SaveData& data);
+
+    // Lấy tên file duy nhất nếu trùng (thêm (1), (2)...)
+    static std::string getUniqueSaveFileName(const std::string& baseName);
 
     // Đọc game từ file assets/data/<filename>.sav
     static bool loadGame(const std::string& filename, SaveData& data);

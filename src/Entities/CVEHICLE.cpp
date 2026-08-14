@@ -1,4 +1,5 @@
 #include "CVEHICLE.h"
+#include <cmath>
 
 CVEHICLE::CVEHICLE(float x, float y, float speed, int direction)
     : m_speed(speed)
@@ -9,11 +10,9 @@ CVEHICLE::CVEHICLE(float x, float y, float speed, int direction)
 }
 
 void CVEHICLE::update(float dt) {
-    // Nếu đang dừng (đèn đỏ) thì không di chuyển
     if (m_stopped) return;
-
     Move(dt);
-    updateAnimation(dt);
+    // (updateAnimation đã xóa - xe dùng ảnh đơn, không có spritesheet animation)
 }
 
 void CVEHICLE::Move(float dt) {
@@ -23,13 +22,21 @@ void CVEHICLE::Move(float dt) {
     setPosition(pos);
 }
 
-void CVEHICLE::updateAnimation(float dt) {
-    // Không làm gì cả vì xe cộ trong game này là ảnh đơn (không phải spritesheet)
-    // Việc lật ảnh đã được xử lý trong constructor của CCAR và CTRUCK.
-}
 
 sf::FloatRect CVEHICLE::getBounds() const {
     sf::Vector2f pos = getPosition();
+    if (!m_usesFallback && m_sprite.getTexture() != nullptr) {
+        // Dùng bounds thực của sprite (đã tính scale và origin)
+        sf::FloatRect spriteBounds = m_sprite.getGlobalBounds();
+        // Tính lại theo vị trí transform của entity (vì sprite dùng origin để flip)
+        return sf::FloatRect(
+            pos.x,
+            pos.y,
+            std::abs(spriteBounds.width),
+            std::abs(spriteBounds.height)
+        );
+    }
+    // Dùng fallback shape khi không có texture
     sf::Vector2f size = m_fallbackShape.getSize();
     return sf::FloatRect(pos.x, pos.y, size.x, size.y);
 }

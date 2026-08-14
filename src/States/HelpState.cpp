@@ -1,86 +1,116 @@
 #include "HelpState.h"
 #include "../Core/Game.h"
 #include <memory>
-
-// ============================================================
-// HelpState - Màn hình hướng dẫn chơi game
-// ============================================================
+#include <vector>
 
 void HelpState::init() {
-    m_fontLoaded = m_font.loadFromFile("assets/fonts/arial.ttf");
+    const std::vector<std::string> fontCandidates = {
+        "assets/fonts/arial.ttf",
+        "assets/fonts/consola.ttf",
+        "assets/fonts/PressStart2P-Regular.ttf",
+        "C:/Windows/Fonts/consola.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/cour.ttf",
+        "C:/Windows/Fonts/Consolas.ttf"
+    };
 
-    // Nền tối
-    m_background.setSize(sf::Vector2f(800.f, 600.f));
-    m_background.setFillColor(sf::Color(25, 30, 45));
+    for (const auto& path : fontCandidates) {
+        if (m_font.loadFromFile(path)) {
+            m_fontLoaded = true;
+            break;
+        }
+    }
 
-    // Tiêu đề
-    m_titleText.setFont(m_font);
-    m_titleText.setString("HOW TO PLAY");
-    m_titleText.setCharacterSize(42);
-    m_titleText.setFillColor(sf::Color(100, 200, 255));
-    m_titleText.setStyle(sf::Text::Bold);
-    sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-    m_titleText.setOrigin(titleBounds.left + titleBounds.width / 2.f,
-                          titleBounds.top + titleBounds.height / 2.f);
-    m_titleText.setPosition(400.f, 50.f);
+    // Load menu.png background
+    m_bgLoaded = m_bgTexture.loadFromFile("assets/textures/menu.png");
+    if (m_bgLoaded) {
+        m_bgSprite.setTexture(m_bgTexture);
+        sf::Vector2u size = m_bgTexture.getSize();
+        if (size.x > 0 && size.y > 0) {
+            m_bgSprite.setScale(
+                800.f / static_cast<float>(size.x),
+                600.f / static_cast<float>(size.y));
+        }
+    } else {
+        m_background.setSize(sf::Vector2f(800.f, 600.f));
+        m_background.setFillColor(sf::Color(124, 179, 66));
+    }
 
-    // Nội dung hướng dẫn
-    std::string helpContent =
-        "  CONTROLS:\n"
-        "    Player 1:  W / A / S / D  to move\n"
-        "    Player 2:  Arrow Keys  to move\n"
-        "\n"
-        "  GAMEPLAY:\n"
-        "    - Avoid vehicles on the roads!\n"
-        "      Getting hit means GAME OVER.\n"
-        "    - Use lilypads to cross rivers.\n"
-        "      Falling into water means GAME OVER.\n"
-        "    - Collect gold items for bonus points.\n"
-        "    - Reach the top of the screen to advance to the next level.\n"
-        "\n"
-        "  OTHER KEYS:\n"
-        "    P / Escape  -  Pause the game\n"
-        "    S           -  Save your progress\n"
-        "    R           -  Restart (when game over)\n"
-        "    Q           -  Quit to menu";
+    // Main window container (Sky Blue)
+    m_mainContainer.setSize(sf::Vector2f(720.f, 540.f));
+    m_mainContainer.setOrigin(360.f, 270.f);
+    m_mainContainer.setPosition(400.f, 300.f);
+    m_mainContainer.setFillColor(sf::Color(74, 144, 226, 242)); // #4a90e2 with 95% opacity
 
-    m_contentText.setFont(m_font);
-    m_contentText.setString(helpContent);
-    m_contentText.setCharacterSize(16);
-    m_contentText.setFillColor(sf::Color(220, 220, 220));
-    m_contentText.setLineSpacing(1.1f);
-    m_contentText.setPosition(100.f, 105.f);
+    m_containerBorder.setSize(sf::Vector2f(720.f, 540.f));
+    m_containerBorder.setOrigin(360.f, 270.f);
+    m_containerBorder.setPosition(400.f, 300.f);
+    m_containerBorder.setFillColor(sf::Color::Transparent);
+    m_containerBorder.setOutlineColor(sf::Color::Black);
+    m_containerBorder.setOutlineThickness(4.f);
 
-    // Nút BACK
-    float backW = 160.f, backH = 45.f;
-    m_backBtnBg.setSize(sf::Vector2f(backW, backH));
-    m_backBtnBg.setOrigin(backW / 2.f, backH / 2.f);
-    m_backBtnBg.setPosition(400.f, 550.f);
-    m_backBtnBg.setFillColor(sf::Color(80, 80, 100));
-    m_backBtnBg.setOutlineColor(sf::Color(120, 120, 160));
-    m_backBtnBg.setOutlineThickness(2.f);
+    // Top ribbon
+    m_topRibbon.setSize(sf::Vector2f(720.f, 8.f));
+    m_topRibbon.setPosition(40.f, 30.f);
+    m_topRibbon.setFillColor(sf::Color(255, 255, 255, 60));
 
-    m_backBtnText.setFont(m_font);
-    m_backBtnText.setString("BACK");
-    m_backBtnText.setCharacterSize(22);
-    m_backBtnText.setFillColor(sf::Color::White);
-    sf::FloatRect backBounds = m_backBtnText.getLocalBounds();
-    m_backBtnText.setOrigin(backBounds.left + backBounds.width / 2.f,
-                             backBounds.top + backBounds.height / 2.f);
-    m_backBtnText.setPosition(400.f, 550.f);
+    if (m_fontLoaded) {
+        // Title: HOW TO PLAY
+        m_titleShadow.setFont(m_font);
+        m_titleShadow.setString("HOW TO PLAY");
+        m_titleShadow.setCharacterSize(36);
+        m_titleShadow.setFillColor(sf::Color::Black);
+        m_titleShadow.setStyle(sf::Text::Bold);
+        sf::FloatRect tb = m_titleShadow.getLocalBounds();
+        m_titleShadow.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_titleShadow.setPosition(403.f, 61.f);
+
+        m_titleText.setFont(m_font);
+        m_titleText.setString("HOW TO PLAY");
+        m_titleText.setCharacterSize(36);
+        m_titleText.setFillColor(sf::Color(253, 216, 53)); // #fdd835 yellow
+        m_titleText.setStyle(sf::Text::Bold);
+        m_titleText.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_titleText.setPosition(400.f, 58.f);
+
+        // Accent Bar
+        m_accentBar.setSize(sf::Vector2f(440.f, 6.f));
+        m_accentBar.setOrigin(220.f, 0.f);
+        m_accentBar.setPosition(400.f, 88.f);
+        m_accentBar.setFillColor(sf::Color(253, 216, 53));
+
+        m_accentBarBorder.setSize(sf::Vector2f(440.f, 3.f));
+        m_accentBarBorder.setOrigin(220.f, 0.f);
+        m_accentBarBorder.setPosition(400.f, 94.f);
+        m_accentBarBorder.setFillColor(sf::Color::Black);
+
+        // Content Box Container
+        m_contentBox.setSize(sf::Vector2f(660.f, 365.f));
+        m_contentBox.setPosition(70.f, 110.f);
+        m_contentBox.setFillColor(sf::Color(0, 0, 0, 180));
+        m_contentBox.setOutlineColor(sf::Color::Black);
+        m_contentBox.setOutlineThickness(3.f);
+    }
+
+    // Back Button (Wooden pixel style)
+    bool backLoaded = m_backTexture.loadFromFile("assets/textures/back_text.png");
+    if (backLoaded) {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, m_backTexture, []() {
+            Game::instance().getStateMachine().popState();
+        });
+    } else {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, "< BACK", m_font, []() {
+            Game::instance().getStateMachine().popState();
+        });
+        m_backBtn->setNormalColor(sf::Color(141, 110, 99)); // #8d6e63
+        m_backBtn->setHoverColor(sf::Color(161, 136, 127));  // #a1887f
+        m_backBtn->setClickColor(sf::Color(93, 64, 55));     // #5d4037
+        m_backBtn->setTextColor(sf::Color(253, 216, 53));
+    }
 }
 
 void HelpState::handleInput(sf::RenderWindow& window, sf::Event& event) {
-    if (event.type == sf::Event::MouseButtonPressed &&
-        event.mouseButton.button == sf::Mouse::Left)
-    {
-        sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x),
-                              static_cast<float>(event.mouseButton.y));
-
-        if (m_backBtnBg.getGlobalBounds().contains(mousePos)) {
-            Game::instance().getStateMachine().popState();
-        }
-    }
+    if (m_backBtn) m_backBtn->handleEvent(event, window);
 
     if (event.type == sf::Event::KeyPressed &&
         event.key.code == sf::Keyboard::Escape)
@@ -90,92 +120,164 @@ void HelpState::handleInput(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void HelpState::update(float dt) {
-    sf::Vector2i mousePixel = sf::Mouse::getPosition(Game::instance().getWindow());
-    sf::Vector2f mousePos(static_cast<float>(mousePixel.x),
-                          static_cast<float>(mousePixel.y));
-
-    m_backHovered = m_backBtnBg.getGlobalBounds().contains(mousePos);
-    m_backBtnBg.setFillColor(m_backHovered
-        ? sf::Color(120, 120, 180)
-        : sf::Color(80, 80, 100));
+    if (m_backBtn) m_backBtn->update(dt);
 }
 
 void HelpState::draw(sf::RenderWindow& window) {
-    window.draw(m_background);
+    if (m_bgLoaded) {
+        window.draw(m_bgSprite);
+    } else {
+        window.draw(m_background);
+    }
+
+    // Main window container
+    window.draw(m_mainContainer);
+    window.draw(m_topRibbon);
+    window.draw(m_containerBorder);
 
     if (!m_fontLoaded) return;
 
+    // Header
+    window.draw(m_titleShadow);
     window.draw(m_titleText);
+    window.draw(m_accentBar);
+    window.draw(m_accentBarBorder);
 
-    // Đường kẻ trang trí dưới tiêu đề
-    sf::RectangleShape divider(sf::Vector2f(400.f, 2.f));
-    divider.setPosition(200.f, 85.f);
-    divider.setFillColor(sf::Color(100, 200, 255, 80));
-    window.draw(divider);
+    // Content Box
+    window.draw(m_contentBox);
 
-    // Nền cho phần nội dung
-    sf::RectangleShape contentBg(sf::Vector2f(620.f, 430.f));
-    contentBg.setPosition(90.f, 95.f);
-    contentBg.setFillColor(sf::Color(35, 40, 55, 200));
-    contentBg.setOutlineColor(sf::Color(60, 70, 100));
-    contentBg.setOutlineThickness(1.f);
-    window.draw(contentBg);
+    // Helper lambda for section title
+    auto drawSectionHeader = [this, &window](const std::string& title, float y) {
+        sf::Text headerText;
+        headerText.setFont(m_font);
+        headerText.setString(title);
+        headerText.setCharacterSize(16);
+        headerText.setFillColor(sf::Color(253, 216, 53)); // #fdd835
+        headerText.setStyle(sf::Text::Bold);
+        headerText.setPosition(90.f, y);
+        window.draw(headerText);
+    };
 
-    window.draw(m_contentText);
+    // --- SECTION 1: CONTROLS ---
+    drawSectionHeader("CONTROLS", 124.f);
 
-    // Biểu tượng phím nhỏ trang trí
-    // Phím W
-    sf::RectangleShape keyIcon(sf::Vector2f(25.f, 25.f));
-    keyIcon.setFillColor(sf::Color(80, 80, 120));
-    keyIcon.setOutlineColor(sf::Color(140, 140, 180));
-    keyIcon.setOutlineThickness(1.f);
+    sf::Text ctrl1, ctrl2;
+    ctrl1.setFont(m_font);
+    ctrl1.setString("Moveset 1:   W / A / S / D   to move");
+    ctrl1.setCharacterSize(13);
+    ctrl1.setFillColor(sf::Color(230, 230, 230));
+    ctrl1.setPosition(90.f, 150.f);
+    window.draw(ctrl1);
 
-    // Vẽ minh họa phím WASD ở góc phải
-    float iconX = 610.f, iconY = 130.f;
-    // W
-    keyIcon.setPosition(iconX + 27.f, iconY);
-    window.draw(keyIcon);
-    sf::Text keyW;
-    keyW.setFont(m_font);
-    keyW.setString("W");
-    keyW.setCharacterSize(14);
-    keyW.setFillColor(sf::Color::White);
-    keyW.setPosition(iconX + 33.f, iconY + 3.f);
-    window.draw(keyW);
+    ctrl2.setFont(m_font);
+    ctrl2.setString("Moveset 2:   Arrow Keys   to move");
+    ctrl2.setCharacterSize(13);
+    ctrl2.setFillColor(sf::Color(230, 230, 230));
+    ctrl2.setPosition(90.f, 175.f);
+    window.draw(ctrl2);
 
-    // A
-    keyIcon.setPosition(iconX, iconY + 28.f);
-    window.draw(keyIcon);
-    sf::Text keyA;
-    keyA.setFont(m_font);
-    keyA.setString("A");
-    keyA.setCharacterSize(14);
-    keyA.setFillColor(sf::Color::White);
-    keyA.setPosition(iconX + 7.f, iconY + 31.f);
-    window.draw(keyA);
+    // Visual WASD Keys Box
+    sf::RectangleShape keyBox(sf::Vector2f(106.f, 64.f));
+    keyBox.setPosition(580.f, 130.f);
+    keyBox.setFillColor(sf::Color(0, 0, 0, 100));
+    keyBox.setOutlineColor(sf::Color::Black);
+    keyBox.setOutlineThickness(2.f);
+    window.draw(keyBox);
 
-    // S
-    keyIcon.setPosition(iconX + 27.f, iconY + 28.f);
-    window.draw(keyIcon);
-    sf::Text keyS;
-    keyS.setFont(m_font);
-    keyS.setString("S");
-    keyS.setCharacterSize(14);
-    keyS.setFillColor(sf::Color::White);
-    keyS.setPosition(iconX + 34.f, iconY + 31.f);
-    window.draw(keyS);
+    auto drawKeyBtn = [this, &window](const std::string& label, float x, float y) {
+        sf::RectangleShape key(sf::Vector2f(26.f, 26.f));
+        key.setPosition(x, y);
+        key.setFillColor(sf::Color(220, 220, 220));
+        key.setOutlineColor(sf::Color::Black);
+        key.setOutlineThickness(2.f);
+        window.draw(key);
 
-    // D
-    keyIcon.setPosition(iconX + 54.f, iconY + 28.f);
-    window.draw(keyIcon);
-    sf::Text keyD;
-    keyD.setFont(m_font);
-    keyD.setString("D");
-    keyD.setCharacterSize(14);
-    keyD.setFillColor(sf::Color::White);
-    keyD.setPosition(iconX + 61.f, iconY + 31.f);
-    window.draw(keyD);
+        sf::Text txt;
+        txt.setFont(m_font);
+        txt.setString(label);
+        txt.setCharacterSize(12);
+        txt.setFillColor(sf::Color::Black);
+        txt.setStyle(sf::Text::Bold);
+        sf::FloatRect kb = txt.getLocalBounds();
+        txt.setOrigin(kb.left + kb.width / 2.f, kb.top + kb.height / 2.f);
+        txt.setPosition(x + 13.f, y + 13.f);
+        window.draw(txt);
+    };
 
-    window.draw(m_backBtnBg);
-    window.draw(m_backBtnText);
+    drawKeyBtn("W", 620.f, 134.f);
+    drawKeyBtn("A", 590.f, 163.f);
+    drawKeyBtn("S", 620.f, 163.f);
+    drawKeyBtn("D", 650.f, 163.f);
+
+    // Section 1 Divider
+    sf::RectangleShape div1(sf::Vector2f(620.f, 2.f));
+    div1.setPosition(90.f, 204.f);
+    div1.setFillColor(sf::Color(80, 80, 80));
+    window.draw(div1);
+
+    // --- SECTION 2: GAMEPLAY ---
+    drawSectionHeader("GAMEPLAY", 212.f);
+
+    auto drawBullet = [this, &window](const std::string& mainTxt, const std::string& subTxt, sf::Color subColor, float y) {
+        sf::Text bulletText;
+        bulletText.setFont(m_font);
+        bulletText.setString("- " + mainTxt);
+        bulletText.setCharacterSize(13);
+        bulletText.setFillColor(sf::Color(230, 230, 230));
+        bulletText.setPosition(100.f, y);
+        window.draw(bulletText);
+
+        if (!subTxt.empty()) {
+            sf::Text noteText;
+            noteText.setFont(m_font);
+            noteText.setString(subTxt);
+            noteText.setCharacterSize(12);
+            noteText.setFillColor(subColor);
+            noteText.setStyle(sf::Text::Bold);
+            noteText.setPosition(120.f, y + 18.f);
+            window.draw(noteText);
+        }
+    };
+
+    drawBullet("Avoid vehicles on the roads!", "Getting hit means GAME OVER.", sf::Color(229, 57, 53), 236.f);
+    drawBullet("Use wood logs to cross rivers.", "Falling into water means GAME OVER.", sf::Color(229, 57, 53), 276.f);
+    drawBullet("Collect 'Superhero-figured' items for bonus points.", "", sf::Color(67, 160, 71), 316.f);
+    drawBullet("Reach the top of the screen to advance to next level.", "", sf::Color::White, 338.f);
+
+    // Section 2 Divider
+    sf::RectangleShape div2(sf::Vector2f(620.f, 2.f));
+    div2.setPosition(90.f, 362.f);
+    div2.setFillColor(sf::Color(80, 80, 80));
+    window.draw(div2);
+
+    // --- SECTION 3: OTHER KEYS ---
+    drawSectionHeader("OTHER KEYS", 370.f);
+
+    auto drawShortcut = [this, &window](const std::string& keyStr, const std::string& descStr, float x, float y) {
+        sf::Text kText;
+        kText.setFont(m_font);
+        kText.setString(keyStr);
+        kText.setCharacterSize(13);
+        kText.setFillColor(sf::Color(253, 216, 53)); // #fdd835
+        kText.setStyle(sf::Text::Bold);
+        kText.setPosition(x, y);
+        window.draw(kText);
+
+        sf::Text dText;
+        dText.setFont(m_font);
+        dText.setString("-  " + descStr);
+        dText.setCharacterSize(13);
+        dText.setFillColor(sf::Color(220, 220, 220));
+        dText.setPosition(x + 95.f, y);
+        window.draw(dText);
+    };
+
+    drawShortcut("P / Esc", "Pause the game", 100.f, 396.f);
+    drawShortcut("S", "Save your progress", 400.f, 396.f);
+    drawShortcut("R", "Restart (when game over)", 100.f, 422.f);
+    drawShortcut("Q", "Quit to menu", 400.f, 422.f);
+
+    // Back Button
+    if (m_backBtn) window.draw(*m_backBtn);
 }
+

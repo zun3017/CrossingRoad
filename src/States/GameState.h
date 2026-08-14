@@ -29,13 +29,13 @@ struct TrainData {
 
 // Removed Obstacle
 
-struct LilyPad {
+struct Log {
     sf::RectangleShape shape;
     float speed;
     bool movingRight;
 };
 
-struct Item {
+struct ItemData {
     sf::CircleShape shape;
     bool collected = false;
     int points = 10;
@@ -46,8 +46,8 @@ struct TerrainRow {
     float yPosition;
     sf::RectangleShape background;
     std::vector<std::unique_ptr<CVEHICLE>> vehicles;
-    std::vector<LilyPad> lilyPads;     // Lá sen trên sông
-    std::vector<Item> items;           // Vật phẩm thu thập
+    std::vector<Log> logs;              // Khúc gỗ trôi trên sông
+    std::vector<ItemData> items;           // Vật phẩm thu thập
     CTRAFFICLIGHT trafficLight;     // Đèn giao thông (cho đường ray)
     TrainData train;                   // Tàu hoả (cho đường ray)
 
@@ -56,7 +56,7 @@ struct TerrainRow {
     TerrainRow& operator=(TerrainRow&&) noexcept = default;
 };
 
-struct SaveData;
+// (SaveData được định nghĩa đầy đủ trong SaveManager.h đã include ở trên)
 
 class GameState : public State {
 public:
@@ -69,7 +69,7 @@ public:
     void draw(sf::RenderWindow& window) override;
     
     void loadGame(const std::string& sessionName, const SaveData& data);
-
+private:
     sf::Font m_font;
     bool m_fontLoaded = false;
     
@@ -79,14 +79,11 @@ public:
     // Flag for drowning
     bool m_playerDrowned = false;
 
-    sf::Sprite m_playerSprite;
+    // (m_playerSprite đã xóa - player được vẽ qua window.draw(*m_player) trong CPEOPLE::draw())
     sf::Sprite m_grassSprite;
     sf::Sprite m_roadSprite;
     sf::Sprite m_riverSprite;
     sf::Sprite m_logSprite;
-    sf::Sprite m_carBlueSprite;
-    sf::Sprite m_carRedSprite;
-    sf::Sprite m_carYellowSprite;
     sf::Sprite m_trackSprite;
     sf::Sprite m_trainSprite;
     sf::Sprite m_lightGreenSprite;
@@ -97,6 +94,9 @@ public:
     
     sf::Texture m_hitByCarTexture;
     bool m_hitByCarLoaded = false;
+    
+    sf::Texture m_playerDrownTexture;
+    bool m_playerDrownLoaded = false;
     
 
     // Player
@@ -124,6 +124,41 @@ public:
     // Game over overlay
     sf::RectangleShape m_gameOverOverlay;
     sf::Text m_gameOverText;
+    sf::Sprite m_gameOverSprite;
+    sf::Texture m_texGameOver;
+    sf::Texture m_texConfirm;
+    sf::Texture m_texYes;
+    sf::Texture m_texNo;
+    sf::Texture m_texPlayAgain;
+    sf::Texture m_texHome;
+    sf::Texture m_texLabel;
+    sf::Sprite m_labelSprite;
+    sf::Texture m_texEnterNameText;
+    sf::Sprite m_enterNameTextSprite;
+    sf::Texture m_texNameExistsText;
+    sf::Sprite m_nameExistsTextSprite;
+    sf::Texture m_texNameScoreRankText;
+    sf::Sprite m_nameScoreRankTextSprite;
+    sf::Texture m_goldMedalTex;
+    sf::Texture m_silverMedalTex;
+    sf::Texture m_bronzeMedalTex;
+    sf::Sprite m_medalSprite;
+    bool m_texGameOverLoaded = false;
+    bool m_texConfirmLoaded = false;
+    bool m_texYesLoaded = false;
+    bool m_texNoLoaded = false;
+    bool m_texPlayAgainLoaded = false;
+    bool m_texHomeLoaded = false;
+    bool m_texLabelLoaded = false;
+    bool m_texEnterNameTextLoaded = false;
+    bool m_texNameExistsTextLoaded = false;
+    bool m_texNameScoreRankTextLoaded = false;
+    bool m_medalsLoaded = false;
+    
+    sf::Text m_confirmBestScoreText;
+    sf::Text m_showNameText;
+    sf::Text m_showScoreText;
+    sf::Text m_showRankText;
     
     // UI Game Over
     enum class GameOverUIState { None, Delay, EnterName, ConfirmIdentity, ShowScore };
@@ -170,8 +205,17 @@ public:
     bool m_isLoadedGame = false;
     void saveCurrentGameState(const std::string& sessionName);
     
-    // Nút tạm
-    std::unique_ptr<Button> m_testBtn;
+    // HUD Buttons (Back, Pause/Continue, Save)
+    sf::Texture m_texHudBack;
+    sf::Texture m_texHudPause;
+    sf::Texture m_texHudContinue;
+    sf::Texture m_texHudSave;
+    bool m_texHudButtonsLoaded = false;
+
+    std::unique_ptr<Button> m_hudBtnBack;
+    std::unique_ptr<Button> m_hudBtnPause;
+    std::unique_ptr<Button> m_hudBtnSave;
+    void updatePauseButtonTexture();
 
     // Phương thức nội bộ
     void initPlayer();

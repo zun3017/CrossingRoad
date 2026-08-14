@@ -1,40 +1,27 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "LightStateEnum.h"
 
-enum class LightState { Green, Blinking, Red };
+// CTRAFFICLIGHT.h - Struct dữ liệu đèn tín hiệu cho hàng đường ray (Railway)
+// Có 3 trạng thái: Green -> Blinking -> Red (khi tàu đến)
+// Dùng trong struct TerrainRow của GameState
+//
+// LƯU Ý: Toàn bộ logic update (chuyển trạng thái, đếm giờ) được xử lý
+// trực tiếp trong GameState::updateRailway() — struct này chỉ là data container.
 
-class CTRAFFICLIGHT {
-public:
-    LightState state;
-    float timer;
-    float greenDuration;
-    float redDuration;
-    int frameIndex;
-    float animTimer;
+struct CTRAFFICLIGHT {
+    LightState state    = LightState::Green;
+    float timer         = 0.f;
+    float greenDuration = 3.f;
+    float redDuration   = 2.f;
+    int   frameIndex    = 0;
+    float animTimer     = 0.f;
+    // shape chỉ dùng cho fallback (không có texture)
     sf::RectangleShape shape;
 
-    CTRAFFICLIGHT() : state(LightState::Green), timer(0.f), greenDuration(3.f), redDuration(2.f), frameIndex(0), animTimer(0.f) {
+    CTRAFFICLIGHT() {
         shape.setSize(sf::Vector2f(12.f, 30.f));
         shape.setFillColor(sf::Color::Green);
     }
-
-    void update(float dt) {
-        animTimer += dt;
-        if (animTimer >= 0.15f) {
-            animTimer = 0.f;
-            frameIndex++;
-        }
-        
-        timer -= dt;
-        if (state == LightState::Red && timer <= 0.f) {
-            state = LightState::Green;
-        }
-
-        if (state == LightState::Green) {
-            shape.setFillColor(sf::Color::Green);
-        } else {
-            shape.setFillColor(sf::Color::Red);
-        }
-    }
+    // Không có hàm update() — GameState::updateRailway() xử lý toàn bộ logic
 };
-

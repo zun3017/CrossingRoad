@@ -35,8 +35,8 @@ protected:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
     sf::Sprite m_sprite;
-    sf::Texture m_texture;
     sf::Vector2f m_velocity;
+    std::string m_texturePath;  // Đường dẫn texture đã load (để reset/reload lại)
 
     // Hình dạng dự phòng khi không có texture
     sf::RectangleShape m_fallbackShape;
