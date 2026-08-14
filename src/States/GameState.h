@@ -235,6 +235,7 @@ private:
     
     float m_totalPlaytime = 0.f;
     std::string m_currentSaveSession = "";
+    std::string m_savedPlayerName = "";
     bool m_isLoadedGame = false;
     void saveCurrentGameState(const std::string& sessionName);
     

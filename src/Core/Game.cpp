@@ -302,3 +302,45 @@ void Game::playSound(const std::string& filename) {
 StateMachine& Game::getStateMachine() {
     return m_stateMachine;
 }
+
+// === Skin Quản Lý ===
+PlayerSkin Game::getPlayerSkin() const {
+    return m_playerSkin;
+}
+
+void Game::setPlayerSkin(PlayerSkin skin) {
+    m_playerSkin = skin;
+}
+
+std::string Game::getPlayerSkinPath() const {
+    switch (m_playerSkin) {
+    case PlayerSkin::Beach:
+        return "assets/textures/skins nv/player_beach.png";
+    case PlayerSkin::Mafia:
+        return "assets/textures/skins nv/player_mafia.png";
+    default:
+        return "assets/textures/skins nv/player.png";
+    }
+}
+
+std::string Game::getPlayerDrownPath() const {
+    switch (m_playerSkin) {
+    case PlayerSkin::Beach:
+        return "assets/textures/skins nv/player_beach_drown.png";
+    case PlayerSkin::Mafia:
+        return "assets/textures/skins nv/player_mafia_drown.png";
+    default:
+        return "assets/textures/skins nv/player_drown.png";
+    }
+}
+
+std::string Game::getPlayerHitPath() const {
+    switch (m_playerSkin) {
+    case PlayerSkin::Beach:
+        return "assets/textures/skins nv/player_beach_hit.png";
+    case PlayerSkin::Mafia:
+        return "assets/textures/skins nv/player_mafia_hit.png";
+    default:
+        return "assets/textures/skins nv/hitbycar.png";
+    }
+}

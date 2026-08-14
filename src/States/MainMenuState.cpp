@@ -131,6 +131,17 @@ void MainMenuState::init()
     }
 
     // ========================================================
+    // LOAD SKINS BUTTON & TEXT
+    // ========================================================
+    m_skinsButtonLoaded = m_skinsButtonTexture.loadFromFile("assets/textures/skins_button.png");
+    if (!m_skinsButtonLoaded) m_skinsButtonLoaded = m_skinsButtonTexture.loadFromFile("CrossingRoad/assets/textures/skins_button.png");
+
+    m_skinsTextLoaded = m_skinsTextTexture.loadFromFile("assets/textures/skins_text.png");
+    if (!m_skinsTextLoaded) m_skinsTextLoaded = m_skinsTextTexture.loadFromFile("CrossingRoad/assets/textures/skins_text.png");
+
+    initSkinSelectionUI();
+
+    // ========================================================
     // BACKGROUND
     // ========================================================
 
@@ -508,6 +519,215 @@ void MainMenuState::initButtons()
 
         m_buttons.push_back(button);
     }
+
+    // ========================================================
+    // SKINS BUTTON (Góc dưới bên trái màn hình)
+    // ========================================================
+    float skinsX = 20.f + BUTTON_SIZE / 2.f;
+    float skinsY = startY; // Ngang hàng tuyệt đối với các nút khác ở dưới
+
+    m_skinsButton.hitbox.setSize(sf::Vector2f(BUTTON_SIZE, BUTTON_SIZE));
+    m_skinsButton.hitbox.setOrigin(BUTTON_SIZE / 2.f, BUTTON_SIZE / 2.f);
+    m_skinsButton.hitbox.setPosition(skinsX, skinsY);
+    m_skinsButton.hitbox.setFillColor(sf::Color::Transparent);
+
+    m_skinsButton.basePosition = sf::Vector2f(skinsX, skinsY);
+    m_skinsButton.width = BUTTON_SIZE;
+    m_skinsButton.height = BUTTON_SIZE;
+    m_skinsButton.hovered = false;
+    m_skinsButton.pressed = false;
+    m_skinsButton.currentFrame = 0;
+
+    if (m_skinsButtonLoaded)
+    {
+        m_skinsButton.sprite.setTexture(m_skinsButtonTexture);
+        sf::Vector2u texSize = m_skinsButtonTexture.getSize();
+        if (texSize.x > 0 && texSize.y > 0)
+        {
+            int frameWidth = static_cast<int>(texSize.x / 3);
+            int frameHeight = static_cast<int>(texSize.y);
+            int squareSize = std::min(frameWidth, frameHeight);
+            int offsetX = (frameWidth - squareSize) / 2;
+            int offsetY = (frameHeight - squareSize) / 2;
+
+            m_skinsButton.sprite.setTextureRect(sf::IntRect(offsetX, offsetY, squareSize, squareSize));
+            m_skinsButton.sprite.setOrigin(squareSize / 2.f, squareSize / 2.f);
+            float scale = BUTTON_SIZE / static_cast<float>(squareSize);
+            m_skinsButton.sprite.setScale(scale, scale);
+            m_skinsButton.sprite.setPosition(skinsX, skinsY);
+        }
+    }
+
+    if (m_skinsTextLoaded)
+    {
+        m_skinsTextSprite.setTexture(m_skinsTextTexture);
+        sf::Vector2u textTexSize = m_skinsTextTexture.getSize();
+        if (textTexSize.x > 0 && textTexSize.y > 0)
+        {
+            float textScale = 25.f / static_cast<float>(textTexSize.y);
+            m_skinsTextSprite.setScale(textScale, textScale);
+            m_skinsTextSprite.setOrigin(
+                static_cast<float>(textTexSize.x) / 2.f,
+                static_cast<float>(textTexSize.y) / 2.f
+            );
+            m_skinsTextSprite.setPosition(skinsX, skinsY - BUTTON_SIZE / 2.f - 20.f);
+        }
+    }
+}
+
+// ============================================================
+// INIT SKIN SELECTION UI POPUP
+// ============================================================
+void MainMenuState::initSkinSelectionUI()
+{
+    m_skinPreviewLoaded[0] = m_skinPreviewTextures[0].loadFromFile("assets/textures/skins nv/player.png");
+    if (!m_skinPreviewLoaded[0]) m_skinPreviewLoaded[0] = m_skinPreviewTextures[0].loadFromFile("assets/textures/player.png");
+    if (!m_skinPreviewLoaded[0]) m_skinPreviewLoaded[0] = m_skinPreviewTextures[0].loadFromFile("CrossingRoad/assets/textures/skins nv/player.png");
+
+    m_skinPreviewLoaded[1] = m_skinPreviewTextures[1].loadFromFile("assets/textures/skins nv/player_beach.png");
+    if (!m_skinPreviewLoaded[1]) m_skinPreviewLoaded[1] = m_skinPreviewTextures[1].loadFromFile("CrossingRoad/assets/textures/skins nv/player_beach.png");
+
+    m_skinPreviewLoaded[2] = m_skinPreviewTextures[2].loadFromFile("assets/textures/skins nv/player_mafia.png");
+    if (!m_skinPreviewLoaded[2]) m_skinPreviewLoaded[2] = m_skinPreviewTextures[2].loadFromFile("CrossingRoad/assets/textures/skins nv/player_mafia.png");
+
+    m_selectTextLoaded = m_selectTextTexture.loadFromFile("assets/textures/select_text.png");
+    if (!m_selectTextLoaded) m_selectTextLoaded = m_selectTextTexture.loadFromFile("CrossingRoad/assets/textures/select_text.png");
+
+    m_selectedTextLoaded = m_selectedTextTexture.loadFromFile("assets/textures/selected_text.png");
+    if (!m_selectedTextLoaded) m_selectedTextLoaded = m_selectedTextTexture.loadFromFile("CrossingRoad/assets/textures/selected_text.png");
+
+    // Lớp phủ nền mờ
+    m_skinOverlayDim.setSize(sf::Vector2f(800.f, 600.f));
+    m_skinOverlayDim.setFillColor(sf::Color(0, 0, 0, 160));
+
+    // Khung lớn
+    m_skinOuterFrame.setSize(sf::Vector2f(660.f, 480.f));
+    m_skinOuterFrame.setOrigin(330.f, 240.f);
+    m_skinOuterFrame.setPosition(400.f, 300.f);
+    m_skinOuterFrame.setFillColor(sf::Color(18, 18, 35, 235));
+    m_skinOuterFrame.setOutlineColor(sf::Color(90, 90, 150, 220));
+    m_skinOuterFrame.setOutlineThickness(3.f);
+
+    // Khung nhỏ bên trong
+    m_skinInnerFrame.setSize(sf::Vector2f(380.f, 370.f));
+    m_skinInnerFrame.setOrigin(190.f, 185.f);
+    m_skinInnerFrame.setPosition(400.f, 315.f);
+    m_skinInnerFrame.setFillColor(sf::Color(30, 30, 52, 240));
+    m_skinInnerFrame.setOutlineColor(sf::Color(130, 130, 190, 220));
+    m_skinInnerFrame.setOutlineThickness(2.f);
+
+    // Tiêu đề & các nút chữ
+    if (m_fontLoaded)
+    {
+        m_skinTitleText.setFont(m_font);
+        m_skinTitleText.setString("SKIN SELECTION");
+        m_skinTitleText.setCharacterSize(28);
+        m_skinTitleText.setFillColor(sf::Color(255, 215, 0));
+        m_skinTitleText.setStyle(sf::Text::Bold);
+        sf::FloatRect tb = m_skinTitleText.getLocalBounds();
+        m_skinTitleText.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        m_skinTitleText.setPosition(400.f, 88.f);
+
+        m_skinCloseBtn.setFont(m_font);
+        m_skinCloseBtn.setString("X");
+        m_skinCloseBtn.setCharacterSize(26);
+        m_skinCloseBtn.setFillColor(sf::Color(200, 200, 200));
+        m_skinCloseBtn.setStyle(sf::Text::Bold);
+        sf::FloatRect cb = m_skinCloseBtn.getLocalBounds();
+        m_skinCloseBtn.setOrigin(cb.left + cb.width / 2.f, cb.top + cb.height / 2.f);
+        m_skinCloseBtn.setPosition(700.f, 88.f);
+
+        m_arrowLeftText.setFont(m_font);
+        m_arrowLeftText.setString("<");
+        m_arrowLeftText.setCharacterSize(52);
+        m_arrowLeftText.setFillColor(sf::Color(255, 215, 0));
+        m_arrowLeftText.setStyle(sf::Text::Bold);
+        sf::FloatRect ab1 = m_arrowLeftText.getLocalBounds();
+        m_arrowLeftText.setOrigin(ab1.left + ab1.width / 2.f, ab1.top + ab1.height / 2.f);
+        m_arrowLeftText.setPosition(250.f, 220.f);
+
+        m_arrowRightText.setFont(m_font);
+        m_arrowRightText.setString(">");
+        m_arrowRightText.setCharacterSize(52);
+        m_arrowRightText.setFillColor(sf::Color(255, 215, 0));
+        m_arrowRightText.setStyle(sf::Text::Bold);
+        sf::FloatRect ab2 = m_arrowRightText.getLocalBounds();
+        m_arrowRightText.setOrigin(ab2.left + ab2.width / 2.f, ab2.top + ab2.height / 2.f);
+        m_arrowRightText.setPosition(550.f, 220.f);
+
+        m_skinNameText.setFont(m_font);
+        m_skinNameText.setCharacterSize(24);
+        m_skinNameText.setFillColor(sf::Color::White);
+        m_skinNameText.setStyle(sf::Text::Bold);
+    }
+
+    updateSkinPreview();
+}
+
+// ============================================================
+// UPDATE SKIN PREVIEW
+// ============================================================
+void MainMenuState::updateSkinPreview()
+{
+    if (m_viewingSkinIndex < 0) m_viewingSkinIndex = 0;
+    if (m_viewingSkinIndex >= TOTAL_SKINS) m_viewingSkinIndex = TOTAL_SKINS - 1;
+
+    // 1. Ảnh Demo Skin
+    if (m_skinPreviewLoaded[m_viewingSkinIndex])
+    {
+        m_skinPreviewSprite.setTexture(m_skinPreviewTextures[m_viewingSkinIndex]);
+        sf::Vector2u texSize = m_skinPreviewTextures[m_viewingSkinIndex].getSize();
+        if (texSize.x > 0 && texSize.y > 0)
+        {
+            int frameW = static_cast<int>(texSize.x / 4);
+            int frameH = static_cast<int>(texSize.y / 4);
+            // Frame nhìn về phía trước (hàng 1, frame 0)
+            m_skinPreviewSprite.setTextureRect(sf::IntRect(0, frameH, frameW, frameH));
+            m_skinPreviewSprite.setOrigin(frameW / 2.f, frameH / 2.f);
+            float scale = 110.f / static_cast<float>(frameH);
+            m_skinPreviewSprite.setScale(scale, scale);
+            m_skinPreviewSprite.setPosition(400.f, 220.f);
+        }
+    }
+
+    // 2. Tên Skin
+    std::string skinNames[TOTAL_SKINS] = { "Default", "Beach", "Mafia" };
+    if (m_fontLoaded)
+    {
+        m_skinNameText.setString(skinNames[m_viewingSkinIndex]);
+        sf::FloatRect nb = m_skinNameText.getLocalBounds();
+        m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
+        m_skinNameText.setPosition(400.f, 315.f);
+    }
+
+    // 3. Nút SELECT / SELECTED (Tăng kích thước to rõ hơn)
+    bool isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+    if (isCurrent && m_selectedTextLoaded)
+    {
+        m_selectBtnSprite.setTexture(m_selectedTextTexture);
+        sf::Vector2u sSize = m_selectedTextTexture.getSize();
+        if (sSize.x > 0 && sSize.y > 0)
+        {
+            float btnScale = 65.f / static_cast<float>(sSize.y);
+            m_selectBtnSprite.setScale(btnScale, btnScale);
+            m_selectBtnSprite.setOrigin(sSize.x / 2.f, sSize.y / 2.f);
+            m_selectBtnSprite.setPosition(400.f, 405.f);
+            m_selectBtnSprite.setColor(sf::Color::White);
+        }
+    }
+    else if (!isCurrent && m_selectTextLoaded)
+    {
+        m_selectBtnSprite.setTexture(m_selectTextTexture);
+        sf::Vector2u sSize = m_selectTextTexture.getSize();
+        if (sSize.x > 0 && sSize.y > 0)
+        {
+            float btnScale = 65.f / static_cast<float>(sSize.y);
+            m_selectBtnSprite.setScale(btnScale, btnScale);
+            m_selectBtnSprite.setOrigin(sSize.x / 2.f, sSize.y / 2.f);
+            m_selectBtnSprite.setPosition(400.f, 405.f);
+            m_selectBtnSprite.setColor(sf::Color::White);
+        }
+    }
 }
 
 // ============================================================
@@ -633,50 +853,105 @@ void MainMenuState::handleInput(
     sf::RenderWindow &window,
     sf::Event &event)
 {
+    // 1. Phím ESC đóng bảng Skin
+    if (event.type == sf::Event::KeyPressed)
+    {
+        if (event.key.code == sf::Keyboard::Escape)
+        {
+            if (m_showSkinsUI)
+            {
+                m_showSkinsUI = false;
+                Game::instance().playSound("assets/audio/sfx_click.wav");
+                return;
+            }
+        }
+    }
+
+    // 2. Nếu bảng chọn Skin đang mở -> Chỉ nhận tương tác trong bảng Skin
+    if (m_showSkinsUI)
+    {
+        if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
+        {
+            sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+            sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
+
+            // Nút đóng X (ở góc trên phải bảng)
+            sf::FloatRect closeBounds(680.f, 70.f, 45.f, 45.f);
+            if (closeBounds.contains(mousePos))
+            {
+                m_showSkinsUI = false;
+                Game::instance().playSound("assets/audio/sfx_click.wav");
+                return;
+            }
+
+            // Mũi tên trái < (quay lại skin trước)
+            if (m_viewingSkinIndex > 0)
+            {
+                sf::FloatRect leftArrowBounds(220.f, 190.f, 60.f, 60.f);
+                if (leftArrowBounds.contains(mousePos))
+                {
+                    m_viewingSkinIndex--;
+                    Game::instance().playSound("assets/audio/sfx_click.wav");
+                    updateSkinPreview();
+                    return;
+                }
+            }
+
+            // Mũi tên phải > (chuyển sang skin kế tiếp)
+            if (m_viewingSkinIndex < TOTAL_SKINS - 1)
+            {
+                sf::FloatRect rightArrowBounds(520.f, 190.f, 60.f, 60.f);
+                if (rightArrowBounds.contains(mousePos))
+                {
+                    m_viewingSkinIndex++;
+                    Game::instance().playSound("assets/audio/sfx_click.wav");
+                    updateSkinPreview();
+                    return;
+                }
+            }
+
+            // Nút SELECT
+            bool isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+            if (!isCurrent)
+            {
+                if (m_selectBtnSprite.getGlobalBounds().contains(mousePos))
+                {
+                    Game::instance().setPlayerSkin(static_cast<PlayerSkin>(m_viewingSkinIndex));
+                    Game::instance().playSound("assets/audio/sfx_click.wav");
+                    updateSkinPreview();
+                    return;
+                }
+            }
+        }
+        return; // Chặn các nút menu phía sau
+    }
+
     // ========================================================
     // MOUSE PRESSED
     // ========================================================
-
-    if (event.type ==
-        sf::Event::MouseButtonPressed)
+    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
     {
-        if (event.mouseButton.button ==
-            sf::Mouse::Left)
+        sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
+
+        // Nút Skins
+        if (m_skinsButtonLoaded && m_skinsButton.hitbox.getGlobalBounds().contains(mousePos))
         {
-            sf::Vector2i mousePixel =
-                sf::Mouse::getPosition(window);
+            m_skinsButton.pressed = true;
+            setButtonFrame(m_skinsButton, 2);
+            m_skinsButton.sprite.setPosition(m_skinsButton.basePosition.x, m_skinsButton.basePosition.y - PRESSED_OFFSET);
+        }
 
-            sf::Vector2f mousePos =
-                window.mapPixelToCoords(
-                    mousePixel);
-
-            for (int i = 0;
-                 i < BUTTON_COUNT;
-                 ++i)
+        // 7 nút menu khác
+        for (int i = 0; i < BUTTON_COUNT; ++i)
+        {
+            if (!m_buttonLoaded[i]) continue;
+            if (m_buttons[i].hitbox.getGlobalBounds().contains(mousePos))
             {
-                if (!m_buttonLoaded[i])
-                    continue;
-
-                if (m_buttons[i]
-                        .hitbox
-                        .getGlobalBounds()
-                        .contains(mousePos))
-                {
-                    m_buttons[i].pressed = true;
-
-                    // Frame PRESSED
-                    setButtonFrame(
-                        m_buttons[i],
-                        2);
-
-                    // Di chuyển lên một chút
-                    m_buttons[i].sprite.setPosition(
-                        m_buttons[i].basePosition.x,
-                        m_buttons[i].basePosition.y -
-                            PRESSED_OFFSET);
-
-                    break;
-                }
+                m_buttons[i].pressed = true;
+                setButtonFrame(m_buttons[i], 2);
+                m_buttons[i].sprite.setPosition(m_buttons[i].basePosition.x, m_buttons[i].basePosition.y - PRESSED_OFFSET);
+                break;
             }
         }
     }
@@ -684,42 +959,41 @@ void MainMenuState::handleInput(
     // ========================================================
     // MOUSE RELEASED
     // ========================================================
-
-    if (event.type ==
-        sf::Event::MouseButtonReleased)
+    if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
     {
-        if (event.mouseButton.button ==
-            sf::Mouse::Left)
+        sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
+
+        // Nút Skins
+        if (m_skinsButtonLoaded)
         {
-            sf::Vector2i mousePixel =
-                sf::Mouse::getPosition(window);
-
-            sf::Vector2f mousePos =
-                window.mapPixelToCoords(
-                    mousePixel);
-
-            for (int i = 0;
-                 i < BUTTON_COUNT;
-                 ++i)
+            bool inside = m_skinsButton.hitbox.getGlobalBounds().contains(mousePos);
+            if (m_skinsButton.pressed)
             {
-                if (!m_buttonLoaded[i])
-                    continue;
-
-                bool inside =
-                    m_buttons[i]
-                        .hitbox
-                        .getGlobalBounds()
-                        .contains(mousePos);
-
-                if (m_buttons[i].pressed)
+                m_skinsButton.pressed = false;
+                if (inside)
                 {
-                    m_buttons[i].pressed = false;
+                    Game::instance().playSound("assets/audio/sfx_click.wav");
+                    m_viewingSkinIndex = static_cast<int>(Game::instance().getPlayerSkin());
+                    updateSkinPreview();
+                    m_showSkinsUI = true;
+                    return;
+                }
+            }
+        }
 
-                    if (inside)
-                    {
-                        Game::instance().playSound("assets/audio/sfx_click.wav");
-                        onButtonClick(i);
-                    }
+        // 7 nút menu khác
+        for (int i = 0; i < BUTTON_COUNT; ++i)
+        {
+            if (!m_buttonLoaded[i]) continue;
+            bool inside = m_buttons[i].hitbox.getGlobalBounds().contains(mousePos);
+            if (m_buttons[i].pressed)
+            {
+                m_buttons[i].pressed = false;
+                if (inside)
+                {
+                    Game::instance().playSound("assets/audio/sfx_click.wav");
+                    onButtonClick(i);
                 }
             }
         }
@@ -841,6 +1115,79 @@ void MainMenuState::updateButtonHover()
     sf::Vector2f mousePos =
         window.mapPixelToCoords(
             mousePixel);
+
+    if (m_showSkinsUI)
+    {
+        // 1. Hover Close Button X
+        sf::FloatRect closeBounds(680.f, 70.f, 45.f, 45.f);
+        bool closeOver = closeBounds.contains(mousePos);
+        if (closeOver && !m_skinCloseHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
+        m_skinCloseHovered = closeOver;
+        m_skinCloseBtn.setFillColor(m_skinCloseHovered ? sf::Color::Red : sf::Color(200, 200, 200));
+
+        // 2. Hover Arrow Left <
+        if (m_viewingSkinIndex > 0)
+        {
+            sf::FloatRect leftArrowBounds(220.f, 190.f, 60.f, 60.f);
+            bool leftOver = leftArrowBounds.contains(mousePos);
+            if (leftOver && !m_arrowLeftHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
+            m_arrowLeftHovered = leftOver;
+            m_arrowLeftText.setFillColor(m_arrowLeftHovered ? sf::Color::White : sf::Color(255, 215, 0));
+        }
+
+        // 3. Hover Arrow Right >
+        if (m_viewingSkinIndex < TOTAL_SKINS - 1)
+        {
+            sf::FloatRect rightArrowBounds(520.f, 190.f, 60.f, 60.f);
+            bool rightOver = rightArrowBounds.contains(mousePos);
+            if (rightOver && !m_arrowRightHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
+            m_arrowRightHovered = rightOver;
+            m_arrowRightText.setFillColor(m_arrowRightHovered ? sf::Color::White : sf::Color(255, 215, 0));
+        }
+
+        // 4. Hover Select Button
+        bool isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+        if (!isCurrent)
+        {
+            bool selectOver = m_selectBtnSprite.getGlobalBounds().contains(mousePos);
+            if (selectOver && !m_selectBtnHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
+            m_selectBtnHovered = selectOver;
+            m_selectBtnSprite.setColor(m_selectBtnHovered ? sf::Color(230, 230, 255) : sf::Color::White);
+            m_selectBtnSprite.setPosition(400.f, m_selectBtnHovered ? 402.f : 405.f);
+        }
+        return;
+    }
+
+    // ========================================================
+    // Cập nhật Hover cho Skins Button (Góc dưới trái)
+    // ========================================================
+    if (m_skinsButtonLoaded)
+    {
+        bool mouseOver = m_skinsButton.hitbox.getGlobalBounds().contains(mousePos);
+        bool wasHovered = m_skinsButton.hovered;
+        m_skinsButton.hovered = mouseOver;
+
+        if (m_skinsButton.hovered && !wasHovered)
+        {
+            Game::instance().playSound("assets/audio/sfx_hovering.wav");
+        }
+
+        if (m_skinsButton.pressed)
+        {
+            setButtonFrame(m_skinsButton, 2);
+            m_skinsButton.sprite.setPosition(m_skinsButton.basePosition.x, m_skinsButton.basePosition.y - PRESSED_OFFSET);
+        }
+        else if (m_skinsButton.hovered)
+        {
+            setButtonFrame(m_skinsButton, 1);
+            m_skinsButton.sprite.setPosition(m_skinsButton.basePosition.x, m_skinsButton.basePosition.y - HOVER_OFFSET);
+        }
+        else
+        {
+            setButtonFrame(m_skinsButton, 0);
+            m_skinsButton.sprite.setPosition(m_skinsButton.basePosition);
+        }
+    }
 
     // ========================================================
     // Duyệt 7 button
@@ -982,7 +1329,7 @@ void MainMenuState::draw(
     }
 
     // ========================================================
-    // BUTTONS
+    // 7 BUTTONS (Góc dưới bên phải)
     // ========================================================
 
     for (int i = 0;
@@ -999,6 +1346,54 @@ void MainMenuState::draw(
             {
                 window.draw(m_hoverTextSprites[i]);
             }
+        }
+    }
+
+    // ========================================================
+    // SKINS BUTTON (Góc dưới bên trái)
+    // ========================================================
+    if (m_skinsButtonLoaded)
+    {
+        window.draw(m_skinsButton.sprite);
+        if (m_skinsButton.hovered && m_skinsTextLoaded)
+        {
+            window.draw(m_skinsTextSprite);
+        }
+    }
+
+    // ========================================================
+    // POPUP CHỌN SKIN (Nếu đang bật)
+    // ========================================================
+    if (m_showSkinsUI)
+    {
+        window.draw(m_skinOverlayDim);
+        window.draw(m_skinOuterFrame);
+        window.draw(m_skinInnerFrame);
+
+        if (m_fontLoaded)
+        {
+            window.draw(m_skinTitleText);
+            window.draw(m_skinCloseBtn);
+            window.draw(m_skinNameText);
+
+            if (m_viewingSkinIndex > 0)
+            {
+                window.draw(m_arrowLeftText);
+            }
+            if (m_viewingSkinIndex < TOTAL_SKINS - 1)
+            {
+                window.draw(m_arrowRightText);
+            }
+        }
+
+        if (m_skinPreviewLoaded[m_viewingSkinIndex])
+        {
+            window.draw(m_skinPreviewSprite);
+        }
+
+        if (m_selectTextLoaded || m_selectedTextLoaded)
+        {
+            window.draw(m_selectBtnSprite);
         }
     }
 }

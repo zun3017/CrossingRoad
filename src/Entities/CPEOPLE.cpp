@@ -10,8 +10,9 @@ CPEOPLE::CPEOPLE()
 {
     setupFallback();
     
-    // Load hình ảnh
-    if (loadTexture("assets/textures/player.png")) {
+    // Load hình ảnh theo Skin đang chọn
+    std::string skinPath = Game::instance().getPlayerSkinPath();
+    if (loadTexture(skinPath) || loadTexture("assets/textures/player.png")) {
         m_texturesLoaded = true;
         // CPEOPLE scale
         auto texSize = m_sprite.getTexture()->getSize();
@@ -174,14 +175,13 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
         if (type == DeathType::HitByCar) {
             const sf::Texture* tex = deathTexture;
             static sf::Texture localHitTex;
-            static bool localHitLoaded = false;
-            if (!tex && !localHitLoaded) {
-                if (localHitTex.loadFromFile("assets/textures/hitbycar.png") ||
+            if (!tex) {
+                if (localHitTex.loadFromFile(Game::instance().getPlayerHitPath()) ||
+                    localHitTex.loadFromFile("assets/textures/hitbycar.png") ||
                     localHitTex.loadFromFile("CrossingRoad/assets/textures/hitbycar.png")) {
-                    localHitLoaded = true;
+                    tex = &localHitTex;
                 }
             }
-            if (!tex && localHitLoaded) tex = &localHitTex;
 
             if (tex != nullptr) {
                 m_sprite.setTexture(*tex, true);
@@ -195,14 +195,13 @@ void CPEOPLE::die(DeathType type, const sf::Texture* deathTexture) {
         } else if (type == DeathType::Drowned) {
             const sf::Texture* tex = deathTexture;
             static sf::Texture localDrownTex;
-            static bool localDrownLoaded = false;
-            if (!tex && !localDrownLoaded) {
-                if (localDrownTex.loadFromFile("assets/textures/player_drown.png") ||
+            if (!tex) {
+                if (localDrownTex.loadFromFile(Game::instance().getPlayerDrownPath()) ||
+                    localDrownTex.loadFromFile("assets/textures/player_drown.png") ||
                     localDrownTex.loadFromFile("CrossingRoad/assets/textures/player_drown.png")) {
-                    localDrownLoaded = true;
+                    tex = &localDrownTex;
                 }
             }
-            if (!tex && localDrownLoaded) tex = &localDrownTex;
 
             if (tex != nullptr) {
                 m_sprite.setTexture(*tex, true);

@@ -650,7 +650,8 @@ void GameState::updatePauseButtonTexture() {
 
 void GameState::saveCurrentGameState(const std::string& sessionName) {
     SaveData data;
-    data.playerName = "Player";
+    data.playerName = sessionName;
+    m_savedPlayerName = sessionName;
     data.score = m_score;
     data.level = m_level;
     data.playerX = m_player->getPosition().x;
@@ -1911,6 +1912,12 @@ void GameState::setupGameOverUI() {
     } else {
         m_btnOk = std::make_unique<Button>(340.f, 340.f, 120.f, 40.f, "OK", m_font, onSubmit);
     }
+
+    // Tự động dùng tên đã nhập lúc Save Game để không cần gõ lại
+    if (!m_savedPlayerName.empty()) {
+        m_nameInput->setString(m_savedPlayerName);
+        if (m_submitNameFunc) m_submitNameFunc();
+    }
 }
 
 // ============================================================
@@ -1918,6 +1925,7 @@ void GameState::setupGameOverUI() {
 // ============================================================
 void GameState::loadGame(const std::string& sessionName, const SaveData& data) {
     m_currentSaveSession = sessionName;
+    m_savedPlayerName = sessionName;
     m_level = data.level;
     m_score = data.score;
     m_totalPlaytime = static_cast<float>(data.playTimeSeconds);
