@@ -29,12 +29,36 @@ void SettingState::toggleSetting(SettingId id) {
 
 void SettingState::resetDefaults() {
     Game::instance().setSoundEnabled(true);
+    Game::instance().setSoundVolume(80.0f);
     Game::instance().setMusicEnabled(true);
+    Game::instance().setMusicVolume(65.0f);
     Game::instance().setMotionEnabled(true);
-
     updateToggleVisual(m_soundToggle);
     updateToggleVisual(m_musicToggle);
     updateToggleVisual(m_motionToggle);
+}
+
+void SettingState::updateSliderFromMouse(SettingToggle& toggle, float mouseX) {
+    if (toggle.settingId == SettingId::Motion) return;
+
+    float barX = toggle.volumeBarBg.getPosition().x;
+    float barW = toggle.volumeBarBg.getSize().x;
+    float pct = (mouseX - barX) / barW;
+    pct = std::max(0.0f, std::min(1.0f, pct));
+    float vol = pct * 100.0f;
+
+    if (toggle.settingId == SettingId::Sound) {
+        Game::instance().setSoundVolume(vol);
+        if (vol > 0.0f && !Game::instance().isSoundEnabled()) {
+            Game::instance().setSoundEnabled(true);
+        }
+    } else if (toggle.settingId == SettingId::Music) {
+        Game::instance().setMusicVolume(vol);
+        if (vol > 0.0f && !Game::instance().isMusicEnabled()) {
+            Game::instance().setMusicEnabled(true);
+        }
+    }
+    updateToggleVisual(toggle);
 }
 
 void SettingState::init() {
@@ -54,7 +78,6 @@ void SettingState::init() {
         m_offTexture = offTex;
     }
 
-    // Load menu.png background from cache
     auto& bgTex = TextureManager::getInstance().get("assets/textures/menu.png");
     if (bgTex.getSize().x > 0) {
         m_bgLoaded = true;
@@ -68,11 +91,10 @@ void SettingState::init() {
         m_background.setFillColor(sf::Color(124, 179, 66));
     }
 
-    // Main window container (Sky Blue)
     m_mainContainer.setSize(sf::Vector2f(720.f, 540.f));
     m_mainContainer.setOrigin(360.f, 270.f);
     m_mainContainer.setPosition(400.f, 300.f);
-    m_mainContainer.setFillColor(sf::Color(74, 144, 226, 242)); // #4a90e2 with 95% opacity
+    m_mainContainer.setFillColor(sf::Color(74, 144, 226, 242));
 
     m_containerBorder.setSize(sf::Vector2f(720.f, 540.f));
     m_containerBorder.setOrigin(360.f, 270.f);
@@ -81,13 +103,11 @@ void SettingState::init() {
     m_containerBorder.setOutlineColor(sf::Color::Black);
     m_containerBorder.setOutlineThickness(4.f);
 
-    // Top ribbon
     m_topRibbon.setSize(sf::Vector2f(720.f, 8.f));
     m_topRibbon.setPosition(40.f, 30.f);
     m_topRibbon.setFillColor(sf::Color(255, 255, 255, 60));
 
     if (m_fontLoaded) {
-        // Title: SETTINGS
         m_titleShadow.setFont(m_font);
         m_titleShadow.setString("SETTINGS");
         m_titleShadow.setCharacterSize(36);
@@ -100,12 +120,11 @@ void SettingState::init() {
         m_titleText.setFont(m_font);
         m_titleText.setString("SETTINGS");
         m_titleText.setCharacterSize(36);
-        m_titleText.setFillColor(sf::Color(253, 216, 53)); // #fdd835 yellow
+        m_titleText.setFillColor(sf::Color(253, 216, 53));
         m_titleText.setStyle(sf::Text::Bold);
         m_titleText.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
         m_titleText.setPosition(400.f, 58.f);
 
-        // Accent Bar
         m_accentBar.setSize(sf::Vector2f(440.f, 6.f));
         m_accentBar.setOrigin(220.f, 0.f);
         m_accentBar.setPosition(400.f, 88.f);
@@ -116,14 +135,12 @@ void SettingState::init() {
         m_accentBarBorder.setPosition(400.f, 94.f);
         m_accentBarBorder.setFillColor(sf::Color::Black);
 
-        // Content Box Container
         m_contentBox.setSize(sf::Vector2f(660.f, 365.f));
         m_contentBox.setPosition(70.f, 110.f);
         m_contentBox.setFillColor(sf::Color(0, 0, 0, 180));
         m_contentBox.setOutlineColor(sf::Color::Black);
         m_contentBox.setOutlineThickness(3.f);
 
-        // Bottom Preset Info Bar
         m_infoBarBg.setSize(sf::Vector2f(630.f, 32.f));
         m_infoBarBg.setPosition(85.f, 430.f);
         m_infoBarBg.setFillColor(sf::Color(0, 0, 0, 140));
@@ -133,25 +150,23 @@ void SettingState::init() {
         m_infoBarText.setFont(m_font);
         m_infoBarText.setString("Auto-saves changes to local config");
         m_infoBarText.setCharacterSize(12);
-        m_infoBarText.setFillColor(sf::Color(41, 182, 246)); // #29b6f6
+        m_infoBarText.setFillColor(sf::Color(41, 182, 246));
         m_infoBarText.setPosition(95.f, 438.f);
 
         m_resetDefaultsBtnText.setFont(m_font);
         m_resetDefaultsBtnText.setString("Reset Defaults");
         m_resetDefaultsBtnText.setCharacterSize(12);
-        m_resetDefaultsBtnText.setFillColor(sf::Color(253, 216, 53)); // #fdd835
+        m_resetDefaultsBtnText.setFillColor(sf::Color(253, 216, 53));
         m_resetDefaultsBtnText.setStyle(sf::Text::Underlined | sf::Text::Bold);
         sf::FloatRect rb = m_resetDefaultsBtnText.getLocalBounds();
         m_resetDefaultsBtnText.setPosition(700.f - rb.width, 438.f);
         m_resetBtnBounds = m_resetDefaultsBtnText.getGlobalBounds();
     }
 
-    // Init 3 setting toggles
     initToggle(m_soundToggle, "SFX", "Sound Effects", 125.f, SettingId::Sound);
     initToggle(m_musicToggle, "BGM", "Music", 215.f, SettingId::Music);
     initToggle(m_motionToggle, "FX", "Motion Effects", 305.f, SettingId::Motion);
 
-    // Back Button (Wooden pixel style)
     auto& backTex = TextureManager::getInstance().get("assets/textures/back_text.png");
     if (backTex.getSize().x > 0) {
         m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, backTex, []() {
@@ -161,9 +176,9 @@ void SettingState::init() {
         m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, "< BACK", m_font, []() {
             Game::instance().getStateMachine().popState();
         });
-        m_backBtn->setNormalColor(sf::Color(141, 110, 99)); // #8d6e63
-        m_backBtn->setHoverColor(sf::Color(161, 136, 127));  // #a1887f
-        m_backBtn->setClickColor(sf::Color(93, 64, 55));     // #5d4037
+        m_backBtn->setNormalColor(sf::Color(141, 110, 99));
+        m_backBtn->setHoverColor(sf::Color(161, 136, 127));
+        m_backBtn->setClickColor(sf::Color(93, 64, 55));
         m_backBtn->setTextColor(sf::Color(253, 216, 53));
     }
 }
@@ -173,7 +188,6 @@ void SettingState::initToggle(SettingToggle& toggle, const std::string& iconStr,
 {
     toggle.settingId = id;
 
-    // Card background
     float cardHeight = (id == SettingId::Motion) ? 55.f : 78.f;
     toggle.cardBg.setSize(sf::Vector2f(630.f, cardHeight));
     toggle.cardBg.setPosition(85.f, y);
@@ -181,7 +195,6 @@ void SettingState::initToggle(SettingToggle& toggle, const std::string& iconStr,
     toggle.cardBg.setOutlineColor(sf::Color::Black);
     toggle.cardBg.setOutlineThickness(2.f);
 
-    // Icon / Prefix
     toggle.iconText.setFont(m_font);
     toggle.iconText.setString("[" + iconStr + "]");
     toggle.iconText.setCharacterSize(14);
@@ -189,7 +202,6 @@ void SettingState::initToggle(SettingToggle& toggle, const std::string& iconStr,
     toggle.iconText.setStyle(sf::Text::Bold);
     toggle.iconText.setPosition(98.f, y + 12.f);
 
-    // Label
     toggle.label.setFont(m_font);
     toggle.label.setString(labelStr);
     toggle.label.setCharacterSize(15);
@@ -197,19 +209,16 @@ void SettingState::initToggle(SettingToggle& toggle, const std::string& iconStr,
     toggle.label.setStyle(sf::Text::Bold);
     toggle.label.setPosition(155.f, y + 12.f);
 
-    // Retro Checkbox (right side)
     float checkSize = 32.f;
     toggle.checkbox.setSize(sf::Vector2f(checkSize, checkSize));
     toggle.checkbox.setPosition(670.f - checkSize, y + 10.f);
     toggle.checkbox.setOutlineColor(sf::Color::Black);
     toggle.checkbox.setOutlineThickness(2.f);
 
-    // Status text
     toggle.statusText.setFont(m_font);
     toggle.statusText.setCharacterSize(13);
     toggle.statusText.setStyle(sf::Text::Bold);
 
-    // Volume Slider/Indicator (Sound & Music)
     if (id != SettingId::Motion) {
         toggle.volumeLabel.setFont(m_font);
         toggle.volumeLabel.setString("Volume");
@@ -223,13 +232,21 @@ void SettingState::initToggle(SettingToggle& toggle, const std::string& iconStr,
         toggle.volumeBarBg.setOutlineColor(sf::Color::Black);
         toggle.volumeBarBg.setOutlineThickness(2.f);
 
-        float pct = (id == SettingId::Sound) ? 0.80f : 0.65f;
+        float vol = (id == SettingId::Sound) ? Game::instance().getSoundVolume() : Game::instance().getMusicVolume();
+        float pct = vol / 100.0f;
         toggle.volumeBarFill.setSize(sf::Vector2f(380.f * pct, 10.f));
         toggle.volumeBarFill.setPosition(225.f, y + 47.f);
-        toggle.volumeBarFill.setFillColor(sf::Color(253, 216, 53)); // #fdd835 yellow
+        toggle.volumeBarFill.setFillColor(sf::Color(253, 216, 53));
+
+        toggle.sliderKnob.setRadius(8.f);
+        toggle.sliderKnob.setOrigin(8.f, 8.f);
+        toggle.sliderKnob.setPosition(225.f + 380.f * pct, y + 52.f);
+        toggle.sliderKnob.setFillColor(sf::Color(255, 235, 59));
+        toggle.sliderKnob.setOutlineColor(sf::Color::Black);
+        toggle.sliderKnob.setOutlineThickness(2.f);
 
         toggle.volumeValueText.setFont(m_font);
-        toggle.volumeValueText.setString(std::to_string(static_cast<int>(pct * 100)) + "%");
+        toggle.volumeValueText.setString(std::to_string(static_cast<int>(std::round(vol))) + "%");
         toggle.volumeValueText.setCharacterSize(11);
         toggle.volumeValueText.setFillColor(sf::Color(253, 216, 53));
         toggle.volumeValueText.setStyle(sf::Text::Bold);
@@ -246,9 +263,9 @@ void SettingState::updateToggleVisual(SettingToggle& toggle) {
     float y = toggle.cardBg.getPosition().y + 10.f;
 
     if (value) {
-        toggle.checkbox.setFillColor(sf::Color(67, 160, 71));   // Green #43a047
+        toggle.checkbox.setFillColor(sf::Color(67, 160, 71));
         toggle.statusText.setFont(m_font);
-        toggle.statusText.setString("v"); // Retro Checkmark
+        toggle.statusText.setString("v");
         toggle.statusText.setCharacterSize(18);
         toggle.statusText.setFillColor(sf::Color::White);
         sf::FloatRect sb = toggle.statusText.getLocalBounds();
@@ -264,7 +281,7 @@ void SettingState::updateToggleVisual(SettingToggle& toggle) {
             toggle.statusSprite.setPosition(x, y);
         }
     } else {
-        toggle.checkbox.setFillColor(sf::Color(229, 57, 53));   // Red #e53935
+        toggle.checkbox.setFillColor(sf::Color(229, 57, 53));
         toggle.statusText.setFont(m_font);
         toggle.statusText.setString("x");
         toggle.statusText.setCharacterSize(16);
@@ -283,10 +300,27 @@ void SettingState::updateToggleVisual(SettingToggle& toggle) {
         }
     }
 
-    // Dim volume bar if toggled off
     if (toggle.settingId != SettingId::Motion) {
-        sf::Color fillCol = value ? sf::Color(253, 216, 53) : sf::Color(100, 100, 100);
-        toggle.volumeBarFill.setFillColor(fillCol);
+        float vol = (toggle.settingId == SettingId::Sound) ? Game::instance().getSoundVolume() : Game::instance().getMusicVolume();
+        float pct = vol / 100.0f;
+        float barX = toggle.volumeBarBg.getPosition().x;
+        float barY = toggle.volumeBarBg.getPosition().y;
+        float barW = toggle.volumeBarBg.getSize().x;
+
+        toggle.volumeBarFill.setSize(sf::Vector2f(barW * pct, 10.f));
+        toggle.sliderKnob.setPosition(barX + barW * pct, barY + 5.f);
+
+        if (value) {
+            toggle.volumeBarFill.setFillColor(sf::Color(253, 216, 53));
+            toggle.sliderKnob.setFillColor(sf::Color(255, 235, 59));
+            toggle.volumeValueText.setFillColor(sf::Color(253, 216, 53));
+            toggle.volumeValueText.setString(std::to_string(static_cast<int>(std::round(vol))) + "%");
+        } else {
+            toggle.volumeBarFill.setFillColor(sf::Color(100, 100, 100));
+            toggle.sliderKnob.setFillColor(sf::Color(120, 120, 120));
+            toggle.volumeValueText.setFillColor(sf::Color(140, 140, 140));
+            toggle.volumeValueText.setString("OFF");
+        }
     }
 }
 
@@ -298,8 +332,38 @@ void SettingState::handleInput(sf::RenderWindow& window, sf::Event& event) {
     {
         sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
 
+        auto checkVolumeSlider = [&](SettingToggle& toggle) -> bool {
+            if (toggle.settingId == SettingId::Motion) return false;
+            sf::FloatRect barBounds = toggle.volumeBarBg.getGlobalBounds();
+            barBounds.left -= 12.f;
+            barBounds.top -= 12.f;
+            barBounds.width += 24.f;
+            barBounds.height += 24.f;
+            if (barBounds.contains(mousePos)) {
+                m_activeSlider = &toggle;
+                updateSliderFromMouse(toggle, mousePos.x);
+                return true;
+            }
+            return false;
+        };
+
+        if (checkVolumeSlider(m_soundToggle) || checkVolumeSlider(m_musicToggle)) {
+            return;
+        }
+
         auto tryToggle = [&](SettingToggle& toggle) {
-            bool clicked = toggle.checkbox.getGlobalBounds().contains(mousePos) || toggle.cardBg.getGlobalBounds().contains(mousePos);
+            sf::FloatRect checkBounds = toggle.checkbox.getGlobalBounds();
+            checkBounds.left -= 10.f;
+            checkBounds.top -= 10.f;
+            checkBounds.width += 20.f;
+            checkBounds.height += 20.f;
+
+            sf::FloatRect headerBounds = toggle.cardBg.getGlobalBounds();
+            headerBounds.height = 40.f;
+
+            bool clicked = checkBounds.contains(mousePos) || headerBounds.contains(mousePos) ||
+                           ((m_onLoaded || m_offLoaded) && toggle.statusSprite.getGlobalBounds().contains(mousePos));
+
             if (clicked) {
                 Game::instance().playSound("assets/audio/sfx_click.wav");
                 toggleSetting(toggle.settingId);
@@ -315,6 +379,17 @@ void SettingState::handleInput(sf::RenderWindow& window, sf::Event& event) {
             Game::instance().playSound("assets/audio/sfx_click.wav");
             resetDefaults();
         }
+    }
+    else if (event.type == sf::Event::MouseMoved) {
+        if (m_activeSlider != nullptr && sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
+            updateSliderFromMouse(*m_activeSlider, mousePos.x);
+        }
+    }
+    else if (event.type == sf::Event::MouseButtonReleased &&
+             event.mouseButton.button == sf::Mouse::Left)
+    {
+        m_activeSlider = nullptr;
     }
 
     if (event.type == sf::Event::KeyPressed &&
@@ -332,7 +407,7 @@ void SettingState::update(float dt) {
     auto updateHover = [&](SettingToggle& toggle) {
         toggle.hovered = toggle.checkbox.getGlobalBounds().contains(mousePos) || toggle.cardBg.getGlobalBounds().contains(mousePos);
         if (toggle.hovered) {
-            toggle.checkbox.setOutlineColor(sf::Color(253, 216, 53)); // Yellow hover outline
+            toggle.checkbox.setOutlineColor(sf::Color(253, 216, 53));
         } else {
             toggle.checkbox.setOutlineColor(sf::Color::Black);
         }
@@ -354,22 +429,18 @@ void SettingState::draw(sf::RenderWindow& window) {
         window.draw(m_background);
     }
 
-    // Main window container
     window.draw(m_mainContainer);
     window.draw(m_topRibbon);
     window.draw(m_containerBorder);
 
     if (m_fontLoaded) {
-        // Header
         window.draw(m_titleShadow);
         window.draw(m_titleText);
         window.draw(m_accentBar);
         window.draw(m_accentBarBorder);
 
-        // Content Box
         window.draw(m_contentBox);
 
-        // Helper lambda to draw a setting card
         auto drawToggle = [&](const SettingToggle& toggle) {
             window.draw(toggle.cardBg);
             window.draw(toggle.iconText);
@@ -386,6 +457,7 @@ void SettingState::draw(sf::RenderWindow& window) {
                 window.draw(toggle.volumeLabel);
                 window.draw(toggle.volumeBarBg);
                 window.draw(toggle.volumeBarFill);
+                window.draw(toggle.sliderKnob);
                 window.draw(toggle.volumeValueText);
             }
         };
@@ -394,7 +466,6 @@ void SettingState::draw(sf::RenderWindow& window) {
         drawToggle(m_musicToggle);
         drawToggle(m_motionToggle);
 
-        // Bottom Info Bar
         window.draw(m_infoBarBg);
         window.draw(m_infoBarText);
         window.draw(m_resetDefaultsBtnText);

@@ -19,10 +19,12 @@ struct SettingToggle {
     sf::Sprite statusSprite;
     sf::RectangleShape volumeBarBg;
     sf::RectangleShape volumeBarFill;
+    sf::CircleShape sliderKnob;
     sf::Text volumeLabel;
     sf::Text volumeValueText;
     SettingId settingId = SettingId::Sound;
     bool hovered = false;
+    bool isDraggingVolume = false;
 };
 
 class SettingState : public State {
@@ -80,6 +82,8 @@ private:
     sf::Texture m_backTexture;
     std::unique_ptr<Button> m_backBtn;
 
+    SettingToggle* m_activeSlider = nullptr;
+
     // Lấy giá trị hiện tại của một setting
     bool getSettingValue(SettingId id) const;
     // Đảo giá trị một setting
@@ -90,4 +94,5 @@ private:
     void initToggle(SettingToggle& toggle, const std::string& iconStr, const std::string& labelStr,
                     float y, SettingId id);
     void updateToggleVisual(SettingToggle& toggle);
+    void updateSliderFromMouse(SettingToggle& toggle, float mouseX);
 };

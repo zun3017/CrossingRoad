@@ -46,9 +46,13 @@ public:
     // === Cài đặt âm thanh & hiệu ứng ===
     bool isSoundEnabled() const;
     void setSoundEnabled(bool enabled);
+    float getSoundVolume() const;
+    void setSoundVolume(float volume);
 
     bool isMusicEnabled() const;
     void setMusicEnabled(bool enabled);
+    float getMusicVolume() const;
+    void setMusicVolume(float volume);
 
     bool isMotionEnabled() const;
     void setMotionEnabled(bool enabled);
@@ -84,7 +88,9 @@ private:
 
     // Cài đặt
     bool m_soundEnabled  = true;
+    float m_soundVolume  = 80.0f;
     bool m_musicEnabled  = true;
+    float m_musicVolume  = 65.0f;
     bool m_motionEnabled = true;
 
     // Game đang chạy?

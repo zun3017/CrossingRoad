@@ -166,6 +166,17 @@ void Game::setSoundEnabled(bool enabled) {
     std::cout << "[Game] Am thanh: " << (enabled ? "BAT" : "TAT") << std::endl;
 }
 
+float Game::getSoundVolume() const {
+    return m_soundVolume;
+}
+
+void Game::setSoundVolume(float volume) {
+    m_soundVolume = std::max(0.0f, std::min(100.0f, volume));
+    for (auto& sound : m_sounds) {
+        sound.setVolume(m_soundVolume);
+    }
+}
+
 bool Game::isMusicEnabled() const {
     return m_musicEnabled;
 }
@@ -173,6 +184,7 @@ bool Game::isMusicEnabled() const {
 void Game::setMusicEnabled(bool enabled) {
     m_musicEnabled = enabled;
     if (enabled) {
+        m_backgroundMusic.setVolume(m_musicVolume);
         if (!m_currentMusicFile.empty()) {
             std::string fileToPlay = m_currentMusicFile;
             m_currentMusicFile.clear(); // Force reload
@@ -182,6 +194,17 @@ void Game::setMusicEnabled(bool enabled) {
         m_backgroundMusic.stop();
     }
     std::cout << "[Game] Nhac nen: " << (enabled ? "BAT" : "TAT") << std::endl;
+}
+
+float Game::getMusicVolume() const {
+    return m_musicVolume;
+}
+
+void Game::setMusicVolume(float volume) {
+    m_musicVolume = std::max(0.0f, std::min(100.0f, volume));
+    if (m_musicEnabled) {
+        m_backgroundMusic.setVolume(m_musicVolume);
+    }
 }
 
 bool Game::isMotionEnabled() const {
@@ -207,6 +230,7 @@ void Game::playBackgroundMusic(const std::string& filename) {
             return;
         }
         if (m_backgroundMusic.getStatus() == sf::Music::Playing) {
+            m_backgroundMusic.setVolume(m_musicVolume);
             return; // Đã đang phát cùng bài nhạc -> giữ nguyên không ngắt đoạn
         }
     }
@@ -224,9 +248,9 @@ void Game::playBackgroundMusic(const std::string& filename) {
     }
 
     m_backgroundMusic.setLoop(true);
-    m_backgroundMusic.setVolume(50.0f); // Âm lượng 50%
+    m_backgroundMusic.setVolume(m_musicVolume);
     m_backgroundMusic.play();
-    std::cout << "[Game] Dang phat nhac: " << filename << std::endl;
+    std::cout << "[Game] Dang phat nhac: " << filename << " (Volume: " << m_musicVolume << "%)" << std::endl;
 }
 
 void Game::stopBackgroundMusic() {
@@ -236,7 +260,7 @@ void Game::stopBackgroundMusic() {
 
 // === Hiệu ứng âm thanh SFX ===
 void Game::playSound(const std::string& filename) {
-    if (!m_soundEnabled) return;
+    if (!m_soundEnabled || m_soundVolume <= 0.0f) return;
 
     // Nạp SoundBuffer nếu chưa có trong cache
     auto it = m_soundBuffers.find(filename);
@@ -254,7 +278,7 @@ void Game::playSound(const std::string& filename) {
     for (auto& sound : m_sounds) {
         if (sound.getStatus() != sf::Sound::Playing) {
             sound.setBuffer(it->second);
-            sound.setVolume(70.0f);
+            sound.setVolume(m_soundVolume);
             sound.play();
             return;
         }
@@ -264,7 +288,7 @@ void Game::playSound(const std::string& filename) {
     if (m_sounds.size() < 16) {
         m_sounds.emplace_back();
         m_sounds.back().setBuffer(it->second);
-        m_sounds.back().setVolume(70.0f);
+        m_sounds.back().setVolume(m_soundVolume);
         m_sounds.back().play();
     }
 }
