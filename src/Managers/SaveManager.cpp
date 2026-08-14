@@ -52,7 +52,7 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
             file << row.type << " " << row.yPosition << "\n";
             file << row.vehicles.size() << "\n";
             for (const auto& v : row.vehicles) {
-                file << v.type << " " << v.x << " " << v.y << " " << v.speed << " " << v.direction << "\n";
+                file << v.type << " " << v.x << " " << v.y << " " << v.speed << " " << v.direction << " " << v.isCrazy << "\n";
             }
             file << row.lilyPads.size() << "\n";
             for (const auto& pad : row.lilyPads) {
@@ -170,7 +170,11 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
             if (!std::getline(file, line)) break;
             std::stringstream ssVeh(line);
             SavedVehicle v;
+            v.isCrazy = false;
             ssVeh >> v.type >> v.x >> v.y >> v.speed >> v.direction;
+            if (!(ssVeh >> v.isCrazy)) {
+                v.isCrazy = false;
+            }
             row.vehicles.push_back(v);
         }
 

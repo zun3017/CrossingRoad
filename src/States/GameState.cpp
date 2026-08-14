@@ -288,9 +288,13 @@ void GameState::createRoadRow(float y) {
 
         int direction = movingRight ? 1 : -1;
         
-        // Tỉ lệ: 75% ra CCAR (các xe con nhiều màu), 25% ra CTRUCK (xe tải đỏ)
-        if (std::rand() % 100 < 75) {
-            row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, speed, direction));
+        // 35% cơ hội chiếc xe đầu tiên trong làn là "Xe Điên" (chạy siêu tốc x2.3 và xả khói)
+        bool isCrazy = (v == 0 && std::rand() % 100 < 35);
+        if (isCrazy) {
+            float crazySpeed = (baseSpeed + 60.f) * 2.3f;
+            row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, crazySpeed, direction, true));
+        } else if (std::rand() % 100 < 70) {
+            row.vehicles.push_back(std::make_unique<CCAR>(startX, y + 2.f, speed, direction, false));
         } else {
             row.vehicles.push_back(std::make_unique<CTRUCK>(startX, y + 2.f, speed, direction));
         }
@@ -620,6 +624,7 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
             sVeh.y = v->getPosition().y;
             sVeh.speed = v->getSpeed();
             sVeh.direction = v->getDirection();
+            sVeh.isCrazy = v->isCrazy();
             sRow.vehicles.push_back(sVeh);
         }
         
@@ -880,19 +885,30 @@ void GameState::updateObstacles(float dt) {
             for (auto& v : row.vehicles) {
                 v->update(dt);
                 
+                // Xe điên bóp còi báo động to rõ khi vừa lao vào màn hình
+                if (v->isCrazy()) {
+                    float vx = v->getPosition().x;
+                    if (vx >= -40.f && vx <= 840.f && !v->hasHonked()) {
+                        Game::instance().playSound("assets/audio/sfx_car_horn.wav");
+                        v->setHonked(true);
+                    }
+                }
+                
                 // Wrap quanh khi xe vừa thoát hết khỏi màn hình
                 if (v->getDirection() > 0 && v->getPosition().x > 860.f) {
                     v->setPosition(-180.f, v->getPosition().y);
-                    // Random lại tốc độ khi quay vòng để các xe bị đè (dính vào nhau) sẽ tách ra
+                    v->setHonked(false); // Reset còi cho vòng chạy tiếp theo
+                    // Random lại tốc độ khi quay vòng
                     float baseSpeed = 80.f + static_cast<float>(m_level * 15);
-                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 100 - 30);
+                    float newSpeed = v->isCrazy() ? ((baseSpeed + 60.f) * 2.3f) : (baseSpeed + static_cast<float>(std::rand() % 100 - 30));
                     if (newSpeed < 40.f) newSpeed = 40.f;
                     v->setSpeed(newSpeed);
                 } else if (v->getDirection() < 0 && v->getPosition().x < -90.f) {
                     v->setPosition(860.f, v->getPosition().y);
+                    v->setHonked(false); // Reset còi cho vòng chạy tiếp theo
                     // Random lại tốc độ khi quay vòng
                     float baseSpeed = 80.f + static_cast<float>(m_level * 15);
-                    float newSpeed = baseSpeed + static_cast<float>(std::rand() % 100 - 30);
+                    float newSpeed = v->isCrazy() ? ((baseSpeed + 60.f) * 2.3f) : (baseSpeed + static_cast<float>(std::rand() % 100 - 30));
                     if (newSpeed < 40.f) newSpeed = 40.f;
                     v->setSpeed(newSpeed);
                 }
@@ -1697,7 +1713,7 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     // Khôi phục vehicles
     for (const auto& sVeh : savedRow.vehicles) {
         if (sVeh.type == 0) {
-            row.vehicles.push_back(std::make_unique<CCAR>(sVeh.x, sVeh.y, sVeh.speed, sVeh.direction));
+            row.vehicles.push_back(std::make_unique<CCAR>(sVeh.x, sVeh.y, sVeh.speed, sVeh.direction, sVeh.isCrazy));
         } else {
             row.vehicles.push_back(std::make_unique<CTRUCK>(sVeh.x, sVeh.y, sVeh.speed, sVeh.direction));
         }

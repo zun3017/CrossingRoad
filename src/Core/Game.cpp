@@ -30,6 +30,7 @@ Game::Game()
     TextureManager::getInstance().preload("assets/textures/on_button.png");
     TextureManager::getInstance().preload("assets/textures/off_button.png");
     TextureManager::getInstance().preload("assets/textures/watch.png");
+    TextureManager::getInstance().preload("assets/textures/smoke.png");
     FontManager::getInstance().preload("assets/fonts/arial.ttf");
 
     std::cout << "=== Crossing Road ===" << std::endl;

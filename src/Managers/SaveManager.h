@@ -10,6 +10,7 @@ struct SavedVehicle {
     int type; // 0=Car, 1=Truck
     float x, y, speed;
     int direction;
+    bool isCrazy = false;
 };
 
 
