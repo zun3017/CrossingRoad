@@ -19,10 +19,16 @@ struct SavedLilyPad {
     int r, g, b;
 };
 
+enum class ItemType : int {
+    Superhero = 0,
+    Clock = 1
+};
+
 struct SavedItem {
     float x, y;
     bool collected;
     int points;
+    int type = 0; // 0 = Superhero, 1 = Clock
 };
 
 struct SavedTerrainRow {
@@ -41,6 +47,7 @@ struct SaveData {
     float playerX = 400.f;
     float playerY = 500.f;
     float maxPlayerY = 500.f;
+    float timeFreezeTimer = 0.f;          // Thời gian ngưng đọng còn lại
     
     int numTerrains = 0;                  // Số lượng terrain đã tạo
     std::vector<SavedTerrainRow> terrains; // Chi tiết từng terrain

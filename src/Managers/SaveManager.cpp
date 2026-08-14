@@ -60,7 +60,7 @@ bool SaveManager::saveGame(const std::string& filename, const SaveData& data) {
             }
             file << row.items.size() << "\n";
             for (const auto& item : row.items) {
-                file << item.x << " " << item.y << " " << item.collected << " " << item.points << "\n";
+                file << item.x << " " << item.y << " " << item.collected << " " << item.points << " " << item.type << "\n";
             }
         } else {
             file << "0 0\n0\n0\n0\n";
@@ -194,7 +194,11 @@ bool SaveManager::loadGame(const std::string& filename, SaveData& data) {
             if (!std::getline(file, line)) break;
             std::stringstream ssItem(line);
             SavedItem item;
+            item.type = 0;
             ssItem >> item.x >> item.y >> item.collected >> item.points;
+            if (!(ssItem >> item.type)) {
+                item.type = 0;
+            }
             row.items.push_back(item);
         }
         data.terrains.push_back(row);

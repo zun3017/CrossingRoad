@@ -64,23 +64,39 @@ void GameState::init() {
             m_logSprite.setScale(56.f / tLog.getSize().x, 40.f / tLog.getSize().y);
             
 
-            if (tItem.getSize().x > 0) m_itemSprite.setTexture(tItem);
-            
-            if (tTrack.getSize().x > 0) m_trackSprite.setTexture(tTrack);
-            if (tTrain.getSize().x > 0) m_trainSprite.setTexture(tTrain);
-            if (tLightGreen.getSize().x > 0) m_lightGreenSprite.setTexture(tLightGreen);
-            if (tLightRed.getSize().x > 0) m_lightRedSprite.setTexture(tLightRed);
-            if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
-            
-            m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
-            if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
-            
-            m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
-            if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/assets/textures/player_drown.png");
-            
-            m_texturesLoaded = true;
+        auto& tWatch = ResourceManager<sf::Texture>::getInstance().get("assets/textures/watch.png");
+        if (tWatch.getSize().x > 0) {
+            m_watchSprite.setTexture(tWatch);
+            m_watchLoaded = true;
         }
-    } catch (...) {}
+
+        if (tItem.getSize().x > 0) m_itemSprite.setTexture(tItem);
+        
+        if (tTrack.getSize().x > 0) m_trackSprite.setTexture(tTrack);
+        if (tTrain.getSize().x > 0) m_trainSprite.setTexture(tTrain);
+        if (tLightGreen.getSize().x > 0) m_lightGreenSprite.setTexture(tLightGreen);
+        if (tLightRed.getSize().x > 0) m_lightRedSprite.setTexture(tLightRed);
+        if (tLightBlink.getSize().x > 0) m_lightBlinkSprite.setTexture(tLightBlink);
+        
+        m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+        if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
+        
+        m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
+        if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/assets/textures/player_drown.png");
+        
+        m_texturesLoaded = true;
+    }
+} catch (...) {}
+
+m_freezeOverlay.setSize(sf::Vector2f(800.f, 600.f));
+m_freezeOverlay.setFillColor(sf::Color(100, 210, 255, 45)); // Ánh xanh băng tuyết
+
+m_freezeBadgeText.setFont(m_font);
+m_freezeBadgeText.setCharacterSize(13);
+m_freezeBadgeText.setFillColor(sf::Color(0, 229, 255)); // Cyan #00e5ff
+m_freezeBadgeText.setOutlineColor(sf::Color::Black);
+m_freezeBadgeText.setOutlineThickness(1.5f);
+m_freezeBadgeText.setStyle(sf::Text::Bold);
 
     if (!m_isLoadedGame) {
         initPlayer();
@@ -160,20 +176,31 @@ void GameState::createGrassRow(float y, bool safeZone) {
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(34, 139, 34)); // Xanh lá đậm
 
-    // Thêm vật phẩm (ItemData) ngẫu nhiên trên cỏ (không phải vùng an toàn)
-    if (!safeZone && std::rand() % 100 < 30) {
-        ItemData item;
-        float itemX = static_cast<float>(50 + std::rand() % 700);
-        item.shape.setRadius(14.f); // To hơn để dễ nhìn (bán kính 14 -> đường kính 28)
-        item.shape.setFillColor(sf::Color(255, 215, 0)); // Vàng gold
-        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
-        item.collected = false;
-        item.points = 10; // Vật phẩm luôn luôn được 10 điểm
-        row.items.push_back(item);
+    // Thêm vật phẩm ngẫu nhiên trên cỏ (không phải vùng an toàn)
+    if (!safeZone) {
+        int r = std::rand() % 100;
+        if (r < 25) { // 25% cơ hội ra mô hình siêu nhân (10 điểm)
+            ItemData item;
+            float itemX = static_cast<float>(50 + std::rand() % 700);
+            item.shape.setRadius(14.f);
+            item.shape.setFillColor(sf::Color(255, 215, 0));
+            item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
+            item.collected = false;
+            item.points = 10;
+            item.type = ItemType::Superhero;
+            row.items.push_back(item);
+        } else if (r < 40) { // 15% cơ hội ra đồng hồ ngưng đọng thời gian
+            ItemData item;
+            float itemX = static_cast<float>(50 + std::rand() % 700);
+            item.shape.setRadius(14.f);
+            item.shape.setFillColor(sf::Color(0, 229, 255));
+            item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
+            item.collected = false;
+            item.points = 0;
+            item.type = ItemType::Clock;
+            row.items.push_back(item);
+        }
     }
-    
-
-
 
     m_terrains.push_back(std::move(row));
 }
@@ -189,6 +216,19 @@ void GameState::createRoadRow(float y) {
     row.background.setSize(sf::Vector2f(800.f, m_cellSize));
     row.background.setPosition(0.f, y);
     row.background.setFillColor(sf::Color(80, 80, 80)); // Xám đường
+
+    // 18% cơ hội xuất hiện đồng hồ ngưng đọng thời gian trên làn đường xe chạy
+    if (std::rand() % 100 < 18) {
+        ItemData item;
+        float itemX = static_cast<float>(80 + std::rand() % 640);
+        item.shape.setRadius(14.f);
+        item.shape.setFillColor(sf::Color(0, 229, 255));
+        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
+        item.collected = false;
+        item.points = 0;
+        item.type = ItemType::Clock;
+        row.items.push_back(item);
+    }
 
     // Vẽ vạch kẻ đường (trang trí, lưu vào obstacles sẽ phức tạp quá)
     // Tạo 2-4 xe ngẫu nhiên trên mỗi hàng đường
@@ -208,7 +248,6 @@ void GameState::createRoadRow(float y) {
         }
 
         // Tốc độ thay đổi ngẫu nhiên từng xe (thêm bớt 30) để có hiện tượng vượt nhau.
-        // Người chơi chấp nhận việc xe đi xuyên qua nhau, nên ta cứ để tốc độ khác biệt!
         float speed = baseSpeed + static_cast<float>(std::rand() % 60 - 30);
         if (speed < 40.f) speed = 40.f;
 
@@ -531,6 +570,7 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
     data.playerX = m_player->getPosition().x;
     data.playerY = m_player->getPosition().y;
     data.maxPlayerY = m_maxPlayerY;
+    data.timeFreezeTimer = m_timeFreezeTimer;
     
     data.numTerrains = static_cast<int>(m_terrains.size());
     for (auto& row : m_terrains) {
@@ -568,6 +608,7 @@ void GameState::saveCurrentGameState(const std::string& sessionName) {
             sItem.y = item.shape.getPosition().y;
             sItem.collected = item.collected;
             sItem.points = item.points;
+            sItem.type = static_cast<int>(item.type);
             sRow.items.push_back(sItem);
         }
         
@@ -775,9 +816,16 @@ void GameState::update(float dt) {
     
     if (m_paused) return;
 
-    updateObstacles(dt);
-    updateLilyPads(dt);
-    updateRailway(dt);
+    // Cập nhật ngưng đọng thời gian
+    if (m_timeFreezeTimer > 0.f) {
+        m_timeFreezeTimer -= dt;
+        if (m_timeFreezeTimer < 0.f) m_timeFreezeTimer = 0.f;
+    } else {
+        updateObstacles(dt);
+        updateLilyPads(dt);
+        updateRailway(dt);
+    }
+
     checkCollisions(dt);
     checkWinCondition();
     
@@ -987,24 +1035,26 @@ void GameState::checkCollisions(float dt) {
 
                     if (playerHitbox.intersects(logHitbox)) {
                         onLog = true;
-                        // Di chuyển theo khúc gỗ đồng bộ với dt
-                        float logMove = log.speed * dt * (log.movingRight ? 1.f : -1.f);
-                        m_player->setPosition(m_player->getPosition().x + logMove, m_player->getPosition().y);
+                        // Chỉ di chuyển theo khúc gỗ nếu thời gian không bị ngưng đọng
+                        if (m_timeFreezeTimer <= 0.f) {
+                            float logMove = log.speed * dt * (log.movingRight ? 1.f : -1.f);
+                            m_player->setPosition(m_player->getPosition().x + logMove, m_player->getPosition().y);
 
-                        // Nếu bị đẩy ra ngoài màn hình thì chết
-                        if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
-                            if (!m_playerDead) {
-                                m_playerDead = true;
-                                Game::instance().playSound("assets/audio/sfx_water_splash.wav");
-                                m_player->die(DeathType::Drowned, m_playerDrownLoaded ? &m_playerDrownTexture : nullptr);
-                                m_deathTimer = 0.f;
-                                m_goState = GameOverUIState::Delay;
-                                if (!m_currentSaveSession.empty()) {
-                                    SaveManager::deleteGame(m_currentSaveSession);
-                                    m_currentSaveSession = "";
+                            // Nếu bị đẩy ra ngoài màn hình thì chết
+                            if (m_player->getPosition().x < -m_playerSize || m_player->getPosition().x > 800.f) {
+                                if (!m_playerDead) {
+                                    m_playerDead = true;
+                                    Game::instance().playSound("assets/audio/sfx_water_splash.wav");
+                                    m_player->die(DeathType::Drowned, m_playerDrownLoaded ? &m_playerDrownTexture : nullptr);
+                                    m_deathTimer = 0.f;
+                                    m_goState = GameOverUIState::Delay;
+                                    if (!m_currentSaveSession.empty()) {
+                                        SaveManager::deleteGame(m_currentSaveSession);
+                                        m_currentSaveSession = "";
+                                    }
                                 }
+                                return;
                             }
-                            return;
                         }
                         break;
                     }
@@ -1028,12 +1078,17 @@ void GameState::checkCollisions(float dt) {
         }
 
 
-        // Kiểm tra thu thập item
+        // Kiểm tra thu thập item (Mô hình siêu nhân & Đồng hồ ngưng đọng thời gian)
         for (auto& item : row.items) {
             if (!item.collected && playerHitbox.intersects(item.shape.getGlobalBounds())) {
                 item.collected = true;
-                m_score += item.points;
-                Game::instance().playSound("assets/audio/sfx_pick_up.wav");
+                if (item.type == ItemType::Clock) {
+                    m_timeFreezeTimer = 5.0f; // 5 giây ngưng đọng thời gian
+                    Game::instance().playSound("assets/audio/sfx_hovering.wav");
+                } else {
+                    m_score += item.points;
+                    Game::instance().playSound("assets/audio/sfx_pick_up.wav");
+                }
             }
         }
     }
@@ -1195,12 +1250,17 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
-        // Vẽ items chưa thu thập
+        // Vẽ items chưa thu thập (Mô hình siêu nhân & Đồng hồ)
         for (auto& item : row.items) {
             if (!item.collected) {
-                if (m_texturesLoaded && m_itemSprite.getTexture()) {
+                float diam = item.shape.getRadius() * 2.f;
+                if (item.type == ItemType::Clock && m_watchLoaded && m_watchSprite.getTexture()) {
+                    auto texSize = m_watchSprite.getTexture()->getSize();
+                    m_watchSprite.setScale(diam / texSize.x, diam / texSize.y);
+                    m_watchSprite.setPosition(item.shape.getPosition());
+                    window.draw(m_watchSprite);
+                } else if (item.type == ItemType::Superhero && m_texturesLoaded && m_itemSprite.getTexture()) {
                     auto texSize = m_itemSprite.getTexture()->getSize();
-                    float diam = item.shape.getRadius() * 2.f;
                     m_itemSprite.setScale(diam / texSize.x, diam / texSize.y);
                     m_itemSprite.setPosition(item.shape.getPosition());
                     window.draw(m_itemSprite);
@@ -1214,6 +1274,21 @@ void GameState::draw(sf::RenderWindow& window) {
     // Vẽ người chơi
     if (!m_playerDrowned) {
         window.draw(*m_player);
+    }
+
+    // Hiệu ứng ngưng đọng thời gian (Time Freeze Tint & Badge)
+    if (m_timeFreezeTimer > 0.f) {
+        window.draw(m_freezeOverlay);
+
+        if (m_fontLoaded) {
+            char timerStr[32];
+            std::snprintf(timerStr, sizeof(timerStr), "[FREEZE: %.1fs]", m_timeFreezeTimer);
+            m_freezeBadgeText.setString(timerStr);
+            sf::FloatRect fb = m_freezeBadgeText.getLocalBounds();
+            m_freezeBadgeText.setOrigin(fb.left + fb.width / 2.f, fb.top + fb.height / 2.f);
+            m_freezeBadgeText.setPosition(80.f, 78.f);
+            window.draw(m_freezeBadgeText);
+        }
     }
 
     // Vẽ HUD (bảng gỗ nền + text)
@@ -1547,6 +1622,7 @@ void GameState::loadGame(const std::string& sessionName, const SaveData& data) {
     initPlayer(); // init default
     m_player->forcePosition(data.playerX, data.playerY);
     m_maxPlayerY = data.maxPlayerY;
+    m_timeFreezeTimer = data.timeFreezeTimer;
     
     m_isLoadedGame = true;
     
@@ -1572,8 +1648,9 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     // Khôi phục items
     for (const auto& sItem : savedRow.items) {
         ItemData item;
-        item.shape.setRadius(8.f);
-        item.shape.setFillColor(sf::Color::Yellow);
+        item.shape.setRadius(14.f);
+        item.type = static_cast<ItemType>(sItem.type);
+        item.shape.setFillColor(item.type == ItemType::Clock ? sf::Color(0, 229, 255) : sf::Color(255, 215, 0));
         item.shape.setPosition(sItem.x, sItem.y);
         item.collected = sItem.collected;
         item.points = sItem.points;

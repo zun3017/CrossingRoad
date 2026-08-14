@@ -39,6 +39,7 @@ struct ItemData {
     sf::CircleShape shape;
     bool collected = false;
     int points = 10;
+    ItemType type = ItemType::Superhero;
 };
 
 struct TerrainRow {
@@ -91,6 +92,13 @@ private:
     sf::Sprite m_lightBlinkSprite;
     sf::Texture m_itemTexture;
     sf::Sprite m_itemSprite;
+    sf::Sprite m_watchSprite;
+    bool m_watchLoaded = false;
+    
+    // Ngưng đọng thời gian (Time Freeze)
+    float m_timeFreezeTimer = 0.f;
+    sf::RectangleShape m_freezeOverlay;
+    sf::Text m_freezeBadgeText;
     
     sf::Texture m_hitByCarTexture;
     bool m_hitByCarLoaded = false;
