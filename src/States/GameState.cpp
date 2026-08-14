@@ -1432,20 +1432,20 @@ void GameState::draw(sf::RenderWindow& window) {
         if (isNightMode() && m_handLampLoaded && !m_playerDead) {
             sf::Vector2f pPos = m_player->getPosition();
             int animRow = m_player->m_animRow;
-            float lampX = pPos.x + 28.f;
-            float lampY = pPos.y + 16.f;
+            float lampX = pPos.x + 24.f;
+            float lampY = pPos.y + 19.f;
             if (animRow == 0) { // Đi Lên (Lưng) -> Cầm bên tay phải
-                lampX = pPos.x + 26.f;
-                lampY = pPos.y + 14.f;
+                lampX = pPos.x + 24.f;
+                lampY = pPos.y + 17.f;
             } else if (animRow == 1) { // Đi Xuống (Mặt) -> Cầm bên tay phải
-                lampX = pPos.x + 28.f;
-                lampY = pPos.y + 16.f;
-            } else if (animRow == 2) { // Đi Sang Phải -> Đưa đèn ra phía trước mặt bên phải
-                lampX = pPos.x + 26.f;
-                lampY = pPos.y + 14.f;
-            } else if (animRow == 3) { // Đi Sang Trái -> Đưa đèn ra phía trước mặt bên trái
-                lampX = pPos.x - 2.f;
-                lampY = pPos.y + 14.f;
+                lampX = pPos.x + 24.f;
+                lampY = pPos.y + 19.f;
+            } else if (animRow == 2) { // Đi Sang Phải -> Cầm ngay bàn tay bên phải
+                lampX = pPos.x + 16.f;
+                lampY = pPos.y + 19.f;
+            } else if (animRow == 3) { // Đi Sang Trái -> Cầm ngay bàn tay bên trái
+                lampX = pPos.x + 10.f;
+                lampY = pPos.y + 19.f;
             }
             m_handLampSprite.setPosition(lampX, lampY);
             window.draw(m_handLampSprite);
@@ -1498,20 +1498,20 @@ void GameState::draw(sf::RenderWindow& window) {
         if (!m_playerDrowned) {
             sf::Vector2f pPos = m_player->getPosition();
             int animRow = m_player->m_animRow;
-            float lampX = pPos.x + 28.f;
-            float lampY = pPos.y + 16.f;
+            float lampX = pPos.x + 24.f;
+            float lampY = pPos.y + 19.f;
             if (animRow == 0) {
-                lampX = pPos.x + 26.f;
-                lampY = pPos.y + 14.f;
+                lampX = pPos.x + 24.f;
+                lampY = pPos.y + 17.f;
             } else if (animRow == 1) {
-                lampX = pPos.x + 28.f;
-                lampY = pPos.y + 16.f;
+                lampX = pPos.x + 24.f;
+                lampY = pPos.y + 19.f;
             } else if (animRow == 2) {
-                lampX = pPos.x + 26.f;
-                lampY = pPos.y + 14.f;
+                lampX = pPos.x + 16.f;
+                lampY = pPos.y + 19.f;
             } else if (animRow == 3) {
-                lampX = pPos.x - 2.f;
-                lampY = pPos.y + 14.f;
+                lampX = pPos.x + 10.f;
+                lampY = pPos.y + 19.f;
             }
 
             float bulbX = lampX + 7.f;
