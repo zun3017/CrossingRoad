@@ -118,8 +118,8 @@ private:
     sf::Texture m_playerDrownTexture;
     bool m_playerDrownLoaded = false;
 
-    // Màn Đêm (Night Mode): 5 màn sáng - 2 màn tối
-    bool isNightMode() const { return ((m_level - 1) % 7) >= 5; }
+    // Màn Đêm (Night Mode): Luân phiên 1 màn sáng - 1 màn tối (Level lẻ = Sáng, Level chẵn = Tối)
+    bool isNightMode() const { return (m_level % 2 == 0); }
     sf::Sprite m_handLampSprite;
     bool m_handLampLoaded = false;
     sf::Sprite m_streetLampSprite;
