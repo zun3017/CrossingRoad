@@ -22,6 +22,12 @@ constexpr float CELL_SIZE            = 48.0f;
 constexpr int GRID_COLS = static_cast<int>(WINDOW_WIDTH / CELL_SIZE);   // 800/48 = 16 (dư 32px)
 constexpr int GRID_ROWS = static_cast<int>(WINDOW_HEIGHT / CELL_SIZE);  // 600/48 = 12 (dư 24px)
 
+enum class PlayerSkin {
+    Default = 0,
+    Beach = 1,
+    Mafia = 2
+};
+
 class Game {
 public:
     Game();
@@ -64,6 +70,13 @@ public:
 
     void playSound(const std::string& filename);
 
+    // === Quản lý Skin nhân vật ===
+    PlayerSkin getPlayerSkin() const;
+    void setPlayerSkin(PlayerSkin skin);
+    std::string getPlayerSkinPath() const;
+    std::string getPlayerDrownPath() const;
+    std::string getPlayerHitPath() const;
+
     // === Lấy StateMachine (cho trường hợp đặc biệt) ===
     StateMachine& getStateMachine();
 
@@ -92,6 +105,7 @@ private:
     bool m_musicEnabled  = true;
     float m_musicVolume  = 65.0f;
     bool m_motionEnabled = true;
+    PlayerSkin m_playerSkin = PlayerSkin::Default;
 
     // Game đang chạy?
     bool m_running = true;
