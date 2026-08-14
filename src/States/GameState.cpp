@@ -188,9 +188,9 @@ void GameState::generateMap() {
             auto& targetRow = m_terrains[chosenIdx];
             ItemData clockItem;
             float itemX = static_cast<float>(80 + std::rand() % 640);
-            clockItem.shape.setRadius(14.f);
+            clockItem.shape.setRadius(19.f); // Tăng kích thước đồng hồ to rõ hơn (đường kính 38px)
             clockItem.shape.setFillColor(sf::Color(0, 229, 255));
-            clockItem.shape.setPosition(itemX, targetRow.yPosition + m_cellSize / 2.f - 14.f);
+            clockItem.shape.setPosition(itemX, targetRow.yPosition + m_cellSize / 2.f - 19.f);
             clockItem.collected = false;
             clockItem.points = 0;
             clockItem.type = ItemType::Clock;
@@ -227,9 +227,9 @@ void GameState::createGrassRow(float y, bool safeZone) {
         } else if (r < 40) { // 15% cơ hội ra đồng hồ ngưng đọng thời gian
             ItemData item;
             float itemX = static_cast<float>(50 + std::rand() % 700);
-            item.shape.setRadius(14.f);
+            item.shape.setRadius(19.f); // Đồng hồ to hơn
             item.shape.setFillColor(sf::Color(0, 229, 255));
-            item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
+            item.shape.setPosition(itemX, y + m_cellSize / 2.f - 19.f);
             item.collected = false;
             item.points = 0;
             item.type = ItemType::Clock;
@@ -256,9 +256,9 @@ void GameState::createRoadRow(float y) {
     if (std::rand() % 100 < 18) {
         ItemData item;
         float itemX = static_cast<float>(80 + std::rand() % 640);
-        item.shape.setRadius(14.f);
+        item.shape.setRadius(19.f); // Đồng hồ to hơn
         item.shape.setFillColor(sf::Color(0, 229, 255));
-        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 14.f);
+        item.shape.setPosition(itemX, y + m_cellSize / 2.f - 19.f);
         item.collected = false;
         item.points = 0;
         item.type = ItemType::Clock;
@@ -1190,7 +1190,28 @@ void GameState::draw(sf::RenderWindow& window) {
             }
         }
 
-        // Vẽ xe cộ
+        // Vẽ items chưa thu thập trên mặt đất (Mô hình siêu nhân & Đồng hồ)
+        // (Vẽ trước xe cộ và tàu hoả để khi xe chạy ngang qua sẽ che khuất vật phẩm)
+        for (auto& item : row.items) {
+            if (!item.collected) {
+                float diam = item.shape.getRadius() * 2.f;
+                if (item.type == ItemType::Clock && m_watchLoaded && m_watchSprite.getTexture()) {
+                    auto texSize = m_watchSprite.getTexture()->getSize();
+                    m_watchSprite.setScale(diam / texSize.x, diam / texSize.y);
+                    m_watchSprite.setPosition(item.shape.getPosition());
+                    window.draw(m_watchSprite);
+                } else if (item.type == ItemType::Superhero && m_texturesLoaded && m_itemSprite.getTexture()) {
+                    auto texSize = m_itemSprite.getTexture()->getSize();
+                    m_itemSprite.setScale(diam / texSize.x, diam / texSize.y);
+                    m_itemSprite.setPosition(item.shape.getPosition());
+                    window.draw(m_itemSprite);
+                } else {
+                    window.draw(item.shape);
+                }
+            }
+        }
+
+        // Vẽ xe cộ (đè lên mặt đường và vật phẩm)
         if (row.type == TerrainType::Road) {
             for (auto& v : row.vehicles) {
                 window.draw(*v);
@@ -1282,26 +1303,6 @@ void GameState::draw(sf::RenderWindow& window) {
                 window.draw(m_logSprite);
             } else {
                 window.draw(log.shape);
-            }
-        }
-
-        // Vẽ items chưa thu thập (Mô hình siêu nhân & Đồng hồ)
-        for (auto& item : row.items) {
-            if (!item.collected) {
-                float diam = item.shape.getRadius() * 2.f;
-                if (item.type == ItemType::Clock && m_watchLoaded && m_watchSprite.getTexture()) {
-                    auto texSize = m_watchSprite.getTexture()->getSize();
-                    m_watchSprite.setScale(diam / texSize.x, diam / texSize.y);
-                    m_watchSprite.setPosition(item.shape.getPosition());
-                    window.draw(m_watchSprite);
-                } else if (item.type == ItemType::Superhero && m_texturesLoaded && m_itemSprite.getTexture()) {
-                    auto texSize = m_itemSprite.getTexture()->getSize();
-                    m_itemSprite.setScale(diam / texSize.x, diam / texSize.y);
-                    m_itemSprite.setPosition(item.shape.getPosition());
-                    window.draw(m_itemSprite);
-                } else {
-                    window.draw(item.shape);
-                }
             }
         }
     }
@@ -1683,8 +1684,9 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
     // Khôi phục items
     for (const auto& sItem : savedRow.items) {
         ItemData item;
-        item.shape.setRadius(14.f);
         item.type = static_cast<ItemType>(sItem.type);
+        float rad = (item.type == ItemType::Clock) ? 19.f : 14.f;
+        item.shape.setRadius(rad);
         item.shape.setFillColor(item.type == ItemType::Clock ? sf::Color(0, 229, 255) : sf::Color(255, 215, 0));
         item.shape.setPosition(sItem.x, sItem.y);
         item.collected = sItem.collected;
