@@ -1461,8 +1461,8 @@ void GameState::draw(sf::RenderWindow& window) {
         }
 
         // 1. Ánh trăng đêm huyền ảo (Midnight Moonlit Ambient Blue)
-        // Phủ một lớp màn đêm xanh tím huyền bí (~45% sáng) để vẫn nhìn rõ khung cảnh
-        m_lightMap.clear(sf::Color(100, 115, 155));
+        // Độ tối đậm hơn (~30% sáng) để tạo không khí đêm sâu thẳm, làm nổi bật các nguồn sáng
+        m_lightMap.clear(sf::Color(65, 78, 115));
 
         // Hàm vẽ quầng sáng hình tròn/elip tỏa mịn không có viền gấp khúc (Smooth Radial Gradient)
         auto drawRadialGlow = [&](float cx, float cy, float rx, float ry, sf::Color coreColor) {
@@ -1518,9 +1518,9 @@ void GameState::draw(sf::RenderWindow& window) {
             float bulbY = lampY + 11.f;
 
             // Quầng sáng vàng ấm tỏa trực tiếp từ ngọn đèn lồng của Shin
-            drawRadialGlow(bulbX, bulbY, 120.f, 110.f, sf::Color(165, 145, 95));
-            drawRadialGlow(bulbX, bulbY, 55.f, 50.f, sf::Color(210, 195, 130));
-            drawRadialGlow(bulbX, bulbY, 22.f, 20.f, sf::Color(255, 240, 180));
+            drawRadialGlow(bulbX, bulbY, 125.f, 115.f, sf::Color(175, 155, 100));
+            drawRadialGlow(bulbX, bulbY, 58.f, 52.f, sf::Color(220, 205, 140));
+            drawRadialGlow(bulbX, bulbY, 24.f, 22.f, sf::Color(255, 245, 190));
         }
 
         // 3. Vầng sáng từ Đèn Đường, Lá Sen, Đèn Pha Ô Tô và Đèn Ray
@@ -1528,41 +1528,47 @@ void GameState::draw(sf::RenderWindow& window) {
             if (row.type == TerrainType::Grass) {
                 // Đèn đường: quầng sáng vàng ấm tỏa từ đầu đèn rọi xuống mặt cỏ
                 for (const auto& lamp : row.streetLamps) {
-                    drawRadialGlow(lamp.x, lamp.y - 48.f, 100.f, 80.f, sf::Color(170, 145, 80));
-                    drawRadialGlow(lamp.x, lamp.y - 60.f, 35.f, 30.f, sf::Color(220, 200, 130));
+                    drawRadialGlow(lamp.x, lamp.y - 48.f, 105.f, 85.f, sf::Color(180, 155, 90));
+                    drawRadialGlow(lamp.x, lamp.y - 60.f, 38.f, 32.f, sf::Color(230, 210, 140));
                 }
             } else if (row.type == TerrainType::River) {
                 // Lá sen có đèn: vầng sáng ngọc bích / vàng dịu lung linh trên mặt nước
                 for (const auto& lotus : row.decorLotuses) {
-                    drawRadialGlow(lotus.x, lotus.y, 65.f, 50.f, sf::Color(120, 165, 150));
-                    drawRadialGlow(lotus.x, lotus.y - 4.f, 25.f, 20.f, sf::Color(180, 230, 200));
+                    drawRadialGlow(lotus.x, lotus.y, 70.f, 55.f, sf::Color(130, 175, 160));
+                    drawRadialGlow(lotus.x, lotus.y - 4.f, 28.f, 22.f, sf::Color(190, 240, 210));
                 }
             } else if (row.type == TerrainType::Road) {
-                // Đèn pha ô tô rọi sáng mặt đường phía trước
+                // Đèn pha ô tô rọi sáng mạnh mẽ mặt đường phía trước
                 for (const auto& v : row.vehicles) {
                     float vx = v->getPosition().x;
                     float vy = v->getPosition().y + 20.f;
                     if (v->getDirection() > 0) {
-                        drawHeadlightBeam(vx + 52.f, vy, 1.f, 140.f, 55.f, sf::Color(140, 130, 85));
+                        drawHeadlightBeam(vx + 52.f, vy, 1.f, 180.f, 65.f, sf::Color(200, 190, 130));
+                        drawHeadlightBeam(vx + 52.f, vy, 1.f, 90.f, 35.f, sf::Color(255, 245, 190));
+                        drawRadialGlow(vx + 52.f, vy, 16.f, 14.f, sf::Color(255, 240, 160));
                     } else {
-                        drawHeadlightBeam(vx + 4.f, vy, -1.f, 140.f, 55.f, sf::Color(140, 130, 85));
+                        drawHeadlightBeam(vx + 4.f, vy, -1.f, 180.f, 65.f, sf::Color(200, 190, 130));
+                        drawHeadlightBeam(vx + 4.f, vy, -1.f, 90.f, 35.f, sf::Color(255, 245, 190));
+                        drawRadialGlow(vx + 4.f, vy, 16.f, 14.f, sf::Color(255, 240, 160));
                     }
                 }
             } else if (row.type == TerrainType::Railway) {
                 // Đèn tín hiệu đường ray
                 if (row.trafficLight.state == LightState::Red) {
-                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(200, 50, 50));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(220, 50, 50));
                 } else if (row.trafficLight.state == LightState::Green) {
-                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(50, 200, 80));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 50.f, 50.f, sf::Color(50, 220, 80));
                 } else {
-                    drawRadialGlow(750.f, row.yPosition + 14.f, 40.f, 40.f, sf::Color(160, 150, 60));
+                    drawRadialGlow(750.f, row.yPosition + 14.f, 40.f, 40.f, sf::Color(180, 170, 70));
                 }
 
+                // Tàu hoả: chỉ chiếu sáng chùm đèn pha mạnh mẽ về phía trước đầu tàu
                 if (row.train.isActive) {
-                    sf::RectangleShape trainBeam(sf::Vector2f(800.f, 48.f));
-                    trainBeam.setPosition(0.f, row.yPosition);
-                    trainBeam.setFillColor(sf::Color(70, 90, 140));
-                    m_lightMap.draw(trainBeam, sf::BlendAdd);
+                    float trainHeadX = row.train.shape.getPosition().x;
+                    float trainY = row.yPosition + 24.f;
+                    drawHeadlightBeam(trainHeadX + 4.f, trainY, -1.f, 260.f, 75.f, sf::Color(230, 220, 150));
+                    drawHeadlightBeam(trainHeadX + 4.f, trainY, -1.f, 120.f, 40.f, sf::Color(255, 245, 190));
+                    drawRadialGlow(trainHeadX + 4.f, trainY, 35.f, 30.f, sf::Color(255, 240, 170));
                 }
             }
         }
