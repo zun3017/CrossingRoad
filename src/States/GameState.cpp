@@ -380,10 +380,12 @@ void GameState::createRiverRow(float y) {
         row.logs.push_back(log);
     }
 
-    // Ban đêm: thêm các lá sen có đèn phát sáng trang trí cố định trên dòng sông
+    // Ban đêm: thêm 6 lá sen có đèn phát sáng trang trí cố định trải đều trên dòng sông
     if (isNightMode()) {
-        row.decorLotuses.push_back({ 220.f, y + m_cellSize / 2.f });
-        row.decorLotuses.push_back({ 580.f, y + m_cellSize / 2.f });
+        const float lotusXs[6] = { 65.f, 200.f, 335.f, 465.f, 600.f, 735.f };
+        for (float lx : lotusXs) {
+            row.decorLotuses.push_back({ lx, y + m_cellSize / 2.f });
+        }
     }
 
     m_terrains.push_back(std::move(row));
@@ -1578,6 +1580,25 @@ void GameState::draw(sf::RenderWindow& window) {
                     drawRadialGlow(trainHeadX + 4.f, trainY, 35.f, 30.f, sf::Color(255, 240, 170));
                 }
             }
+
+            // Vầng sáng phát quang cho các vật phẩm chưa nhặt (Đồng hồ cát ma thuật & Mô hình siêu nhân)
+            for (const auto& item : row.items) {
+                if (!item.collected) {
+                    float ix = item.shape.getPosition().x + item.shape.getRadius();
+                    float iy = item.shape.getPosition().y + item.shape.getRadius();
+                    if (item.type == ItemType::Clock) {
+                        // Đồng hồ ngưng đọng: phát ánh hào quang xanh băng tuyết rực rỡ (Frost Cyan)
+                        drawRadialGlow(ix, iy, 75.f, 75.f, sf::Color(0, 210, 255));
+                        drawRadialGlow(ix, iy, 35.f, 35.f, sf::Color(180, 245, 255));
+                        drawRadialGlow(ix, iy, 15.f, 15.f, sf::Color(255, 255, 255));
+                    } else {
+                        // Mô hình siêu nhân: phát ánh hào quang vàng kim lấp lánh (Golden Star Power)
+                        drawRadialGlow(ix, iy, 65.f, 65.f, sf::Color(255, 215, 0));
+                        drawRadialGlow(ix, iy, 30.f, 30.f, sf::Color(255, 245, 160));
+                        drawRadialGlow(ix, iy, 12.f, 12.f, sf::Color(255, 255, 230));
+                    }
+                }
+            }
         }
 
         m_lightMap.display();
@@ -2007,8 +2028,10 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
 
     // Khôi phục lá sen có đèn trang trí nếu là sông trong màn đêm
     if (row.type == TerrainType::River && isNightMode()) {
-        row.decorLotuses.push_back({ 220.f, row.yPosition + m_cellSize / 2.f });
-        row.decorLotuses.push_back({ 580.f, row.yPosition + m_cellSize / 2.f });
+        const float lotusXs[6] = { 65.f, 200.f, 335.f, 465.f, 600.f, 735.f };
+        for (float lx : lotusXs) {
+            row.decorLotuses.push_back({ lx, row.yPosition + m_cellSize / 2.f });
+        }
     }
 
     // Khởi tạo thông số mặc định cho tàu hoả
