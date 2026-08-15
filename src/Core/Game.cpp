@@ -344,3 +344,45 @@ std::string Game::getPlayerHitPath() const {
         return "assets/textures/skins nv/hitbycar.png";
     }
 }
+
+// === Skin Khúc Gỗ ===
+LogSkin Game::getLogSkin() const {
+    return m_logSkin;
+}
+
+void Game::setLogSkin(LogSkin skin) {
+    m_logSkin = skin;
+}
+
+std::string Game::getLogSkinPath() const {
+    switch (m_logSkin) {
+    case LogSkin::Pink:
+        return "assets/textures/skin_log/log_pink.png";
+    case LogSkin::Red:
+        return "assets/textures/skin_log/log_red.png";
+    case LogSkin::Green:
+    default:
+        return "assets/textures/skin_log/log_green.png";
+    }
+}
+
+// === Skin Xe Hơi ===
+CarSkin Game::getCarSkin() const {
+    return m_carSkin;
+}
+
+void Game::setCarSkin(CarSkin skin) {
+    m_carSkin = skin;
+}
+
+std::string Game::getCarSkinPath() const {
+    switch (m_carSkin) {
+    case CarSkin::Blue2:
+        return "assets/textures/skin car_blue/blue2.png";
+    case CarSkin::Blue3:
+        return "assets/textures/skin car_blue/blue3.png";
+    case CarSkin::Blue1:
+    default:
+        return "assets/textures/skin car_blue/blue1.png";
+    }
+}

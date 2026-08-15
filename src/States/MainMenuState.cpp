@@ -578,18 +578,44 @@ void MainMenuState::initButtons()
 // ============================================================
 // INIT SKIN SELECTION UI POPUP
 // ============================================================
+// KHỞI TẠO POPUP CHỌN SKIN (3 DANH MỤC: NHÂN VẬT, KHÚC GỖ, XE Ô TÔ)
+// ============================================================
 void MainMenuState::initSkinSelectionUI()
 {
-    m_skinPreviewLoaded[0] = m_skinPreviewTextures[0].loadFromFile("assets/textures/skins nv/player.png");
-    if (!m_skinPreviewLoaded[0]) m_skinPreviewLoaded[0] = m_skinPreviewTextures[0].loadFromFile("assets/textures/player.png");
-    if (!m_skinPreviewLoaded[0]) m_skinPreviewLoaded[0] = m_skinPreviewTextures[0].loadFromFile("CrossingRoad/assets/textures/skins nv/player.png");
+    // 1. Load Textures Preview Nhân Vật (Shin)
+    m_playerPreviewLoaded[0] = m_playerPreviewTextures[0].loadFromFile("assets/textures/skins nv/player.png");
+    if (!m_playerPreviewLoaded[0]) m_playerPreviewLoaded[0] = m_playerPreviewTextures[0].loadFromFile("assets/textures/player.png");
+    if (!m_playerPreviewLoaded[0]) m_playerPreviewLoaded[0] = m_playerPreviewTextures[0].loadFromFile("CrossingRoad/assets/textures/skins nv/player.png");
 
-    m_skinPreviewLoaded[1] = m_skinPreviewTextures[1].loadFromFile("assets/textures/skins nv/player_beach.png");
-    if (!m_skinPreviewLoaded[1]) m_skinPreviewLoaded[1] = m_skinPreviewTextures[1].loadFromFile("CrossingRoad/assets/textures/skins nv/player_beach.png");
+    m_playerPreviewLoaded[1] = m_playerPreviewTextures[1].loadFromFile("assets/textures/skins nv/player_beach.png");
+    if (!m_playerPreviewLoaded[1]) m_playerPreviewLoaded[1] = m_playerPreviewTextures[1].loadFromFile("CrossingRoad/assets/textures/skins nv/player_beach.png");
 
-    m_skinPreviewLoaded[2] = m_skinPreviewTextures[2].loadFromFile("assets/textures/skins nv/player_mafia.png");
-    if (!m_skinPreviewLoaded[2]) m_skinPreviewLoaded[2] = m_skinPreviewTextures[2].loadFromFile("CrossingRoad/assets/textures/skins nv/player_mafia.png");
+    m_playerPreviewLoaded[2] = m_playerPreviewTextures[2].loadFromFile("assets/textures/skins nv/player_mafia.png");
+    if (!m_playerPreviewLoaded[2]) m_playerPreviewLoaded[2] = m_playerPreviewTextures[2].loadFromFile("CrossingRoad/assets/textures/skins nv/player_mafia.png");
 
+    // 2. Load Textures Preview Khúc Gỗ (Log)
+    m_logPreviewLoaded[0] = m_logPreviewTextures[0].loadFromFile("assets/textures/skin_log/log_green.png");
+    if (!m_logPreviewLoaded[0]) m_logPreviewLoaded[0] = m_logPreviewTextures[0].loadFromFile("assets/textures/log.png");
+    if (!m_logPreviewLoaded[0]) m_logPreviewLoaded[0] = m_logPreviewTextures[0].loadFromFile("CrossingRoad/assets/textures/skin_log/log_green.png");
+
+    m_logPreviewLoaded[1] = m_logPreviewTextures[1].loadFromFile("assets/textures/skin_log/log_pink.png");
+    if (!m_logPreviewLoaded[1]) m_logPreviewLoaded[1] = m_logPreviewTextures[1].loadFromFile("CrossingRoad/assets/textures/skin_log/log_pink.png");
+
+    m_logPreviewLoaded[2] = m_logPreviewTextures[2].loadFromFile("assets/textures/skin_log/log_red.png");
+    if (!m_logPreviewLoaded[2]) m_logPreviewLoaded[2] = m_logPreviewTextures[2].loadFromFile("CrossingRoad/assets/textures/skin_log/log_red.png");
+
+    // 3. Load Textures Preview Xe Ô Tô (Blue Car)
+    m_carPreviewLoaded[0] = m_carPreviewTextures[0].loadFromFile("assets/textures/skin car_blue/blue1.png");
+    if (!m_carPreviewLoaded[0]) m_carPreviewLoaded[0] = m_carPreviewTextures[0].loadFromFile("assets/textures/car_blue.png");
+    if (!m_carPreviewLoaded[0]) m_carPreviewLoaded[0] = m_carPreviewTextures[0].loadFromFile("CrossingRoad/assets/textures/skin car_blue/blue1.png");
+
+    m_carPreviewLoaded[1] = m_carPreviewTextures[1].loadFromFile("assets/textures/skin car_blue/blue2.png");
+    if (!m_carPreviewLoaded[1]) m_carPreviewLoaded[1] = m_carPreviewTextures[1].loadFromFile("CrossingRoad/assets/textures/skin car_blue/blue2.png");
+
+    m_carPreviewLoaded[2] = m_carPreviewTextures[2].loadFromFile("assets/textures/skin car_blue/blue3.png");
+    if (!m_carPreviewLoaded[2]) m_carPreviewLoaded[2] = m_carPreviewTextures[2].loadFromFile("CrossingRoad/assets/textures/skin car_blue/blue3.png");
+
+    // Nút SELECT / SELECTED
     m_selectTextLoaded = m_selectTextTexture.loadFromFile("assets/textures/select_text.png");
     if (!m_selectTextLoaded) m_selectTextLoaded = m_selectTextTexture.loadFromFile("CrossingRoad/assets/textures/select_text.png");
 
@@ -598,44 +624,66 @@ void MainMenuState::initSkinSelectionUI()
 
     // Lớp phủ nền mờ
     m_skinOverlayDim.setSize(sf::Vector2f(800.f, 600.f));
-    m_skinOverlayDim.setFillColor(sf::Color(0, 0, 0, 160));
+    m_skinOverlayDim.setFillColor(sf::Color(0, 0, 0, 175));
 
-    // Khung lớn
-    m_skinOuterFrame.setSize(sf::Vector2f(660.f, 480.f));
-    m_skinOuterFrame.setOrigin(330.f, 240.f);
+    // Khung lớn bên ngoài
+    m_skinOuterFrame.setSize(sf::Vector2f(680.f, 510.f));
+    m_skinOuterFrame.setOrigin(340.f, 255.f);
     m_skinOuterFrame.setPosition(400.f, 300.f);
-    m_skinOuterFrame.setFillColor(sf::Color(18, 18, 35, 235));
-    m_skinOuterFrame.setOutlineColor(sf::Color(90, 90, 150, 220));
-    m_skinOuterFrame.setOutlineThickness(3.f);
+    m_skinOuterFrame.setFillColor(sf::Color(18, 26, 46, 240));
+    m_skinOuterFrame.setOutlineColor(sf::Color(65, 105, 170, 230));
+    m_skinOuterFrame.setOutlineThickness(3.5f);
 
-    // Khung nhỏ bên trong
-    m_skinInnerFrame.setSize(sf::Vector2f(380.f, 370.f));
-    m_skinInnerFrame.setOrigin(190.f, 185.f);
-    m_skinInnerFrame.setPosition(400.f, 315.f);
-    m_skinInnerFrame.setFillColor(sf::Color(30, 30, 52, 240));
-    m_skinInnerFrame.setOutlineColor(sf::Color(130, 130, 190, 220));
+    // Khung nhỏ preview ở giữa
+    m_skinInnerFrame.setSize(sf::Vector2f(420.f, 280.f));
+    m_skinInnerFrame.setOrigin(210.f, 140.f);
+    m_skinInnerFrame.setPosition(400.f, 290.f);
+    m_skinInnerFrame.setFillColor(sf::Color(28, 38, 65, 245));
+    m_skinInnerFrame.setOutlineColor(sf::Color(90, 125, 190, 230));
     m_skinInnerFrame.setOutlineThickness(2.f);
+
+    // 3 Tab Chuyển Đổi Danh Mục (Nhân vật / Khúc gỗ / Xe ô tô)
+    const char* tabNames[3] = { "1. NHAN VAT", "2. KHUC GO", "3. XE O TO" };
+    float tabCentersX[3] = { 235.f, 400.f, 565.f };
+    for (int t = 0; t < 3; ++t)
+    {
+        m_tabBgs[t].setSize(sf::Vector2f(150.f, 36.f));
+        m_tabBgs[t].setOrigin(75.f, 18.f);
+        m_tabBgs[t].setPosition(tabCentersX[t], 115.f);
+        m_tabBgs[t].setOutlineThickness(2.f);
+
+        if (m_fontLoaded)
+        {
+            m_tabTexts[t].setFont(m_font);
+            m_tabTexts[t].setString(tabNames[t]);
+            m_tabTexts[t].setCharacterSize(14);
+            m_tabTexts[t].setStyle(sf::Text::Bold);
+            sf::FloatRect tb = m_tabTexts[t].getLocalBounds();
+            m_tabTexts[t].setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+            m_tabTexts[t].setPosition(tabCentersX[t], 115.f);
+        }
+    }
 
     // Tiêu đề & các nút chữ
     if (m_fontLoaded)
     {
         m_skinTitleText.setFont(m_font);
-        m_skinTitleText.setString("SKIN SELECTION");
-        m_skinTitleText.setCharacterSize(28);
+        m_skinTitleText.setString("CUA HANG SKIN & TRANG PHUC");
+        m_skinTitleText.setCharacterSize(24);
         m_skinTitleText.setFillColor(sf::Color(255, 215, 0));
         m_skinTitleText.setStyle(sf::Text::Bold);
         sf::FloatRect tb = m_skinTitleText.getLocalBounds();
         m_skinTitleText.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
-        m_skinTitleText.setPosition(400.f, 88.f);
+        m_skinTitleText.setPosition(400.f, 72.f);
 
         m_skinCloseBtn.setFont(m_font);
         m_skinCloseBtn.setString("X");
         m_skinCloseBtn.setCharacterSize(26);
-        m_skinCloseBtn.setFillColor(sf::Color(200, 200, 200));
+        m_skinCloseBtn.setFillColor(sf::Color(220, 220, 220));
         m_skinCloseBtn.setStyle(sf::Text::Bold);
         sf::FloatRect cb = m_skinCloseBtn.getLocalBounds();
         m_skinCloseBtn.setOrigin(cb.left + cb.width / 2.f, cb.top + cb.height / 2.f);
-        m_skinCloseBtn.setPosition(700.f, 88.f);
+        m_skinCloseBtn.setPosition(710.f, 72.f);
 
         m_arrowLeftText.setFont(m_font);
         m_arrowLeftText.setString("<");
@@ -644,7 +692,7 @@ void MainMenuState::initSkinSelectionUI()
         m_arrowLeftText.setStyle(sf::Text::Bold);
         sf::FloatRect ab1 = m_arrowLeftText.getLocalBounds();
         m_arrowLeftText.setOrigin(ab1.left + ab1.width / 2.f, ab1.top + ab1.height / 2.f);
-        m_arrowLeftText.setPosition(250.f, 220.f);
+        m_arrowLeftText.setPosition(240.f, 240.f);
 
         m_arrowRightText.setFont(m_font);
         m_arrowRightText.setString(">");
@@ -653,65 +701,166 @@ void MainMenuState::initSkinSelectionUI()
         m_arrowRightText.setStyle(sf::Text::Bold);
         sf::FloatRect ab2 = m_arrowRightText.getLocalBounds();
         m_arrowRightText.setOrigin(ab2.left + ab2.width / 2.f, ab2.top + ab2.height / 2.f);
-        m_arrowRightText.setPosition(550.f, 220.f);
+        m_arrowRightText.setPosition(560.f, 240.f);
 
         m_skinNameText.setFont(m_font);
-        m_skinNameText.setCharacterSize(24);
+        m_skinNameText.setCharacterSize(20);
         m_skinNameText.setFillColor(sf::Color::White);
         m_skinNameText.setStyle(sf::Text::Bold);
+
+        m_skinDescText.setFont(m_font);
+        m_skinDescText.setCharacterSize(13);
+        m_skinDescText.setFillColor(sf::Color(160, 190, 230));
     }
 
     updateSkinPreview();
 }
 
 // ============================================================
-// UPDATE SKIN PREVIEW
+// CẬP NHẬT PREVIEW VÀ HIỂN THỊ SKIN ĐANG CHỌN
 // ============================================================
 void MainMenuState::updateSkinPreview()
 {
     if (m_viewingSkinIndex < 0) m_viewingSkinIndex = 0;
     if (m_viewingSkinIndex >= TOTAL_SKINS) m_viewingSkinIndex = TOTAL_SKINS - 1;
 
-    // 1. Ảnh Demo Skin
-    if (m_skinPreviewLoaded[m_viewingSkinIndex])
+    // 1. Cập nhật giao diện 3 Tab (Tab đang chọn sáng vàng)
+    for (int t = 0; t < 3; ++t)
     {
-        m_skinPreviewSprite.setTexture(m_skinPreviewTextures[m_viewingSkinIndex]);
-        sf::Vector2u texSize = m_skinPreviewTextures[m_viewingSkinIndex].getSize();
-        if (texSize.x > 0 && texSize.y > 0)
+        if (t == m_viewingCategory)
         {
-            int frameW = static_cast<int>(texSize.x / 4);
-            int frameH = static_cast<int>(texSize.y / 4);
-            // Frame nhìn về phía trước (hàng 1, frame 0)
-            m_skinPreviewSprite.setTextureRect(sf::IntRect(0, frameH, frameW, frameH));
-            m_skinPreviewSprite.setOrigin(frameW / 2.f, frameH / 2.f);
-            float scale = 110.f / static_cast<float>(frameH);
-            m_skinPreviewSprite.setScale(scale, scale);
-            m_skinPreviewSprite.setPosition(400.f, 220.f);
+            m_tabBgs[t].setFillColor(sf::Color(245, 180, 20));
+            m_tabBgs[t].setOutlineColor(sf::Color(255, 255, 255));
+            m_tabTexts[t].setFillColor(sf::Color(30, 20, 0));
+        }
+        else
+        {
+            m_tabBgs[t].setFillColor(sf::Color(35, 45, 75));
+            m_tabBgs[t].setOutlineColor(sf::Color(70, 90, 140));
+            m_tabTexts[t].setFillColor(sf::Color(180, 205, 240));
         }
     }
 
-    // 2. Tên Skin
-    std::string skinNames[TOTAL_SKINS] = { "Default", "Beach", "Mafia" };
-    if (m_fontLoaded)
+    bool isCurrent = false;
+
+    // 2. Xử lý hiển thị Preview theo Danh mục đang chọn
+    if (m_viewingCategory == 0) // Danh mục: NHÂN VẬT (Shin)
     {
-        m_skinNameText.setString(skinNames[m_viewingSkinIndex]);
-        sf::FloatRect nb = m_skinNameText.getLocalBounds();
-        m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
-        m_skinNameText.setPosition(400.f, 315.f);
+        if (m_playerPreviewLoaded[m_viewingSkinIndex])
+        {
+            m_skinPreviewSprite.setTexture(m_playerPreviewTextures[m_viewingSkinIndex]);
+            sf::Vector2u texSize = m_playerPreviewTextures[m_viewingSkinIndex].getSize();
+            if (texSize.x > 0 && texSize.y > 0)
+            {
+                int frameW = static_cast<int>(texSize.x / 4);
+                int frameH = static_cast<int>(texSize.y / 4);
+                m_skinPreviewSprite.setTextureRect(sf::IntRect(0, frameH, frameW, frameH));
+                m_skinPreviewSprite.setOrigin(frameW / 2.f, frameH / 2.f);
+                float scale = 110.f / static_cast<float>(frameH);
+                m_skinPreviewSprite.setScale(scale, scale);
+                m_skinPreviewSprite.setPosition(400.f, 235.f);
+            }
+        }
+
+        const char* charNames[3] = { "Shin Co Dien (Default)", "Shin Di Bien (Beach Boy)", "Shin Mafia Boss" };
+        const char* charDescs[3] = { "Ao do quan vang quen thuoc tuoi tho", "Kinh ram sanh dieu va phao boi vit vang", "Au phuc den lich lam cua trum Kasukabe" };
+        
+        if (m_fontLoaded)
+        {
+            m_skinNameText.setString(charNames[m_viewingSkinIndex]);
+            sf::FloatRect nb = m_skinNameText.getLocalBounds();
+            m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
+            m_skinNameText.setPosition(400.f, 320.f);
+
+            m_skinDescText.setString(charDescs[m_viewingSkinIndex]);
+            sf::FloatRect db = m_skinDescText.getLocalBounds();
+            m_skinDescText.setOrigin(db.left + db.width / 2.f, db.top + db.height / 2.f);
+            m_skinDescText.setPosition(400.f, 350.f);
+        }
+
+        isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+    }
+    else if (m_viewingCategory == 1) // Danh mục: KHÚC GỖ (Log)
+    {
+        if (m_logPreviewLoaded[m_viewingSkinIndex])
+        {
+            m_skinPreviewSprite.setTexture(m_logPreviewTextures[m_viewingSkinIndex]);
+            sf::Vector2u texSize = m_logPreviewTextures[m_viewingSkinIndex].getSize();
+            if (texSize.x > 0 && texSize.y > 0)
+            {
+                m_skinPreviewSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+                m_skinPreviewSprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+                float scaleX = 180.f / static_cast<float>(texSize.x);
+                float scaleY = 60.f / static_cast<float>(texSize.y);
+                m_skinPreviewSprite.setScale(scaleX, scaleY);
+                m_skinPreviewSprite.setPosition(400.f, 235.f);
+            }
+        }
+
+        const char* logNames[3] = { "Khuc Go Xanh (Green Log)", "Khuc Go Hong (Pink Log)", "Khuc Go Do (Red Log)" };
+        const char* logDescs[3] = { "Than go rung xanh muot ma tu nhien", "Khuc go phu hoa anh dao hong mong mo", "Khuc go do ruc lua noi bat tren song" };
+
+        if (m_fontLoaded)
+        {
+            m_skinNameText.setString(logNames[m_viewingSkinIndex]);
+            sf::FloatRect nb = m_skinNameText.getLocalBounds();
+            m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
+            m_skinNameText.setPosition(400.f, 320.f);
+
+            m_skinDescText.setString(logDescs[m_viewingSkinIndex]);
+            sf::FloatRect db = m_skinDescText.getLocalBounds();
+            m_skinDescText.setOrigin(db.left + db.width / 2.f, db.top + db.height / 2.f);
+            m_skinDescText.setPosition(400.f, 350.f);
+        }
+
+        isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getLogSkin()));
+    }
+    else if (m_viewingCategory == 2) // Danh mục: XE Ô TÔ (Blue Car)
+    {
+        if (m_carPreviewLoaded[m_viewingSkinIndex])
+        {
+            m_skinPreviewSprite.setTexture(m_carPreviewTextures[m_viewingSkinIndex]);
+            sf::Vector2u texSize = m_carPreviewTextures[m_viewingSkinIndex].getSize();
+            if (texSize.x > 0 && texSize.y > 0)
+            {
+                m_skinPreviewSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
+                m_skinPreviewSprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+                float scale = 65.f / static_cast<float>(texSize.y);
+                m_skinPreviewSprite.setScale(scale, scale);
+                m_skinPreviewSprite.setPosition(400.f, 235.f);
+            }
+        }
+
+        const char* carNames[3] = { "Xe Xanh 1 (Classic Blue)", "Xe Xanh 2 (Sport Blue)", "Xe Xanh 3 (Cyber Blue)" };
+        const char* carDescs[3] = { "Xe Mini Cooper xanh duong co dien", "Xe the thao xanh the thao gam thap", "Xe the thao phong cach Cyberpunk cuc sang" };
+
+        if (m_fontLoaded)
+        {
+            m_skinNameText.setString(carNames[m_viewingSkinIndex]);
+            sf::FloatRect nb = m_skinNameText.getLocalBounds();
+            m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
+            m_skinNameText.setPosition(400.f, 320.f);
+
+            m_skinDescText.setString(carDescs[m_viewingSkinIndex]);
+            sf::FloatRect db = m_skinDescText.getLocalBounds();
+            m_skinDescText.setOrigin(db.left + db.width / 2.f, db.top + db.height / 2.f);
+            m_skinDescText.setPosition(400.f, 350.f);
+        }
+
+        isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getCarSkin()));
     }
 
-    // 3. Nút SELECT / SELECTED (Tăng kích thước to rõ hơn)
-    bool isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+    // 3. Nút SELECT / SELECTED
     if (isCurrent && m_selectedTextLoaded)
     {
         m_selectBtnSprite.setTexture(m_selectedTextTexture);
         sf::Vector2u sSize = m_selectedTextTexture.getSize();
         if (sSize.x > 0 && sSize.y > 0)
         {
-            float btnScale = 65.f / static_cast<float>(sSize.y);
+            float btnScale = 62.f / static_cast<float>(sSize.y);
             m_selectBtnSprite.setScale(btnScale, btnScale);
             m_selectBtnSprite.setOrigin(sSize.x / 2.f, sSize.y / 2.f);
-            m_selectBtnSprite.setPosition(400.f, 405.f);
+            m_selectBtnSprite.setPosition(400.f, 430.f);
             m_selectBtnSprite.setColor(sf::Color::White);
         }
     }
@@ -721,10 +870,10 @@ void MainMenuState::updateSkinPreview()
         sf::Vector2u sSize = m_selectTextTexture.getSize();
         if (sSize.x > 0 && sSize.y > 0)
         {
-            float btnScale = 65.f / static_cast<float>(sSize.y);
+            float btnScale = 62.f / static_cast<float>(sSize.y);
             m_selectBtnSprite.setScale(btnScale, btnScale);
             m_selectBtnSprite.setOrigin(sSize.x / 2.f, sSize.y / 2.f);
-            m_selectBtnSprite.setPosition(400.f, 405.f);
+            m_selectBtnSprite.setPosition(400.f, 430.f);
             m_selectBtnSprite.setColor(sf::Color::White);
         }
     }
@@ -876,7 +1025,7 @@ void MainMenuState::handleInput(
             sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
 
             // Nút đóng X (ở góc trên phải bảng)
-            sf::FloatRect closeBounds(680.f, 70.f, 45.f, 45.f);
+            sf::FloatRect closeBounds(680.f, 50.f, 50.f, 50.f);
             if (closeBounds.contains(mousePos))
             {
                 m_showSkinsUI = false;
@@ -884,10 +1033,28 @@ void MainMenuState::handleInput(
                 return;
             }
 
-            // Mũi tên trái < (quay lại skin trước)
+            // Click chuyển đổi 3 Tab Danh Mục (Nhân vật / Khúc gỗ / Xe ô tô)
+            for (int t = 0; t < 3; ++t)
+            {
+                if (m_tabBgs[t].getGlobalBounds().contains(mousePos))
+                {
+                    if (m_viewingCategory != t)
+                    {
+                        m_viewingCategory = t;
+                        if (t == 0) m_viewingSkinIndex = static_cast<int>(Game::instance().getPlayerSkin());
+                        else if (t == 1) m_viewingSkinIndex = static_cast<int>(Game::instance().getLogSkin());
+                        else if (t == 2) m_viewingSkinIndex = static_cast<int>(Game::instance().getCarSkin());
+                        Game::instance().playSound("assets/audio/sfx_click.wav");
+                        updateSkinPreview();
+                    }
+                    return;
+                }
+            }
+
+            // Mũi tên trái < (quay lại skin trước trong tab hiện tại)
             if (m_viewingSkinIndex > 0)
             {
-                sf::FloatRect leftArrowBounds(220.f, 190.f, 60.f, 60.f);
+                sf::FloatRect leftArrowBounds(210.f, 210.f, 60.f, 60.f);
                 if (leftArrowBounds.contains(mousePos))
                 {
                     m_viewingSkinIndex--;
@@ -897,10 +1064,10 @@ void MainMenuState::handleInput(
                 }
             }
 
-            // Mũi tên phải > (chuyển sang skin kế tiếp)
+            // Mũi tên phải > (chuyển sang skin kế tiếp trong tab hiện tại)
             if (m_viewingSkinIndex < TOTAL_SKINS - 1)
             {
-                sf::FloatRect rightArrowBounds(520.f, 190.f, 60.f, 60.f);
+                sf::FloatRect rightArrowBounds(530.f, 210.f, 60.f, 60.f);
                 if (rightArrowBounds.contains(mousePos))
                 {
                     m_viewingSkinIndex++;
@@ -910,13 +1077,20 @@ void MainMenuState::handleInput(
                 }
             }
 
-            // Nút SELECT
-            bool isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+            // Nút SELECT (Trang bị Skin cho danh mục tương ứng)
+            bool isCurrent = false;
+            if (m_viewingCategory == 0) isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+            else if (m_viewingCategory == 1) isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getLogSkin()));
+            else if (m_viewingCategory == 2) isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getCarSkin()));
+
             if (!isCurrent)
             {
                 if (m_selectBtnSprite.getGlobalBounds().contains(mousePos))
                 {
-                    Game::instance().setPlayerSkin(static_cast<PlayerSkin>(m_viewingSkinIndex));
+                    if (m_viewingCategory == 0) Game::instance().setPlayerSkin(static_cast<PlayerSkin>(m_viewingSkinIndex));
+                    else if (m_viewingCategory == 1) Game::instance().setLogSkin(static_cast<LogSkin>(m_viewingSkinIndex));
+                    else if (m_viewingCategory == 2) Game::instance().setCarSkin(static_cast<CarSkin>(m_viewingSkinIndex));
+                    
                     Game::instance().playSound("assets/audio/sfx_click.wav");
                     updateSkinPreview();
                     return;
@@ -1370,11 +1544,19 @@ void MainMenuState::draw(
         window.draw(m_skinOuterFrame);
         window.draw(m_skinInnerFrame);
 
+        // Vẽ 3 Tab chuyển đổi danh mục
+        for (int t = 0; t < 3; ++t)
+        {
+            window.draw(m_tabBgs[t]);
+            window.draw(m_tabTexts[t]);
+        }
+
         if (m_fontLoaded)
         {
             window.draw(m_skinTitleText);
             window.draw(m_skinCloseBtn);
             window.draw(m_skinNameText);
+            window.draw(m_skinDescText);
 
             if (m_viewingSkinIndex > 0)
             {
@@ -1386,7 +1568,12 @@ void MainMenuState::draw(
             }
         }
 
-        if (m_skinPreviewLoaded[m_viewingSkinIndex])
+        bool hasPreview = false;
+        if (m_viewingCategory == 0 && m_playerPreviewLoaded[m_viewingSkinIndex]) hasPreview = true;
+        else if (m_viewingCategory == 1 && m_logPreviewLoaded[m_viewingSkinIndex]) hasPreview = true;
+        else if (m_viewingCategory == 2 && m_carPreviewLoaded[m_viewingSkinIndex]) hasPreview = true;
+
+        if (hasPreview)
         {
             window.draw(m_skinPreviewSprite);
         }
