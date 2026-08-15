@@ -100,7 +100,7 @@ void GameState::init() {
         if (tLotus.getSize().x > 0) {
             m_lotusSprite.setTexture(tLotus);
             m_lotusLoaded = true;
-            float lotusH = 36.f; // Kích thước lá sen trang trí
+            float lotusH = 28.f; // Kích thước lá sen trang trí vừa vặn mép bờ sông
             float scale = lotusH / static_cast<float>(tLotus.getSize().y);
             m_lotusSprite.setScale(scale, scale);
             m_lotusSprite.setOrigin(static_cast<float>(tLotus.getSize().x) / 2.f, static_cast<float>(tLotus.getSize().y) / 2.f);
@@ -380,11 +380,15 @@ void GameState::createRiverRow(float y) {
         row.logs.push_back(log);
     }
 
-    // Ban đêm: thêm 6 lá sen có đèn phát sáng trang trí cố định trải đều trên dòng sông
+    // Ban đêm: thêm 6 lá sen có đèn phát sáng trang trí đan chéo (zigzag) sát mép bờ sông trên và dưới
     if (isNightMode()) {
-        const float lotusXs[6] = { 65.f, 200.f, 335.f, 465.f, 600.f, 735.f };
-        for (float lx : lotusXs) {
-            row.decorLotuses.push_back({ lx, y + m_cellSize / 2.f });
+        const float lotusXs[6] = { 70.f, 200.f, 330.f, 460.f, 590.f, 720.f };
+        // Luân phiên vị trí bắt đầu theo từng hàng sông để các hàng cạnh nhau cũng so le
+        bool startTop = (static_cast<int>(std::round(std::abs(y) / m_cellSize)) % 2 == 0);
+        for (int i = 0; i < 6; ++i) {
+            bool isTop = (i % 2 == 0) ? startTop : !startTop;
+            float ly = isTop ? (y + 11.f) : (y + m_cellSize - 11.f);
+            row.decorLotuses.push_back({ lotusXs[i], ly });
         }
     }
 
@@ -1537,8 +1541,8 @@ void GameState::draw(sf::RenderWindow& window) {
             } else if (row.type == TerrainType::River) {
                 // Lá sen có đèn: vầng sáng ngọc bích / vàng dịu lung linh trên mặt nước
                 for (const auto& lotus : row.decorLotuses) {
-                    drawRadialGlow(lotus.x, lotus.y, 70.f, 55.f, sf::Color(130, 175, 160));
-                    drawRadialGlow(lotus.x, lotus.y - 4.f, 28.f, 22.f, sf::Color(190, 240, 210));
+                    drawRadialGlow(lotus.x, lotus.y, 60.f, 45.f, sf::Color(130, 175, 160));
+                    drawRadialGlow(lotus.x, lotus.y - 3.f, 24.f, 18.f, sf::Color(190, 240, 210));
                 }
             } else if (row.type == TerrainType::Road) {
                 // Đèn pha ô tô rọi sáng mạnh mẽ mặt đường phía trước
@@ -2026,11 +2030,14 @@ void GameState::createExactRow(const SavedTerrainRow& savedRow) {
         row.streetLamps.push_back({ 725.f, row.yPosition + m_cellSize });
     }
 
-    // Khôi phục lá sen có đèn trang trí nếu là sông trong màn đêm
+    // Khôi phục lá sen có đèn trang trí nếu là sông trong màn đêm (đan chéo mép bờ trên và dưới)
     if (row.type == TerrainType::River && isNightMode()) {
-        const float lotusXs[6] = { 65.f, 200.f, 335.f, 465.f, 600.f, 735.f };
-        for (float lx : lotusXs) {
-            row.decorLotuses.push_back({ lx, row.yPosition + m_cellSize / 2.f });
+        const float lotusXs[6] = { 70.f, 200.f, 330.f, 460.f, 590.f, 720.f };
+        bool startTop = (static_cast<int>(std::round(std::abs(row.yPosition) / m_cellSize)) % 2 == 0);
+        for (int i = 0; i < 6; ++i) {
+            bool isTop = (i % 2 == 0) ? startTop : !startTop;
+            float ly = isTop ? (row.yPosition + 11.f) : (row.yPosition + m_cellSize - 11.f);
+            row.decorLotuses.push_back({ lotusXs[i], ly });
         }
     }
 
