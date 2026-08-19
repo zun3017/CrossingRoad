@@ -624,32 +624,32 @@ void MainMenuState::initSkinSelectionUI()
 
     // Lớp phủ nền mờ
     m_skinOverlayDim.setSize(sf::Vector2f(800.f, 600.f));
-    m_skinOverlayDim.setFillColor(sf::Color(0, 0, 0, 175));
+    m_skinOverlayDim.setFillColor(sf::Color(0, 0, 0, 185));
 
     // Khung lớn bên ngoài
-    m_skinOuterFrame.setSize(sf::Vector2f(680.f, 510.f));
-    m_skinOuterFrame.setOrigin(340.f, 255.f);
+    m_skinOuterFrame.setSize(sf::Vector2f(700.f, 520.f));
+    m_skinOuterFrame.setOrigin(350.f, 260.f);
     m_skinOuterFrame.setPosition(400.f, 300.f);
-    m_skinOuterFrame.setFillColor(sf::Color(18, 26, 46, 240));
-    m_skinOuterFrame.setOutlineColor(sf::Color(65, 105, 170, 230));
+    m_skinOuterFrame.setFillColor(sf::Color(18, 26, 46, 245));
+    m_skinOuterFrame.setOutlineColor(sf::Color(65, 105, 175, 240));
     m_skinOuterFrame.setOutlineThickness(3.5f);
 
     // Khung nhỏ preview ở giữa
-    m_skinInnerFrame.setSize(sf::Vector2f(420.f, 280.f));
-    m_skinInnerFrame.setOrigin(210.f, 140.f);
-    m_skinInnerFrame.setPosition(400.f, 290.f);
-    m_skinInnerFrame.setFillColor(sf::Color(28, 38, 65, 245));
-    m_skinInnerFrame.setOutlineColor(sf::Color(90, 125, 190, 230));
+    m_skinInnerFrame.setSize(sf::Vector2f(460.f, 245.f));
+    m_skinInnerFrame.setOrigin(230.f, 122.5f);
+    m_skinInnerFrame.setPosition(400.f, 275.f);
+    m_skinInnerFrame.setFillColor(sf::Color(26, 37, 64, 245));
+    m_skinInnerFrame.setOutlineColor(sf::Color(85, 120, 185, 220));
     m_skinInnerFrame.setOutlineThickness(2.f);
 
     // 3 Tab Chuyển Đổi Danh Mục (Nhân vật / Khúc gỗ / Xe ô tô)
     const char* tabNames[3] = { "1. NHAN VAT", "2. KHUC GO", "3. XE O TO" };
-    float tabCentersX[3] = { 235.f, 400.f, 565.f };
+    float tabCentersX[3] = { 220.f, 400.f, 580.f };
     for (int t = 0; t < 3; ++t)
     {
-        m_tabBgs[t].setSize(sf::Vector2f(150.f, 36.f));
-        m_tabBgs[t].setOrigin(75.f, 18.f);
-        m_tabBgs[t].setPosition(tabCentersX[t], 115.f);
+        m_tabBgs[t].setSize(sf::Vector2f(160.f, 36.f));
+        m_tabBgs[t].setOrigin(80.f, 18.f);
+        m_tabBgs[t].setPosition(tabCentersX[t], 122.f);
         m_tabBgs[t].setOutlineThickness(2.f);
 
         if (m_fontLoaded)
@@ -660,7 +660,7 @@ void MainMenuState::initSkinSelectionUI()
             m_tabTexts[t].setStyle(sf::Text::Bold);
             sf::FloatRect tb = m_tabTexts[t].getLocalBounds();
             m_tabTexts[t].setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
-            m_tabTexts[t].setPosition(tabCentersX[t], 115.f);
+            m_tabTexts[t].setPosition(tabCentersX[t], 122.f);
         }
     }
 
@@ -683,7 +683,7 @@ void MainMenuState::initSkinSelectionUI()
         m_skinCloseBtn.setStyle(sf::Text::Bold);
         sf::FloatRect cb = m_skinCloseBtn.getLocalBounds();
         m_skinCloseBtn.setOrigin(cb.left + cb.width / 2.f, cb.top + cb.height / 2.f);
-        m_skinCloseBtn.setPosition(710.f, 72.f);
+        m_skinCloseBtn.setPosition(715.f, 70.f);
 
         m_arrowLeftText.setFont(m_font);
         m_arrowLeftText.setString("<");
@@ -692,7 +692,7 @@ void MainMenuState::initSkinSelectionUI()
         m_arrowLeftText.setStyle(sf::Text::Bold);
         sf::FloatRect ab1 = m_arrowLeftText.getLocalBounds();
         m_arrowLeftText.setOrigin(ab1.left + ab1.width / 2.f, ab1.top + ab1.height / 2.f);
-        m_arrowLeftText.setPosition(240.f, 240.f);
+        m_arrowLeftText.setPosition(115.f, 275.f);
 
         m_arrowRightText.setFont(m_font);
         m_arrowRightText.setString(">");
@@ -701,7 +701,7 @@ void MainMenuState::initSkinSelectionUI()
         m_arrowRightText.setStyle(sf::Text::Bold);
         sf::FloatRect ab2 = m_arrowRightText.getLocalBounds();
         m_arrowRightText.setOrigin(ab2.left + ab2.width / 2.f, ab2.top + ab2.height / 2.f);
-        m_arrowRightText.setPosition(560.f, 240.f);
+        m_arrowRightText.setPosition(685.f, 275.f);
 
         m_skinNameText.setFont(m_font);
         m_skinNameText.setCharacterSize(20);
@@ -724,20 +724,20 @@ void MainMenuState::updateSkinPreview()
     if (m_viewingSkinIndex < 0) m_viewingSkinIndex = 0;
     if (m_viewingSkinIndex >= TOTAL_SKINS) m_viewingSkinIndex = TOTAL_SKINS - 1;
 
-    // 1. Cập nhật giao diện 3 Tab (Tab đang chọn sáng vàng)
+    // 1. Cập nhật giao diện 3 Tab (Tab đang chọn sáng vàng kim)
     for (int t = 0; t < 3; ++t)
     {
         if (t == m_viewingCategory)
         {
-            m_tabBgs[t].setFillColor(sf::Color(245, 180, 20));
-            m_tabBgs[t].setOutlineColor(sf::Color(255, 255, 255));
+            m_tabBgs[t].setFillColor(sf::Color(255, 195, 0));
+            m_tabBgs[t].setOutlineColor(sf::Color::White);
             m_tabTexts[t].setFillColor(sf::Color(30, 20, 0));
         }
         else
         {
-            m_tabBgs[t].setFillColor(sf::Color(35, 45, 75));
-            m_tabBgs[t].setOutlineColor(sf::Color(70, 90, 140));
-            m_tabTexts[t].setFillColor(sf::Color(180, 205, 240));
+            m_tabBgs[t].setFillColor(sf::Color(30, 42, 70));
+            m_tabBgs[t].setOutlineColor(sf::Color(65, 85, 130));
+            m_tabTexts[t].setFillColor(sf::Color(170, 195, 230));
         }
     }
 
@@ -758,7 +758,7 @@ void MainMenuState::updateSkinPreview()
                 m_skinPreviewSprite.setOrigin(frameW / 2.f, frameH / 2.f);
                 float scale = 110.f / static_cast<float>(frameH);
                 m_skinPreviewSprite.setScale(scale, scale);
-                m_skinPreviewSprite.setPosition(400.f, 235.f);
+                m_skinPreviewSprite.setPosition(400.f, 220.f);
             }
         }
 
@@ -770,12 +770,12 @@ void MainMenuState::updateSkinPreview()
             m_skinNameText.setString(charNames[m_viewingSkinIndex]);
             sf::FloatRect nb = m_skinNameText.getLocalBounds();
             m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
-            m_skinNameText.setPosition(400.f, 320.f);
+            m_skinNameText.setPosition(400.f, 310.f);
 
             m_skinDescText.setString(charDescs[m_viewingSkinIndex]);
             sf::FloatRect db = m_skinDescText.getLocalBounds();
             m_skinDescText.setOrigin(db.left + db.width / 2.f, db.top + db.height / 2.f);
-            m_skinDescText.setPosition(400.f, 350.f);
+            m_skinDescText.setPosition(400.f, 345.f);
         }
 
         isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
@@ -790,10 +790,10 @@ void MainMenuState::updateSkinPreview()
             {
                 m_skinPreviewSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
                 m_skinPreviewSprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
-                float scaleX = 180.f / static_cast<float>(texSize.x);
-                float scaleY = 60.f / static_cast<float>(texSize.y);
+                float scaleX = 190.f / static_cast<float>(texSize.x);
+                float scaleY = 55.f / static_cast<float>(texSize.y);
                 m_skinPreviewSprite.setScale(scaleX, scaleY);
-                m_skinPreviewSprite.setPosition(400.f, 235.f);
+                m_skinPreviewSprite.setPosition(400.f, 220.f);
             }
         }
 
@@ -805,12 +805,12 @@ void MainMenuState::updateSkinPreview()
             m_skinNameText.setString(logNames[m_viewingSkinIndex]);
             sf::FloatRect nb = m_skinNameText.getLocalBounds();
             m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
-            m_skinNameText.setPosition(400.f, 320.f);
+            m_skinNameText.setPosition(400.f, 310.f);
 
             m_skinDescText.setString(logDescs[m_viewingSkinIndex]);
             sf::FloatRect db = m_skinDescText.getLocalBounds();
             m_skinDescText.setOrigin(db.left + db.width / 2.f, db.top + db.height / 2.f);
-            m_skinDescText.setPosition(400.f, 350.f);
+            m_skinDescText.setPosition(400.f, 345.f);
         }
 
         isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getLogSkin()));
@@ -827,7 +827,7 @@ void MainMenuState::updateSkinPreview()
                 m_skinPreviewSprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
                 float scale = 65.f / static_cast<float>(texSize.y);
                 m_skinPreviewSprite.setScale(scale, scale);
-                m_skinPreviewSprite.setPosition(400.f, 235.f);
+                m_skinPreviewSprite.setPosition(400.f, 220.f);
             }
         }
 
@@ -839,18 +839,18 @@ void MainMenuState::updateSkinPreview()
             m_skinNameText.setString(carNames[m_viewingSkinIndex]);
             sf::FloatRect nb = m_skinNameText.getLocalBounds();
             m_skinNameText.setOrigin(nb.left + nb.width / 2.f, nb.top + nb.height / 2.f);
-            m_skinNameText.setPosition(400.f, 320.f);
+            m_skinNameText.setPosition(400.f, 310.f);
 
             m_skinDescText.setString(carDescs[m_viewingSkinIndex]);
             sf::FloatRect db = m_skinDescText.getLocalBounds();
             m_skinDescText.setOrigin(db.left + db.width / 2.f, db.top + db.height / 2.f);
-            m_skinDescText.setPosition(400.f, 350.f);
+            m_skinDescText.setPosition(400.f, 345.f);
         }
 
         isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getCarSkin()));
     }
 
-    // 3. Nút SELECT / SELECTED
+    // 3. Nút SELECT / SELECTED (Đặt gọn gàng phía dưới khung, không bị viền đè lên)
     if (isCurrent && m_selectedTextLoaded)
     {
         m_selectBtnSprite.setTexture(m_selectedTextTexture);
@@ -860,7 +860,7 @@ void MainMenuState::updateSkinPreview()
             float btnScale = 62.f / static_cast<float>(sSize.y);
             m_selectBtnSprite.setScale(btnScale, btnScale);
             m_selectBtnSprite.setOrigin(sSize.x / 2.f, sSize.y / 2.f);
-            m_selectBtnSprite.setPosition(400.f, 430.f);
+            m_selectBtnSprite.setPosition(400.f, 465.f);
             m_selectBtnSprite.setColor(sf::Color::White);
         }
     }
@@ -873,7 +873,7 @@ void MainMenuState::updateSkinPreview()
             float btnScale = 62.f / static_cast<float>(sSize.y);
             m_selectBtnSprite.setScale(btnScale, btnScale);
             m_selectBtnSprite.setOrigin(sSize.x / 2.f, sSize.y / 2.f);
-            m_selectBtnSprite.setPosition(400.f, 430.f);
+            m_selectBtnSprite.setPosition(400.f, 465.f);
             m_selectBtnSprite.setColor(sf::Color::White);
         }
     }
@@ -1025,7 +1025,7 @@ void MainMenuState::handleInput(
             sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
 
             // Nút đóng X (ở góc trên phải bảng)
-            sf::FloatRect closeBounds(680.f, 50.f, 50.f, 50.f);
+            sf::FloatRect closeBounds(685.f, 45.f, 55.f, 50.f);
             if (closeBounds.contains(mousePos))
             {
                 m_showSkinsUI = false;
@@ -1054,7 +1054,7 @@ void MainMenuState::handleInput(
             // Mũi tên trái < (quay lại skin trước trong tab hiện tại)
             if (m_viewingSkinIndex > 0)
             {
-                sf::FloatRect leftArrowBounds(210.f, 210.f, 60.f, 60.f);
+                sf::FloatRect leftArrowBounds(80.f, 235.f, 70.f, 80.f);
                 if (leftArrowBounds.contains(mousePos))
                 {
                     m_viewingSkinIndex--;
@@ -1067,7 +1067,7 @@ void MainMenuState::handleInput(
             // Mũi tên phải > (chuyển sang skin kế tiếp trong tab hiện tại)
             if (m_viewingSkinIndex < TOTAL_SKINS - 1)
             {
-                sf::FloatRect rightArrowBounds(530.f, 210.f, 60.f, 60.f);
+                sf::FloatRect rightArrowBounds(650.f, 235.f, 70.f, 80.f);
                 if (rightArrowBounds.contains(mousePos))
                 {
                     m_viewingSkinIndex++;
@@ -1293,16 +1293,16 @@ void MainMenuState::updateButtonHover()
     if (m_showSkinsUI)
     {
         // 1. Hover Close Button X
-        sf::FloatRect closeBounds(680.f, 70.f, 45.f, 45.f);
+        sf::FloatRect closeBounds(685.f, 45.f, 55.f, 50.f);
         bool closeOver = closeBounds.contains(mousePos);
         if (closeOver && !m_skinCloseHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
         m_skinCloseHovered = closeOver;
-        m_skinCloseBtn.setFillColor(m_skinCloseHovered ? sf::Color::Red : sf::Color(200, 200, 200));
+        m_skinCloseBtn.setFillColor(m_skinCloseHovered ? sf::Color::Red : sf::Color(220, 220, 220));
 
         // 2. Hover Arrow Left <
         if (m_viewingSkinIndex > 0)
         {
-            sf::FloatRect leftArrowBounds(220.f, 190.f, 60.f, 60.f);
+            sf::FloatRect leftArrowBounds(80.f, 235.f, 70.f, 80.f);
             bool leftOver = leftArrowBounds.contains(mousePos);
             if (leftOver && !m_arrowLeftHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
             m_arrowLeftHovered = leftOver;
@@ -1312,7 +1312,7 @@ void MainMenuState::updateButtonHover()
         // 3. Hover Arrow Right >
         if (m_viewingSkinIndex < TOTAL_SKINS - 1)
         {
-            sf::FloatRect rightArrowBounds(520.f, 190.f, 60.f, 60.f);
+            sf::FloatRect rightArrowBounds(650.f, 235.f, 70.f, 80.f);
             bool rightOver = rightArrowBounds.contains(mousePos);
             if (rightOver && !m_arrowRightHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
             m_arrowRightHovered = rightOver;
@@ -1320,14 +1320,23 @@ void MainMenuState::updateButtonHover()
         }
 
         // 4. Hover Select Button
-        bool isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+        bool isCurrent = false;
+        if (m_viewingCategory == 0) isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getPlayerSkin()));
+        else if (m_viewingCategory == 1) isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getLogSkin()));
+        else if (m_viewingCategory == 2) isCurrent = (m_viewingSkinIndex == static_cast<int>(Game::instance().getCarSkin()));
+
         if (!isCurrent)
         {
             bool selectOver = m_selectBtnSprite.getGlobalBounds().contains(mousePos);
             if (selectOver && !m_selectBtnHovered) Game::instance().playSound("assets/audio/sfx_hovering.wav");
             m_selectBtnHovered = selectOver;
             m_selectBtnSprite.setColor(m_selectBtnHovered ? sf::Color(230, 230, 255) : sf::Color::White);
-            m_selectBtnSprite.setPosition(400.f, m_selectBtnHovered ? 402.f : 405.f);
+            m_selectBtnSprite.setPosition(400.f, m_selectBtnHovered ? 462.f : 465.f);
+        }
+        else
+        {
+            m_selectBtnSprite.setColor(sf::Color::White);
+            m_selectBtnSprite.setPosition(400.f, 465.f);
         }
         return;
     }
