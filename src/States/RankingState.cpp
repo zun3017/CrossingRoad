@@ -132,15 +132,20 @@ void RankingState::init() {
         m_noDataText.setPosition(400.f, 280.f);
     }
 
-    // Cup sprite position
+    // Cup sprite position (2 cup đối xứng 2 bên tiêu đề LEADERBOARD)
     if (m_cupLoaded) {
         m_cupSprite.setTexture(m_cupTexture);
+        m_cupRightSprite.setTexture(m_cupTexture);
         sf::Vector2u size = m_cupTexture.getSize();
         if (size.x > 0 && size.y > 0) {
             m_cupSprite.setOrigin(size.x / 2.f, size.y / 2.f);
             m_cupSprite.setScale(36.f / static_cast<float>(size.x), 36.f / static_cast<float>(size.y));
+
+            m_cupRightSprite.setOrigin(size.x / 2.f, size.y / 2.f);
+            m_cupRightSprite.setScale(36.f / static_cast<float>(size.x), 36.f / static_cast<float>(size.y));
         }
         m_cupSprite.setPosition(150.f, 58.f);
+        m_cupRightSprite.setPosition(650.f, 58.f);
     }
 
     // Load Highscores
@@ -249,6 +254,7 @@ void RankingState::draw(sf::RenderWindow& window) {
 
     if (m_cupLoaded) {
         window.draw(m_cupSprite);
+        window.draw(m_cupRightSprite);
     }
 
     // Table Box & Header

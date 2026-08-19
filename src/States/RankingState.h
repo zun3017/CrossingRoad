@@ -50,9 +50,10 @@ private:
     sf::RectangleShape m_accentBar;
     sf::RectangleShape m_accentBarBorder;
 
-    // Cup sprite
+    // Cup sprite (2 cup đối xứng 2 bên tiêu đề)
     sf::Texture m_cupTexture;
     sf::Sprite m_cupSprite;
+    sf::Sprite m_cupRightSprite;
     bool m_cupLoaded = false;
 
     // Medal textures (Gold, Silver, Bronze for Top 3)
