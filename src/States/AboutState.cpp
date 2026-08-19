@@ -3,21 +3,25 @@
 #include "../Core/ResourceManager.h"
 #include <memory>
 
-void AboutState::init() {
-    auto& font = FontManager::getInstance().get("assets/fonts/arial.ttf");
+void AboutState::init()
+{
+    auto &font = FontManager::getInstance().get("assets/fonts/arial.ttf");
     m_font = font;
     m_fontLoaded = true;
 
     // Load menu.png background from cache
-    auto& bgTex = TextureManager::getInstance().get("assets/textures/menu.png");
-    if (bgTex.getSize().x > 0) {
+    auto &bgTex = TextureManager::getInstance().get("assets/textures/menu.png");
+    if (bgTex.getSize().x > 0)
+    {
         m_bgLoaded = true;
         m_bgSprite.setTexture(bgTex);
         sf::Vector2u size = bgTex.getSize();
         m_bgSprite.setScale(
             800.f / static_cast<float>(size.x),
             600.f / static_cast<float>(size.y));
-    } else {
+    }
+    else
+    {
         m_background.setSize(sf::Vector2f(800.f, 600.f));
         m_background.setFillColor(sf::Color(124, 179, 66));
     }
@@ -40,7 +44,8 @@ void AboutState::init() {
     m_topRibbon.setPosition(40.f, 30.f);
     m_topRibbon.setFillColor(sf::Color(255, 255, 255, 60));
 
-    if (m_fontLoaded) {
+    if (m_fontLoaded)
+    {
         // Title: ABOUT
         m_titleShadow.setFont(m_font);
         m_titleShadow.setString("ABOUT");
@@ -139,32 +144,35 @@ void AboutState::init() {
 
     // Initialize 5 team members data
     m_members = {
-        {"01", "Truong Tan Phuc", "ID: 25127111", sf::Color(67, 160, 71)},     // Green
-        {"02", "Nguyen Hoang Danh", "ID: 25127031", sf::Color(41, 182, 246)},   // Blue
-        {"03", "Pham Thanh Lam", "ID: 20127086", sf::Color(253, 216, 53)},    // Yellow
-        {"04", "Ho Hoang Tien Dung", "ID: 25127304", sf::Color(229, 57, 53)},   // Red
-        {"05", "Nguyen Bach Thanh Nhan", "ID: 25127467", sf::Color(168, 85, 247)} // Purple
+        {"01", "Truong Tan Phuc", "ID: 25127467", sf::Color(67, 160, 71)},        // Green
+        {"02", "Nguyen Hoang Danh", "ID: 25127031", sf::Color(41, 182, 246)},     // Blue
+        {"03", "Pham Thanh Lam", "ID: 20127086", sf::Color(253, 216, 53)},        // Yellow
+        {"04", "Ho Hoang Tien Dung", "ID: 25127304", sf::Color(229, 57, 53)},     // Red
+        {"05", "Nguyen Bach Thanh Nhan", "ID: 25127111", sf::Color(168, 85, 247)} // Purple
     };
 
     // Back Button (Wooden pixel style)
-    auto& backTex = TextureManager::getInstance().get("assets/textures/back_text.png");
-    if (backTex.getSize().x > 0) {
-        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, backTex, []() {
-            Game::instance().getStateMachine().popState();
-        });
-    } else {
-        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, "< BACK", m_font, []() {
-            Game::instance().getStateMachine().popState();
-        });
+    auto &backTex = TextureManager::getInstance().get("assets/textures/back_text.png");
+    if (backTex.getSize().x > 0)
+    {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, backTex, []()
+                                             { Game::instance().getStateMachine().popState(); });
+    }
+    else
+    {
+        m_backBtn = std::make_unique<Button>(320.f, 490.f, 160.f, 45.f, "< BACK", m_font, []()
+                                             { Game::instance().getStateMachine().popState(); });
         m_backBtn->setNormalColor(sf::Color(141, 110, 99)); // #8d6e63
-        m_backBtn->setHoverColor(sf::Color(161, 136, 127));  // #a1887f
-        m_backBtn->setClickColor(sf::Color(93, 64, 55));     // #5d4037
+        m_backBtn->setHoverColor(sf::Color(161, 136, 127)); // #a1887f
+        m_backBtn->setClickColor(sf::Color(93, 64, 55));    // #5d4037
         m_backBtn->setTextColor(sf::Color(253, 216, 53));
     }
 }
 
-void AboutState::handleInput(sf::RenderWindow& window, sf::Event& event) {
-    if (m_backBtn) m_backBtn->handleEvent(event, window);
+void AboutState::handleInput(sf::RenderWindow &window, sf::Event &event)
+{
+    if (m_backBtn)
+        m_backBtn->handleEvent(event, window);
 
     if (event.type == sf::Event::KeyPressed &&
         event.key.code == sf::Keyboard::Escape)
@@ -173,14 +181,20 @@ void AboutState::handleInput(sf::RenderWindow& window, sf::Event& event) {
     }
 }
 
-void AboutState::update(float dt) {
-    if (m_backBtn) m_backBtn->update(dt);
+void AboutState::update(float dt)
+{
+    if (m_backBtn)
+        m_backBtn->update(dt);
 }
 
-void AboutState::draw(sf::RenderWindow& window) {
-    if (m_bgLoaded) {
+void AboutState::draw(sf::RenderWindow &window)
+{
+    if (m_bgLoaded)
+    {
         window.draw(m_bgSprite);
-    } else {
+    }
+    else
+    {
         window.draw(m_background);
     }
 
@@ -189,7 +203,8 @@ void AboutState::draw(sf::RenderWindow& window) {
     window.draw(m_topRibbon);
     window.draw(m_containerBorder);
 
-    if (!m_fontLoaded) return;
+    if (!m_fontLoaded)
+        return;
 
     // Header
     window.draw(m_titleShadow);
@@ -220,13 +235,17 @@ void AboutState::draw(sf::RenderWindow& window) {
     float cardH = 48.f;
     float startY = 290.f;
 
-    for (size_t i = 0; i < m_members.size(); ++i) {
+    for (size_t i = 0; i < m_members.size(); ++i)
+    {
         float x, y, width;
-        if (i < 4) {
+        if (i < 4)
+        {
             x = (i % 2 == 0) ? 70.f : 410.f;
             y = startY + static_cast<float>(i / 2) * 56.f;
             width = cardW;
-        } else {
+        }
+        else
+        {
             x = 70.f;
             y = startY + 2.f * 56.f;
             width = 660.f;
@@ -281,6 +300,6 @@ void AboutState::draw(sf::RenderWindow& window) {
     }
 
     // Back Button
-    if (m_backBtn) window.draw(*m_backBtn);
+    if (m_backBtn)
+        window.draw(*m_backBtn);
 }
-
