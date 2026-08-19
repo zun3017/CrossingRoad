@@ -111,10 +111,16 @@ void GameState::init() {
             m_lotusSprite.setOrigin(static_cast<float>(tLotus.getSize().x) / 2.f, static_cast<float>(tLotus.getSize().y) / 2.f);
         }
 
-        m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+        std::string hitPath = Game::instance().getPlayerHitPath();
+        m_hitByCarLoaded = m_hitByCarTexture.loadFromFile(hitPath);
+        if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/" + hitPath);
+        if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
         if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
         
-        m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
+        std::string drownPath = Game::instance().getPlayerDrownPath();
+        m_playerDrownLoaded = m_playerDrownTexture.loadFromFile(drownPath);
+        if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/" + drownPath);
+        if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
         if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/assets/textures/player_drown.png");
         
         m_texturesLoaded = true;
