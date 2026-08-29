@@ -147,14 +147,23 @@ private:
     MenuButton m_skinsButton;
 
     // ========================================================
-    // Skin Selection UI Popup
+    // Skin Selection UI Popup (3 Danh Mục: Nhân vật, Khúc gỗ, Xe hơi)
     // ========================================================
     bool m_showSkinsUI = false;
+    int m_viewingCategory = 0; // 0 = Nhân vật, 1 = Khúc gỗ, 2 = Xe ô tô
     int m_viewingSkinIndex = 0;
     static const int TOTAL_SKINS = 3;
 
-    sf::Texture m_skinPreviewTextures[TOTAL_SKINS];
-    bool m_skinPreviewLoaded[TOTAL_SKINS] = {false};
+    // Textures preview cho từng danh mục
+    sf::Texture m_playerPreviewTextures[TOTAL_SKINS];
+    bool m_playerPreviewLoaded[TOTAL_SKINS] = {false};
+
+    sf::Texture m_logPreviewTextures[TOTAL_SKINS];
+    bool m_logPreviewLoaded[TOTAL_SKINS] = {false};
+
+    sf::Texture m_carPreviewTextures[TOTAL_SKINS];
+    bool m_carPreviewLoaded[TOTAL_SKINS] = {false};
+
     sf::Sprite m_skinPreviewSprite;
 
     sf::Texture m_selectTextTexture;
@@ -164,10 +173,15 @@ private:
     sf::Sprite m_selectBtnSprite;
 
     sf::Text m_skinNameText;
+    sf::Text m_skinDescText;
     sf::Text m_skinTitleText;
     sf::Text m_arrowLeftText;
     sf::Text m_arrowRightText;
     sf::Text m_skinCloseBtn;
+
+    // 3 Tab chuyển đổi danh mục
+    sf::RectangleShape m_tabBgs[3];
+    sf::Text m_tabTexts[3];
 
     sf::RectangleShape m_skinOverlayDim;
     sf::RectangleShape m_skinOuterFrame;

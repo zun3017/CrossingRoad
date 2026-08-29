@@ -37,8 +37,10 @@ void GameState::init() {
         auto& tGrass = ResourceManager<sf::Texture>::getInstance().get("assets/textures/grass.png");
         auto& tRoad = ResourceManager<sf::Texture>::getInstance().get("assets/textures/road.png");
         auto& tRiver = ResourceManager<sf::Texture>::getInstance().get("assets/textures/river.png");
-        auto& tLog = ResourceManager<sf::Texture>::getInstance().get("assets/textures/log.png");
-        auto& tCarBlue = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_blue.png");
+        std::string logSkinPath = Game::instance().getLogSkinPath();
+        auto& tLog = ResourceManager<sf::Texture>::getInstance().get(logSkinPath);
+        auto& tLogFallback = (tLog.getSize().x > 0) ? tLog : ResourceManager<sf::Texture>::getInstance().get("assets/textures/log.png");
+        auto& tCarBlue = ResourceManager<sf::Texture>::getInstance().get(Game::instance().getCarSkinPath());
         auto& tCarRed = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_red.png");
         auto& tCarYellow = ResourceManager<sf::Texture>::getInstance().get("assets/textures/car_yellow.png");
         auto& tItem = ResourceManager<sf::Texture>::getInstance().get("assets/textures/item.png");
@@ -60,8 +62,11 @@ void GameState::init() {
             m_riverSprite.setTexture(tRiver);
             m_riverSprite.setScale(800.f / tRiver.getSize().x, m_cellSize / tRiver.getSize().y);
             
-            m_logSprite.setTexture(tLog);
-            m_logSprite.setScale(56.f / tLog.getSize().x, 40.f / tLog.getSize().y);
+            auto& activeLogTex = (tLog.getSize().x > 0) ? tLog : tLogFallback;
+            if (activeLogTex.getSize().x > 0) {
+                m_logSprite.setTexture(activeLogTex);
+                m_logSprite.setScale(56.f / activeLogTex.getSize().x, 40.f / activeLogTex.getSize().y);
+            }
             
 
         auto& tWatch = ResourceManager<sf::Texture>::getInstance().get("assets/textures/watch.png");
@@ -106,10 +111,16 @@ void GameState::init() {
             m_lotusSprite.setOrigin(static_cast<float>(tLotus.getSize().x) / 2.f, static_cast<float>(tLotus.getSize().y) / 2.f);
         }
 
-        m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
+        std::string hitPath = Game::instance().getPlayerHitPath();
+        m_hitByCarLoaded = m_hitByCarTexture.loadFromFile(hitPath);
+        if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/" + hitPath);
+        if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("assets/textures/hitbycar.png");
         if (!m_hitByCarLoaded) m_hitByCarLoaded = m_hitByCarTexture.loadFromFile("CrossingRoad/assets/textures/hitbycar.png");
         
-        m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
+        std::string drownPath = Game::instance().getPlayerDrownPath();
+        m_playerDrownLoaded = m_playerDrownTexture.loadFromFile(drownPath);
+        if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/" + drownPath);
+        if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("assets/textures/player_drown.png");
         if (!m_playerDrownLoaded) m_playerDrownLoaded = m_playerDrownTexture.loadFromFile("CrossingRoad/assets/textures/player_drown.png");
         
         m_texturesLoaded = true;

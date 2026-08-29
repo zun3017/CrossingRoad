@@ -1,5 +1,6 @@
 #include "CCAR.h"
 #include "../Core/ResourceManager.h"
+#include "../Core/Game.h"
 
 CCAR::CCAR(float x, float y, float speed, int direction, bool isCrazy)
     : CVEHICLE(x, y, speed, direction)
@@ -7,7 +8,8 @@ CCAR::CCAR(float x, float y, float speed, int direction, bool isCrazy)
     m_isCrazy = isCrazy;
 
     try {
-        std::string carFiles[] = { "assets/textures/car_blue.png", "assets/textures/car_red.png", "assets/textures/car_yellow.png" };
+        std::string bluePath = Game::instance().getCarSkinPath();
+        std::string carFiles[] = { bluePath, "assets/textures/car_red.png", "assets/textures/car_yellow.png" };
         // Xe điên ưu tiên màu đỏ thể thao nổi bật
         int colorIdx = m_isCrazy ? 1 : (std::rand() % 3);
         auto& tex = ResourceManager<sf::Texture>::getInstance().get(carFiles[colorIdx]);

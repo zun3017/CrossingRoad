@@ -28,6 +28,18 @@ enum class PlayerSkin {
     Mafia = 2
 };
 
+enum class LogSkin {
+    Green = 0,
+    Pink = 1,
+    Red = 2
+};
+
+enum class CarSkin {
+    Blue1 = 0,
+    Blue2 = 1,
+    Blue3 = 2
+};
+
 class Game {
 public:
     Game();
@@ -70,12 +82,20 @@ public:
 
     void playSound(const std::string& filename);
 
-    // === Quản lý Skin nhân vật ===
+    // === Quản lý Skin Nhân vật, Khúc gỗ và Xe cộ ===
     PlayerSkin getPlayerSkin() const;
     void setPlayerSkin(PlayerSkin skin);
     std::string getPlayerSkinPath() const;
     std::string getPlayerDrownPath() const;
     std::string getPlayerHitPath() const;
+
+    LogSkin getLogSkin() const;
+    void setLogSkin(LogSkin skin);
+    std::string getLogSkinPath() const;
+
+    CarSkin getCarSkin() const;
+    void setCarSkin(CarSkin skin);
+    std::string getCarSkinPath() const;
 
     // === Lấy StateMachine (cho trường hợp đặc biệt) ===
     StateMachine& getStateMachine();
@@ -106,6 +126,8 @@ private:
     float m_musicVolume  = 65.0f;
     bool m_motionEnabled = true;
     PlayerSkin m_playerSkin = PlayerSkin::Default;
+    LogSkin m_logSkin = LogSkin::Green;
+    CarSkin m_carSkin = CarSkin::Blue1;
 
     // Game đang chạy?
     bool m_running = true;
