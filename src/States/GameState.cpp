@@ -869,8 +869,9 @@ void GameState::movePlayer(float dx, float dy) {
     if (newPos.x > 800.f - m_playerSize) newPos.x = 800.f - m_playerSize;
     if (newPos.y > 600.f - m_cellSize) newPos.y = 600.f - m_cellSize;
 
-    // Tăng điểm khi tiến lên (chỉ thưởng nếu đi lên cao hơn mức cao nhất từng đạt được trong màn)
-    if (newPos.y < m_maxPlayerY - 5.f) {
+    // Tăng điểm khi tiến lên sang lane mới (+1đ)
+    // Nếu là bước chạm đích qua màn (newPos.y <= 0.f), điểm thưởng chuyển màn (+5đ) sẽ được tính trong checkWinCondition()
+    if (newPos.y > 0.f && newPos.y < m_maxPlayerY - 5.f) {
         m_score += 1;
         m_maxPlayerY = newPos.y;
     }
