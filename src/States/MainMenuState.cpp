@@ -790,9 +790,9 @@ void MainMenuState::updateSkinPreview()
             {
                 m_skinPreviewSprite.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
                 m_skinPreviewSprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
-                float scaleX = 190.f / static_cast<float>(texSize.x);
-                float scaleY = 55.f / static_cast<float>(texSize.y);
-                m_skinPreviewSprite.setScale(scaleX, scaleY);
+                // Giữ nguyên đúng tỷ lệ gốc (aspect ratio) của khúc gỗ, không bị kéo dẹt hay méo hình
+                float logScale = 175.f / static_cast<float>(texSize.x);
+                m_skinPreviewSprite.setScale(logScale, logScale);
                 m_skinPreviewSprite.setPosition(400.f, 220.f);
             }
         }
